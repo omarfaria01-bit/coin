@@ -9,22 +9,19 @@ on:
     types: [created]
   pull_request_review:
     types: [submitted]
-  issues:
-    types: [opened]
   schedule:
     - cron: "17 */3 * * *" # manager tick every 3h
   workflow_dispatch:
 
 jobs:
   respond:
-    # Only kiwi and Grok can trigger Claude, and only with an @claude mention.
+    # Only kiwi and Grok can trigger Claude, and only with an @claude mention in a comment/review
+    # (not in issue bodies, which often quote "@claude" as an instruction).
     if: >-
       github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' &&
       contains(fromJSON('["omarfaria01-bit","omarmissaoui2009-ship-it"]'), github.actor) &&
       (contains(github.event.comment.body, '@claude') ||
-       contains(github.event.review.body, '@claude') ||
-       contains(github.event.issue.body, '@claude') ||
-       contains(github.event.issue.title, '@claude'))
+       contains(github.event.review.body, '@claude'))
     runs-on: ubuntu-latest
     timeout-minutes: 30
     concurrency:
