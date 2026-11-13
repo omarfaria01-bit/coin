@@ -1,0 +1,26 @@
+{
+  "name": null,
+  "program_ids": [],
+  "token_program": null,
+  "curve": {
+    "type": null,
+    "graduation_mc": null,
+    "venue_after": null
+  },
+  "creator_fee": {
+    "bps": null,
+    "recipient": null,
+    "claim_method": null
+  },
+  "vesting_mode": null,
+  "native_vesting_params_map": {},
+  "dev_buy": {
+    "max_pct": null,
+    "lockable": null
+  },
+  "anti_snipe": null,
+  "transfer_hook_allowed": null,
+  "docs_url": null,
+  "verified_by": null,
+  "verified_at": null
+}

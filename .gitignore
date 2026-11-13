@@ -1,0 +1,22 @@
+# secrets
+.env
+*.key
+*keypair*.json
+# data and runtime
+data/*
+!data/MANIFEST.json
+epochs/
+state.json
+*.log
+STOP
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.hypothesis/
+# local agent settings
+.claude/settings.local.json

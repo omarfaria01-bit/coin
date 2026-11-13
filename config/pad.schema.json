@@ -1,0 +1,273 @@
+{
+  "$defs": {
+    "PadCreatorFee": {
+      "additionalProperties": false,
+      "properties": {
+        "bps": {
+          "anyOf": [
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bps"
+        },
+        "recipient": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Recipient"
+        },
+        "claim_method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Claim Method"
+        }
+      },
+      "title": "PadCreatorFee",
+      "type": "object"
+    },
+    "PadCurve": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Type"
+        },
+        "graduation_mc": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Graduation Mc"
+        },
+        "venue_after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Venue After"
+        }
+      },
+      "title": "PadCurve",
+      "type": "object"
+    },
+    "PadDevBuy": {
+      "additionalProperties": false,
+      "properties": {
+        "max_pct": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Pct"
+        },
+        "lockable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lockable"
+        }
+      },
+      "title": "PadDevBuy",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Filled on launch day from the pad's public docs (§15); each field needs a source.",
+  "properties": {
+    "name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Name"
+    },
+    "program_ids": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Program Ids",
+      "type": "array"
+    },
+    "token_program": {
+      "anyOf": [
+        {
+          "enum": [
+            "spl",
+            "token2022"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Token Program"
+    },
+    "curve": {
+      "$ref": "#/$defs/PadCurve",
+      "default": {
+        "type": null,
+        "graduation_mc": null,
+        "venue_after": null
+      }
+    },
+    "creator_fee": {
+      "$ref": "#/$defs/PadCreatorFee",
+      "default": {
+        "bps": null,
+        "recipient": null,
+        "claim_method": null
+      }
+    },
+    "vesting_mode": {
+      "anyOf": [
+        {
+          "enum": [
+            "native",
+            "soft"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Vesting Mode"
+    },
+    "native_vesting_params_map": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Native Vesting Params Map",
+      "type": "object"
+    },
+    "dev_buy": {
+      "$ref": "#/$defs/PadDevBuy",
+      "default": {
+        "max_pct": null,
+        "lockable": null
+      }
+    },
+    "anti_snipe": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Anti Snipe"
+    },
+    "transfer_hook_allowed": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Transfer Hook Allowed"
+    },
+    "docs_url": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Docs Url"
+    },
+    "verified_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Verified By"
+    },
+    "verified_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Verified At"
+    }
+  },
+  "title": "PadParams",
+  "type": "object"
+}

@@ -1,0 +1,718 @@
+{
+  "$defs": {
+    "ChurnParams": {
+      "additionalProperties": false,
+      "properties": {
+        "window_hours": {
+          "default": 48.0,
+          "description": "Round-trip volume window (§4)",
+          "exclusiveMinimum": 0,
+          "title": "Window Hours",
+          "type": "number"
+        },
+        "kappa": {
+          "default": 2.0,
+          "description": "F = 1/(1+κχ) (§4)",
+          "minimum": 0,
+          "title": "Kappa",
+          "type": "number"
+        }
+      },
+      "title": "ChurnParams",
+      "type": "object"
+    },
+    "DrawParams": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Legal switch (§16)",
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "period_days": {
+          "default": 7.0,
+          "exclusiveMinimum": 0,
+          "title": "Period Days",
+          "type": "number"
+        },
+        "min_balance_usd": {
+          "default": 10.0,
+          "description": "PROVISIONAL threshold (§9)",
+          "minimum": 0,
+          "title": "Min Balance Usd",
+          "type": "number"
+        },
+        "min_hold_hours": {
+          "default": 24.0,
+          "minimum": 0,
+          "title": "Min Hold Hours",
+          "type": "number"
+        },
+        "prize_split": {
+          "default": [
+            0.4,
+            0.1,
+            0.1,
+            0.1,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05
+          ],
+          "description": "Share of the draw pot per rank (§9)",
+          "items": {
+            "type": "number"
+          },
+          "title": "Prize Split",
+          "type": "array"
+        }
+      },
+      "title": "DrawParams",
+      "type": "object"
+    },
+    "EligibilityParams": {
+      "additionalProperties": false,
+      "properties": {
+        "min_eligible_usd": {
+          "default": 10.0,
+          "description": "B̄_c · TWAP_epoch threshold (§2)",
+          "minimum": 0,
+          "title": "Min Eligible Usd",
+          "type": "number"
+        },
+        "min_hold_hours": {
+          "default": 1.0,
+          "description": "Cluster must have held this long (§2)",
+          "minimum": 0,
+          "title": "Min Hold Hours",
+          "type": "number"
+        }
+      },
+      "title": "EligibilityParams",
+      "type": "object"
+    },
+    "EpochParams": {
+      "additionalProperties": false,
+      "properties": {
+        "hours": {
+          "default": 24,
+          "description": "Epoch length; epochs start at 00:00 UTC (§2)",
+          "exclusiveMinimum": 0,
+          "title": "Hours",
+          "type": "integer"
+        }
+      },
+      "title": "EpochParams",
+      "type": "object"
+    },
+    "FeeParams": {
+      "additionalProperties": false,
+      "properties": {
+        "dev": {
+          "default": 0.25,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Dev",
+          "type": "number"
+        },
+        "holder_pot": {
+          "default": 0.35,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Holder Pot",
+          "type": "number"
+        },
+        "draw_pot": {
+          "default": 0.25,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Draw Pot",
+          "type": "number"
+        },
+        "buyback_burn": {
+          "default": 0.15,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Buyback Burn",
+          "type": "number"
+        },
+        "router_interval_minutes": {
+          "default": 60,
+          "exclusiveMinimum": 0,
+          "title": "Router Interval Minutes",
+          "type": "integer"
+        }
+      },
+      "title": "FeeParams",
+      "type": "object"
+    },
+    "HoldParams": {
+      "additionalProperties": false,
+      "properties": {
+        "horizon_days": {
+          "default": 30.0,
+          "description": "h(a)=1+min(1, ln(1+a)/ln(1+H)) (§3)",
+          "exclusiveMinimum": 0,
+          "title": "Horizon Days",
+          "type": "number"
+        }
+      },
+      "title": "HoldParams",
+      "type": "object"
+    },
+    "RewardParams": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Legal switch (§16)",
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "alpha_per_day": {
+          "default": 0.1,
+          "description": "R_e = α·Pot_e (§8)",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Alpha Per Day",
+          "type": "number"
+        },
+        "min_epoch_payout_lamports": {
+          "default": 10000000,
+          "description": "PROVISIONAL (0.01 SOL): skip epoch below this (§8)",
+          "minimum": 0,
+          "title": "Min Epoch Payout Lamports",
+          "type": "integer"
+        },
+        "push_max_eligible": {
+          "default": 500,
+          "description": "Below this, push instead of claims (§13)",
+          "minimum": 0,
+          "title": "Push Max Eligible",
+          "type": "integer"
+        },
+        "push_min_transfer_lamports": {
+          "default": 1000000,
+          "description": "PROVISIONAL (0.001 SOL): smaller amounts carry forward (§13)",
+          "minimum": 0,
+          "title": "Push Min Transfer Lamports",
+          "type": "integer"
+        },
+        "lst_fraction": {
+          "default": 0.0,
+          "description": "Share of idle pot held in an LST; 0 until decided (§8)",
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Lst Fraction",
+          "type": "number"
+        }
+      },
+      "title": "RewardParams",
+      "type": "object"
+    },
+    "ScoringParams": {
+      "additionalProperties": false,
+      "properties": {
+        "cap": {
+          "default": 0.05,
+          "description": "Whale cap on π_c (§6)",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Cap",
+          "type": "number"
+        }
+      },
+      "title": "ScoringParams",
+      "type": "object"
+    },
+    "SybilParams": {
+      "additionalProperties": false,
+      "properties": {
+        "weights": {
+          "$ref": "#/$defs/SybilWeights",
+          "default": {
+            "same_fee_payer": 1.0,
+            "direct_transfer": 1.0,
+            "same_first_funder": 1.0,
+            "co_buy": 0.7,
+            "identical_balances": 0.6
+          }
+        },
+        "strong_edge": {
+          "default": 0.7,
+          "description": "Union-find on edges with weight ≥ this (§7.1)",
+          "title": "Strong Edge",
+          "type": "number"
+        },
+        "merge_threshold": {
+          "default": 1.0,
+          "description": "Merge weak pairs if summed evidence ≥ this",
+          "title": "Merge Threshold",
+          "type": "number"
+        },
+        "funder_window_hours": {
+          "default": 72.0,
+          "exclusiveMinimum": 0,
+          "title": "Funder Window Hours",
+          "type": "number"
+        },
+        "co_buy_slot_tolerance": {
+          "default": 1,
+          "minimum": 0,
+          "title": "Co Buy Slot Tolerance",
+          "type": "integer"
+        },
+        "co_buy_size_tolerance": {
+          "default": 0.1,
+          "minimum": 0,
+          "title": "Co Buy Size Tolerance",
+          "type": "number"
+        },
+        "co_buy_min_occurrences": {
+          "default": 3,
+          "minimum": 1,
+          "title": "Co Buy Min Occurrences",
+          "type": "integer"
+        },
+        "identical_balance_tolerance": {
+          "default": 0.001,
+          "minimum": 0,
+          "title": "Identical Balance Tolerance",
+          "type": "number"
+        },
+        "identical_balance_min_wallets": {
+          "default": 4,
+          "minimum": 2,
+          "title": "Identical Balance Min Wallets",
+          "type": "integer"
+        },
+        "identical_balance_created_within_hours": {
+          "default": 24.0,
+          "exclusiveMinimum": 0,
+          "title": "Identical Balance Created Within Hours",
+          "type": "number"
+        },
+        "review_cluster_size": {
+          "default": 10,
+          "description": "Clusters this big go to review.csv",
+          "minimum": 2,
+          "title": "Review Cluster Size",
+          "type": "integer"
+        }
+      },
+      "title": "SybilParams",
+      "type": "object"
+    },
+    "SybilWeights": {
+      "additionalProperties": false,
+      "properties": {
+        "same_fee_payer": {
+          "default": 1.0,
+          "title": "Same Fee Payer",
+          "type": "number"
+        },
+        "direct_transfer": {
+          "default": 1.0,
+          "title": "Direct Transfer",
+          "type": "number"
+        },
+        "same_first_funder": {
+          "default": 1.0,
+          "title": "Same First Funder",
+          "type": "number"
+        },
+        "co_buy": {
+          "default": 0.7,
+          "title": "Co Buy",
+          "type": "number"
+        },
+        "identical_balances": {
+          "default": 0.6,
+          "title": "Identical Balances",
+          "type": "number"
+        }
+      },
+      "title": "SybilWeights",
+      "type": "object"
+    },
+    "TreasuryBotParams": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "default": "paper",
+          "enum": [
+            "paper",
+            "devnet",
+            "live"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "seed_lamports": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "TREASURY_SEED_SOL, set by kiwi (§12)",
+          "title": "Seed Lamports"
+        },
+        "ema_halflife_hours": {
+          "default": 6.0,
+          "title": "Ema Halflife Hours",
+          "type": "number"
+        },
+        "var_halflife_hours": {
+          "default": 24.0,
+          "title": "Var Halflife Hours",
+          "type": "number"
+        },
+        "f0": {
+          "default": 0.5,
+          "title": "F0",
+          "type": "number"
+        },
+        "gamma": {
+          "default": 0.15,
+          "title": "Gamma",
+          "type": "number"
+        },
+        "f_min": {
+          "default": 0.1,
+          "title": "F Min",
+          "type": "number"
+        },
+        "f_max": {
+          "default": 0.9,
+          "title": "F Max",
+          "type": "number"
+        },
+        "band": {
+          "default": 0.05,
+          "title": "Band",
+          "type": "number"
+        },
+        "max_pool_volume_fraction": {
+          "default": 0.02,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Max Pool Volume Fraction",
+          "type": "number"
+        },
+        "max_trade_lamports": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Trade Lamports"
+        },
+        "no_trade_first_hours": {
+          "default": 24.0,
+          "title": "No Trade First Hours",
+          "type": "number"
+        },
+        "breaker_drawdown": {
+          "default": 0.6,
+          "description": "Stop buying at −60% from 7d high",
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Breaker Drawdown",
+          "type": "number"
+        },
+        "min_liquidity_lamports": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "L_MIN",
+          "title": "Min Liquidity Lamports"
+        },
+        "daily_loss_limit_lamports": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Daily Loss Limit Lamports"
+        },
+        "quiet_minutes": {
+          "default": 15.0,
+          "description": "BOT_QUIET_MIN around buyback/payout",
+          "minimum": 0,
+          "title": "Quiet Minutes",
+          "type": "number"
+        },
+        "sweep_fraction": {
+          "default": 0.5,
+          "description": "Weekly share of profit over HWM",
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Sweep Fraction",
+          "type": "number"
+        }
+      },
+      "title": "TreasuryBotParams",
+      "type": "object"
+    },
+    "UnderwaterParams": {
+      "additionalProperties": false,
+      "properties": {
+        "twap_hours": {
+          "default": 6.0,
+          "description": "P̃ window (§5)",
+          "exclusiveMinimum": 0,
+          "title": "Twap Hours",
+          "type": "number"
+        },
+        "min_age_hours": {
+          "default": 48.0,
+          "description": "Only pool-buy lots this old count (§5)",
+          "minimum": 0,
+          "title": "Min Age Hours",
+          "type": "number"
+        },
+        "beta": {
+          "default": 0.5,
+          "description": "Max boost = 1+β (§5)",
+          "minimum": 0,
+          "title": "Beta",
+          "type": "number"
+        },
+        "d_max": {
+          "default": 0.75,
+          "description": "Drawdown that saturates the boost (§5)",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "D Max",
+          "type": "number"
+        }
+      },
+      "title": "UnderwaterParams",
+      "type": "object"
+    },
+    "VestingParams": {
+      "additionalProperties": false,
+      "properties": {
+        "t_early_minutes": {
+          "default": 15.0,
+          "description": "Early-buy window (§11)",
+          "minimum": 0,
+          "title": "T Early Minutes",
+          "type": "number"
+        },
+        "mc_early_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Or until MC ≥ this; None = time only",
+          "title": "Mc Early Usd"
+        },
+        "t_v_days": {
+          "default": 7.0,
+          "exclusiveMinimum": 0,
+          "title": "T V Days",
+          "type": "number"
+        },
+        "m": {
+          "default": 5.0,
+          "description": "Full unlock at M× entry (§11)",
+          "exclusiveMinimum": 1,
+          "title": "M",
+          "type": "number"
+        },
+        "unlock_twap_hours": {
+          "default": 6.0,
+          "description": "UNLOCK_TWAP_H (§11)",
+          "exclusiveMinimum": 0,
+          "title": "Unlock Twap Hours",
+          "type": "number"
+        },
+        "forfeit_days": {
+          "default": 30.0,
+          "description": "Soft-mode forfeit duration (§11B)",
+          "minimum": 0,
+          "title": "Forfeit Days",
+          "type": "number"
+        }
+      },
+      "title": "VestingParams",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "0.2",
+      "default": "0.2",
+      "title": "Version",
+      "type": "string"
+    },
+    "epoch": {
+      "$ref": "#/$defs/EpochParams",
+      "default": {
+        "hours": 24
+      }
+    },
+    "eligibility": {
+      "$ref": "#/$defs/EligibilityParams",
+      "default": {
+        "min_eligible_usd": 10.0,
+        "min_hold_hours": 1.0
+      }
+    },
+    "hold": {
+      "$ref": "#/$defs/HoldParams",
+      "default": {
+        "horizon_days": 30.0
+      }
+    },
+    "churn": {
+      "$ref": "#/$defs/ChurnParams",
+      "default": {
+        "window_hours": 48.0,
+        "kappa": 2.0
+      }
+    },
+    "underwater": {
+      "$ref": "#/$defs/UnderwaterParams",
+      "default": {
+        "twap_hours": 6.0,
+        "min_age_hours": 48.0,
+        "beta": 0.5,
+        "d_max": 0.75
+      }
+    },
+    "scoring": {
+      "$ref": "#/$defs/ScoringParams",
+      "default": {
+        "cap": 0.05
+      }
+    },
+    "sybil": {
+      "$ref": "#/$defs/SybilParams",
+      "default": {
+        "weights": {
+          "co_buy": 0.7,
+          "direct_transfer": 1.0,
+          "identical_balances": 0.6,
+          "same_fee_payer": 1.0,
+          "same_first_funder": 1.0
+        },
+        "strong_edge": 0.7,
+        "merge_threshold": 1.0,
+        "funder_window_hours": 72.0,
+        "co_buy_slot_tolerance": 1,
+        "co_buy_size_tolerance": 0.1,
+        "co_buy_min_occurrences": 3,
+        "identical_balance_tolerance": 0.001,
+        "identical_balance_min_wallets": 4,
+        "identical_balance_created_within_hours": 24.0,
+        "review_cluster_size": 10
+      }
+    },
+    "rewards": {
+      "$ref": "#/$defs/RewardParams",
+      "default": {
+        "enabled": true,
+        "alpha_per_day": 0.1,
+        "min_epoch_payout_lamports": 10000000,
+        "push_max_eligible": 500,
+        "push_min_transfer_lamports": 1000000,
+        "lst_fraction": 0.0
+      }
+    },
+    "draws": {
+      "$ref": "#/$defs/DrawParams",
+      "default": {
+        "enabled": true,
+        "period_days": 7.0,
+        "min_balance_usd": 10.0,
+        "min_hold_hours": 24.0,
+        "prize_split": [
+          0.4,
+          0.1,
+          0.1,
+          0.1,
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ]
+      }
+    },
+    "fees": {
+      "$ref": "#/$defs/FeeParams",
+      "default": {
+        "dev": 0.25,
+        "holder_pot": 0.35,
+        "draw_pot": 0.25,
+        "buyback_burn": 0.15,
+        "router_interval_minutes": 60
+      }
+    },
+    "vesting": {
+      "$ref": "#/$defs/VestingParams",
+      "default": {
+        "t_early_minutes": 15.0,
+        "mc_early_usd": null,
+        "t_v_days": 7.0,
+        "m": 5.0,
+        "unlock_twap_hours": 6.0,
+        "forfeit_days": 30.0
+      }
+    },
+    "treasury_bot": {
+      "$ref": "#/$defs/TreasuryBotParams",
+      "default": {
+        "mode": "paper",
+        "seed_lamports": null,
+        "ema_halflife_hours": 6.0,
+        "var_halflife_hours": 24.0,
+        "f0": 0.5,
+        "gamma": 0.15,
+        "f_min": 0.1,
+        "f_max": 0.9,
+        "band": 0.05,
+        "max_pool_volume_fraction": 0.02,
+        "max_trade_lamports": null,
+        "no_trade_first_hours": 24.0,
+        "breaker_drawdown": 0.6,
+        "min_liquidity_lamports": null,
+        "daily_loss_limit_lamports": null,
+        "quiet_minutes": 15.0,
+        "sweep_fraction": 0.5
+      }
+    }
+  },
+  "title": "CoinParams",
+  "type": "object"
+}
