@@ -281,18 +281,6 @@ def test_rejects_bad_window_and_negative_pot() -> None:
         run_epoch(inp, _params(), EpochState(0, -1, {}, {}, {}, ()))
 
 
-def test_twap_dense_series_is_time_weighted_mean() -> None:
-    """Regression: divisor is the full window [a, b), not the last gap before b."""
-    from engine.epoch import _twap
-
-    prices = tuple(PricePoint(ts, 1.0 if ts < 1800 else 3.0) for ts in range(0, 3600, 60))
-    got = _twap(prices, 0, 3600, 9)
-    assert got == pytest.approx(2.0)
-    # Sparse fixture used elsewhere must also stay a mid of 1, not 1 * window.
-    flat = (PricePoint(-3_600, 1.0), PricePoint(0, 1.0), PricePoint(86_399, 1.0))
-    assert _twap(flat, 0, 86_400, 9) == pytest.approx(1.0)
-
-
 def test_total_supply_is_required_and_positive() -> None:
     inp = _inputs([_buy("a", W("a"), 10, T0, ix=0)])
     with pytest.raises(ValueError, match="total_supply"):
@@ -315,3 +303,95 @@ def test_lot_sold_mid_epoch_scores_for_the_time_held_and_payout_is_exact() -> No
     assert rows[seller].score * 2 == pytest.approx(rows[keeper].score, rel=1e-12)
     budget = epoch_budget(10**12, 0.10, 24)
     assert sum(result.payouts.values()) + result.rollover == budget
+
+
+# --- #82 PR3: v0.3.3 sybil clustering + soft-vesting wiring, end to end through run_epoch ---
+
+FORFEIT_S = 30 * 86_400
+AMT = 1_000_000_000
+
+
+def _vest(wallet: str, amount: int = AMT) -> EpochState:
+    return EpochState(0, 0, {}, {}, {}, (VestingEntry(wallet, amount, 1.0, T0),))
+
+
+def test_run_epoch_breach_forfeits_cluster_and_fills_unlocked() -> None:
+    vested, honest = W("v-breach"), W("h-breach")
+    events = [_buy("vb", vested, AMT, T0), _buy("hb", honest, AMT, T0, ix=1)]
+    events.append(_sell("vs", vested, AMT // 2, 3_600))  # 1h in: u_time = 1/168 → locked
+    result, nxt = run_epoch(_inputs(events), _params(), _vest(vested))
+    rows = {r.cluster: r for r in result.scores}
+    assert rows[vested].score == 0.0 and rows[vested].share == 0.0
+    assert rows[honest].score > 0.0
+    assert result.payouts.get(vested, 0) == 0 and result.payouts[honest] > 0
+    assert nxt.forfeit_until == {vested: 3_600 + FORFEIT_S}
+    assert nxt.unlocked == {vested: pytest.approx(1 / 7)}  # time unlock only at t1 = 1 day
+
+
+def test_run_epoch_no_breach_keeps_score() -> None:
+    vested = W("v-ok")
+    events = [_buy("vo", vested, AMT, T0), _sell("vos", vested, AMT // 1000, 3_600)]
+    result, nxt = run_epoch(_inputs(events), _params(), _vest(vested, AMT // 2))
+    assert nxt.forfeit_until == {}
+    assert result.scores[0].score > 0.0
+
+
+def test_run_epoch_taint_zeroes_received_lots_only() -> None:
+    """Locked tokens sent to another cluster score 0 there; the receiver's own lot is untouched."""
+    vested, recv, honest = W("v-taint"), W("r-taint"), W("h-taint")
+    events = [
+        _buy("vt", vested, AMT, T0),
+        _buy("rt", recv, AMT, T0, ix=1),
+        _buy("ht", honest, AMT, T0, ix=2),
+        _xfer("leak", vested, recv, AMT, 3_600),
+    ]
+    result, nxt = run_epoch(_inputs(events), _params(), _vest(vested))
+    rows = {r.cluster: r for r in result.scores}
+    assert {vested, recv, honest} <= rows.keys()  # one transfer alone does not merge (§7)
+    assert nxt.forfeit_until == {vested: 3_600 + FORFEIT_S}
+    assert rows[vested].score == 0.0
+    # recv holds 2·AMT but the leaked lot is tainted → same score as honest's single lot.
+    assert rows[recv].score == pytest.approx(rows[honest].score, rel=1e-12)
+
+
+def test_run_epoch_signers_and_overrides_merge_clusters() -> None:
+    a, b, c, d = sorted(W(x) for x in ("m-a", "m-b", "m-c", "m-d"))
+    events = [_buy(f"m{i}", w, AMT, T0, ix=i) for i, w in enumerate((a, b, c, d))]
+    inp = replace(
+        _inputs(events),
+        signers={_sig("cosign"): frozenset({b, d})},  # S1
+        overrides=((a, c, "ov-1"),),  # S3
+    )
+    result, _ = run_epoch(inp, _params(), empty_state())
+    assert [r.cluster for r in result.scores] == [a, b]  # id = smallest holder of the cluster
+    assert sum(result.payouts.values()) + result.rollover == epoch_budget(10**12, 0.10, 24)
+
+
+def test_forfeit_follows_cluster_whose_id_changes_between_epochs() -> None:
+    """Epoch 1: V breaches (cluster id V). Epoch 2: a smaller holder A joins V's cluster, so the
+    id becomes A. The forfeit must follow (key A), with no stale V key; a stale prev key on an
+    honest cluster must not forfeit it (the replay, not prev.forfeit_until, is the truth)."""
+    a, v = sorted(W(x) for x in ("id-a", "id-v"))
+    honest = W("id-h")
+    e1 = [
+        _buy("iv", v, AMT, T0),
+        _buy("ih", honest, AMT, T0, ix=1),
+        _sell("ivs", v, AMT // 2, 3_600),
+    ]
+    _, mid = run_epoch(_inputs(e1), _params(), _vest(v))
+    until = 3_600 + FORFEIT_S
+    assert mid.forfeit_until == {v: until}
+    e2 = [*e1, _buy("ia", a, AMT, T1 + 60)]
+    inp2 = replace(
+        _inputs(e2),
+        t0=T1,
+        t1=2 * T1,
+        slot_range=(T1 + 1, 2 * T1 + 1),
+        overrides=((a, v, "ov-id"),),
+    )
+    stale = replace(mid, forfeit_until={**mid.forfeit_until, honest: 10**12})
+    result, nxt = run_epoch(inp2, _params(), stale)
+    rows = {r.cluster: r for r in result.scores}
+    assert v not in rows and rows[a].score == 0.0
+    assert rows[honest].score > 0.0 and result.payouts[honest] > 0
+    assert nxt.forfeit_until == {a: until}

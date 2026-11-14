@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import Any, Literal
 
@@ -21,7 +21,16 @@ from engine.rewards import (
     split_cluster_payout,
 )
 from engine.scoring import score_lot
-from engine.sybil import build_evidence, cluster
+from engine.sybil_v033 import (
+    cluster,
+    l4_co_trades,
+    l5_identical_balances,
+    l6_shared_proceeds,
+    s1_cosigned,
+    s2_funded_buys,
+    s3_overrides,
+    transfer_links,
+)
 from engine.twab import twab
 from engine.types import (
     ClusterId,
@@ -32,7 +41,7 @@ from engine.types import (
     TokenEvent,
     WalletId,
 )
-from engine.vesting import breaches_soft_lock, locked_amount, unlocked_fraction
+from engine.vesting import VestedLot, soft_vesting_breaches
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,6 +74,10 @@ class EpochInputs:
     events: tuple[TokenEvent, ...]
     sol_transfers: tuple[SolTransfer, ...]
     fundings: tuple[FirstFunding, ...]
+    # prices/decimals are unread since #82 PR3 (price unlock paused); kept for PR4's
+    # pool-reserve harmonic mean.
+    # Not read by v0.3.3 run_epoch (no price in eligibility/score); kept for the
+    # price unlock once pool reserves are wired (#82 PR4).
     prices: tuple[PricePoint, ...]
     decimals: int
     sol_usd: float  # display-only leftover; not used for eligibility (v0.3.3 §2)
@@ -72,6 +85,9 @@ class EpochInputs:
     excluded: frozenset[WalletId]
     hubs: frozenset[WalletId]
     total_supply: int  # token base units, > 0 (v0.3.3 §2 eligibility floor)
+    # v0.3.3 §7 S1: tx signature → signer set (from the parser); S3: logged manual merges.
+    signers: Mapping[str, frozenset[WalletId]] = field(default_factory=dict)
+    overrides: tuple[tuple[WalletId, WalletId, str], ...] = ()
 
     def __post_init__(self) -> None:
         if isinstance(self.total_supply, bool) or not isinstance(self.total_supply, int):
@@ -109,48 +125,6 @@ class EpochResult:
 
 def empty_state() -> EpochState:
     return EpochState(0, 0, {}, {}, {}, ())
-
-
-def _d13(price_sol_per_whole: float, decimals: int) -> float:
-    return price_sol_per_whole * 1e9 / (10**decimals)
-
-
-def _twap(prices: Sequence[PricePoint], a: int, b: int, decimals: int) -> float:
-    """§8 step 1: time-weighted mid of the 1-min series on [a, b), in D13 units."""
-    if b <= a:
-        raise ValueError(f"twap window must be positive, got a={a} b={b}")
-    if not prices:
-        raise ValueError("twap: window has no price")
-    ordered = sorted(prices, key=lambda p: p.ts)
-    price = ordered[0].price
-    has = False
-    cursor = a
-    start = a
-    numer = 0.0
-    for pt in ordered:
-        if pt.ts <= a:
-            price = pt.price
-            has = True
-            continue
-        if pt.ts >= b:
-            break
-        if not has:
-            price = pt.price
-            cursor = pt.ts
-            start = pt.ts
-            has = True
-            continue
-        if pt.ts > cursor:
-            numer += price * (pt.ts - cursor)
-            cursor = pt.ts
-        price = pt.price
-        has = True
-    if not has:
-        raise ValueError("twap: window has no price")
-    numer += price * (b - cursor)
-    if b <= start:
-        raise ValueError(f"twap: empty span, start={start} b={b}")
-    return _d13(numer / (b - start), decimals)
 
 
 def _changes(events: Sequence[TokenEvent], wallet: WalletId) -> list[tuple[int, int]]:
@@ -222,9 +196,6 @@ def run_epoch(
     if inp.pot_inflow < 0 or prev.pot < 0:
         raise ValueError("pot and pot_inflow must be >= 0")
 
-    def twap(a: int, b: int) -> float:
-        return _twap(inp.prices, a, b, inp.decimals)
-
     events = tuple(e for e in inp.events if e.ts <= inp.t1)
     # §8 step 3 (holders: anyone with a balance during the epoch)
     holders: set[WalletId] = set()
@@ -240,21 +211,64 @@ def run_epoch(
             holders.add(w)
     holder_list = sorted(holders)
     bals = {w: _balance_at(paths.get(w, ()), inp.t1) for w in holder_list}
-    evidence = build_evidence(
-        holder_list, events, inp.sol_transfers, inp.fundings, bals, inp.hubs, params.sybil
+    # v0.3.3 §7: strong evidence (S1–S3) or links Σ ≥ 1 with an L1/L2; hubs ignored.
+    hubs, sols = inp.hubs, inp.sol_transfers
+    created = {f.wallet: f.created_ts for f in inp.fundings}
+    edges = [
+        *s1_cosigned(frozenset(holder_list), inp.signers, hubs),
+        *s2_funded_buys(events, sols, hubs),
+        *s3_overrides(inp.overrides),
+        *transfer_links(events, sols, hubs),
+        *l4_co_trades(events, hubs),
+        *l5_identical_balances(bals, created, hubs),
+        *l6_shared_proceeds(events, sols, hubs),
+    ]
+    clustered = cluster(holder_list, edges, hubs, events)
+    # §8 step 7 (moved before scoring, §1 order: clusters → ledger → score) — v0.3.3 §11 B.
+    # Replayed over the full history under this cluster map. Price unlock is paused
+    # (p_harmonic → None) until pool reserves are wired in: only the time unlock runs.
+    kept = [e for e in prev.vesting if e.vested_amount > 0 and e.p_entry > 0]
+    # TODO(#82 PR4): p_entry is a float; Fraction(str(.)) is exact on its repr, but
+    # VestingEntry.p_entry should become a Fraction/int ratio.
+    vested = [
+        VestedLot(
+            clustered.cluster_of.get(e.wallet, e.wallet),
+            e.vested_amount,
+            e.t0,
+            Fraction(str(e.p_entry)),
+        )
+        for e in kept
+    ]
+    breaches = soft_vesting_breaches(
+        events,
+        vested,
+        params.vesting,
+        lambda _t: None,
+        cluster_of=clustered.cluster_of,
+        excluded=inp.excluded,
+        t_end=inp.t1,
     )
-    clustered = cluster(holder_list, evidence, params.sybil)
+    # Cluster ids can change between epochs (merges), so prev.forfeit_until is not carried:
+    # the replay of the full log under this epoch's map is the truth (DECISIONS D18).
+    forfeit_until: dict[ClusterId, int] = dict(breaches.forfeit_until)
+    # §11: score 0 "for the current epoch and the next 30": until = breach + 30 d, so
+    # every epoch that starts before `until` is forfeited (31 daily epochs).
+    forfeited = {cid for cid, until in forfeit_until.items() if until > inp.t0}
+    unlocked = dict(prev.unlocked)
+    for entry, value in zip(kept, breaches.unlocked, strict=True):
+        unlocked[entry.wallet] = float(value)
     # §8 step 4
     twab_w = {w: twab(0, paths.get(w, ()), inp.t0, inp.t1) for w in holder_list}
-    twab_c = {cid: sum(twab_w[w] for w in members) for cid, members in clustered.members.items()}
+    twab_c = {
+        cid: sum(twab_w.get(w, 0.0) for w in members) for cid, members in clustered.members.items()
+    }
     # §8 step 5 — price-free supply-share eligibility (COIN_MATH v0.3.3 §2)
-    eligible: set[ClusterId] = set()
-    for cid in clustered.members:
-        if (
-            is_eligible(twab_c[cid], inp.total_supply, params.eligibility.min_eligible_share)
-            and prev.forfeit_until.get(cid, 0) <= inp.t1
-        ):
-            eligible.add(cid)
+    eligible: set[ClusterId] = {
+        cid
+        for cid in clustered.members
+        if is_eligible(twab_c[cid], inp.total_supply, params.eligibility.min_eligible_share)
+        and cid not in forfeited
+    }
     # §8 step 6 — v0.3.3 §3–§6: score = Σ over lots of (E1 + u·E2), u = 1 (boost off at
     # launch, §16). Lots come from the v0.3.3 ledger under this epoch's cluster map, as a
     # step function of the second, so lots sold mid-epoch still count for the time held.
@@ -262,7 +276,12 @@ def run_epoch(
     knots = hold.knot_fractions()
     epoch_len = inp.t1 - inp.t0
     segments = ledger_segments(
-        events, inp.excluded, inp.t0, inp.t1, cluster_of=clustered.cluster_of
+        events,
+        inp.excluded,
+        inp.t0,
+        inp.t1,
+        cluster_of=clustered.cluster_of,
+        taint_until=breaches.taint_until,
     )
     s_w: dict[WalletId, Fraction] = {}
     for w in holder_list:
@@ -290,49 +309,7 @@ def run_epoch(
         raw_scores[cid] = s_c
         # hold = effective multiplier s_c / B̄_c; churn and boost are gone in v0.3.3 (1.0).
         rows[cid] = ClusterScore(cid, twab_c[cid], eff_h, 1.0, 1.0, float(s_c), 0.0)
-    # §8 step 7 — soft vesting (D10); TWAP window from params (D14)
-    unlocked = dict(prev.unlocked)
-    forfeit_until = dict(prev.forfeit_until)
-    forfeited: set[ClusterId] = set()
-    unlock_s = int(params.vesting.unlock_twap_hours * 3600)
-    forfeit_s = int(params.vesting.forfeit_days * 86_400)
-    outflows = [
-        ev
-        for ev in sorted(events, key=lambda e: (e.slot, e.sig, e.ix))
-        if inp.t0 <= ev.ts < inp.t1
-        and ev.kind in (EventKind.SELL, EventKind.TRANSFER)
-        and ev.src is not None
-    ]
-    for entry in prev.vesting:
-        path = paths.get(entry.wallet, _changes(events, entry.wallet))
-        for ev in outflows:
-            if ev.src != entry.wallet:
-                continue
-            prev_u = unlocked.get(entry.wallet, 0.0)
-            unlocked[entry.wallet] = unlocked_fraction(
-                prev_u,
-                ev.ts,
-                entry.t0,
-                twap(ev.ts - unlock_s, ev.ts),
-                entry.p_entry,
-                params.vesting,
-            )
-            locked = locked_amount(entry.vested_amount, unlocked[entry.wallet])
-            # Balance after this outflow: path entry at ev.ts (already applied).
-            after = _balance_at(path, ev.ts)
-            if breaches_soft_lock(after, locked):
-                cid = clustered.cluster_of.get(entry.wallet, entry.wallet)
-                forfeit_until[cid] = ev.ts + forfeit_s
-                forfeited.add(cid)
-        unlocked[entry.wallet] = unlocked_fraction(
-            unlocked.get(entry.wallet, 0.0),
-            inp.t1,
-            entry.t0,
-            twap(inp.t1 - unlock_s, inp.t1),
-            entry.p_entry,
-            params.vesting,
-        )
-    for cid in forfeited:
+    for cid in forfeited & rows.keys():
         raw_scores[cid] = Fraction(0)
         row = rows[cid]
         rows[cid] = ClusterScore(cid, row.twab, row.hold, row.churn, row.boost, 0.0, 0.0)

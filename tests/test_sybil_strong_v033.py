@@ -120,3 +120,11 @@ def test_property_monotone_more_evidence_never_splits(base: list[Edge], extra: l
         for y in holders:
             if before[x] == before[y]:
                 assert after[x] == after[y]
+
+
+def test_cluster_id_is_smallest_holder_not_funder() -> None:
+    funder, holder = "1" * 32, "9" * 32
+    c = cluster([holder], [Edge(funder, holder, Kind.S2_FUNDED_BUY, "sig")], NO_HUBS)
+    assert c.cluster_of[holder] == holder
+    assert c.cluster_of[funder] == holder
+    assert c.members[holder] == (funder, holder)
