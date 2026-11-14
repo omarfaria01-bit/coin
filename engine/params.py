@@ -69,7 +69,7 @@ class HoldParams(_Strict):
     knots: tuple[tuple[int, str], ...] = Field(
         _DEFAULT_KNOTS, description="v0.3.3 h(a) knots [age_s, 'num/den'], linear between (§3)"
     )
-    t_start_seconds: int = Field(7_200, ge=0, description="T_START: lot-time below scores 0 (§4)")
+    t_start_seconds: int = Field(21_600, ge=0, description="T_START: lot-time below scores 0 (§4)")
     boost_age_seconds: int = Field(172_800, ge=0, description="E1/E2 split, boost start (§3, §5)")
 
     @model_validator(mode="after")

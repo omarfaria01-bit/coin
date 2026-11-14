@@ -103,13 +103,13 @@ B̄_c  ≥  MIN_ELIGIBLE_SHARE · total supply        (default 1/1,000,000 of su
 
 ## 3. Hold multiplier (age): fast start, long-term loyalty
 
-`h(a)` is **0 below `T_START` = 2 hours**, then **piecewise linear** between published knots, flat after 90 days:
+`h(a)` is **0 below `T_START` = 6 hours** (kiwi, 2026-11-14, D21), then **piecewise linear** between published knots, flat after 90 days:
 
-| age | < 2h | 2h | 6h | 12h | 24h | 48h | 72h | 7d | 14d | 30d | 60d | 90d+ |
+| age | < 6h | 2h | 6h | 12h | 24h | 48h | 72h | 7d | 14d | 30d | 60d | 90d+ |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | h | 0 | 1.00 | 1.15 | 1.30 | 1.50 | 1.75 | 1.90 | 2.10 | 2.30 | 2.50 | 2.70 | 2.80 |
 
-- After 2 hours a token earns. After one day it counts 1.5×, after three days 1.9×, and it keeps growing for three months.
+- After 6 hours a token earns, starting at 1.15× (knots below T_START are not used). After one day it counts 1.5×, after three days 1.9×, and it keeps growing for three months.
 - The multiplier acts on the **score** (your share of the pot). It is not a yield: 1.5× does not mean +50% on your money.
 - Each lot has its own age. Buying more never resets the age of what you already hold.
 
@@ -126,17 +126,17 @@ Because `h` is linear between knots, the sum over each segment has a closed form
 
 ## 4. The start rule (replaces the flipper discount)
 
-**A token starts earning when it has been held for `T_START` (2 hours).** Lot-time below that scores zero, and nothing is paid back later for it.
+**A token starts earning when it has been held for `T_START` (6 hours).** Lot-time below that scores zero, and nothing is paid back later for it.
 
 What the rule and the curve do together:
-- **Scalping earns nothing.** Under LIFO, a token bought and sold within 2 hours never counts.
+- **Scalping earns nothing.** Under LIFO, a token bought and sold within 6 hours never counts.
 - **Short holds earn little.** Someone who holds in 4-hour cycles averages 0.51× per hour held, about a quarter of a 7-day holder (2.1×). In 12-hour cycles it is 0.96×, under half.
-- **Snapshot sniping is useless.** Everything is time-weighted, and the first 2 hours count zero.
+- **Snapshot sniping is useless.** Everything is time-weighted, and the first 6 hours count zero.
 - **No cluster-level factor.** A lot's score depends only on that lot, so a wrong cluster merge can't change it.
 - **Splitting can't help.** `h` never falls as a lot ages, so keeping the oldest lots (what LIFO does) is the best a holder can do. No arrangement of the same trades across several wallets scores more than one wallet. (The one bounded exception is in section 5.)
 - **A bag is never penalized for trading around it.**
 
-What a short start time costs, stated plainly: with 48h a day trader earned nothing; with 2h he earns something for the hours he actually held. That is the price of paying small holders quickly.
+What a short start time costs, stated plainly: with 48h a day trader earned nothing; with 6h he earns something for the hours he actually held. That is the price of paying small holders quickly.
 
 **Simulator variants to compare:** `T_START` = 6h, 12h, 48h.
 

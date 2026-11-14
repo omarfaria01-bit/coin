@@ -16,8 +16,9 @@ def test_same_seed_same_payouts_and_conservation() -> None:
 
 def test_probe_rates_follow_t_start_and_curve() -> None:
     rates = out.rate_by_holding(simulate(1, days=12))
-    assert rates[1] == 0  # 1h holds never reach T_START = 2h
-    assert 0 < rates[4] < rates[12] < rates[24] < rates[72] < rates[168]
+    assert rates[1] == 0  # 1h holds never reach T_START = 6h
+    assert rates[4] == 0  # 4h holds neither (D21)
+    assert 0 < rates[12] < rates[24] < rates[72] < rates[168]
 
 
 def test_small_holder_is_paid_and_entered_in_draws() -> None:

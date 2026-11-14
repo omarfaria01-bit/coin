@@ -216,7 +216,7 @@
           "type": "array"
         },
         "t_start_seconds": {
-          "default": 7200,
+          "default": 21600,
           "description": "T_START: lot-time below scores 0 (§4)",
           "minimum": 0,
           "title": "T Start Seconds",
@@ -733,7 +733,7 @@
             "14/5"
           ]
         ],
-        "t_start_seconds": 7200,
+        "t_start_seconds": 21600,
         "boost_age_seconds": 172800
       }
     },
