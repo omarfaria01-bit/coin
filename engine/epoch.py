@@ -6,14 +6,21 @@ import hashlib
 import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from fractions import Fraction
 from typing import Any, Literal
 
 from engine.eligibility import is_eligible
-from engine.ledger import build_lots
+from engine.ledger import ledger_segments
 from engine.merkle import claims_document
 from engine.params import CoinParams
-from engine.rewards import allocate, capped_shares, epoch_budget, split_to_wallets
-from engine.scoring import amount_weighted_hold, churn_factor, score, underwater_boost
+from engine.rewards import (
+    DEFAULT_G,
+    capped_shares_v033,
+    epoch_budget,
+    exact_payout,
+    split_cluster_payout,
+)
+from engine.scoring import score_lot
 from engine.sybil import build_evidence, cluster
 from engine.twab import twab
 from engine.types import (
@@ -219,10 +226,8 @@ def run_epoch(
         return _twap(inp.prices, a, b, inp.decimals)
 
     events = tuple(e for e in inp.events if e.ts <= inp.t1)
-    # §8 step 2
-    lots_map = build_lots(events, inp.excluded, lambda ts: twap(ts - 3600, ts))
-    # §8 step 3
-    holders: set[WalletId] = set(lots_map)
+    # §8 step 3 (holders: anyone with a balance during the epoch)
+    holders: set[WalletId] = set()
     touched: set[WalletId] = set()
     for ev in events:
         if ev.src:
@@ -250,32 +255,41 @@ def run_epoch(
             and prev.forfeit_until.get(cid, 0) <= inp.t1
         ):
             eligible.add(cid)
-    # §8 step 6
-    churn_s = int(params.churn.window_hours * 3600)
-    u_s = int(params.underwater.twap_hours * 3600)
-    u_twap = twap(inp.t1 - u_s, inp.t1)
-    hold_w = {
-        w: amount_weighted_hold(lots_map.get(w, ()), inp.t1, params.hold) for w in holder_list
-    }
+    # §8 step 6 — v0.3.3 §3–§6: score = Σ over lots of (E1 + u·E2), u = 1 (boost off at
+    # launch, §16). Lots come from the v0.3.3 ledger under this epoch's cluster map, as a
+    # step function of the second, so lots sold mid-epoch still count for the time held.
+    hold = params.hold
+    knots = hold.knot_fractions()
+    epoch_len = inp.t1 - inp.t0
+    segments = ledger_segments(
+        events, inp.excluded, inp.t0, inp.t1, cluster_of=clustered.cluster_of
+    )
+    s_w: dict[WalletId, Fraction] = {}
+    for w in holder_list:
+        total = Fraction(0)
+        for a, b, lots in segments.get(w, ()):
+            for lot in lots:
+                part = score_lot(
+                    lot.amount,
+                    lot.t_acquired,
+                    a,
+                    b,
+                    tainted_until=lot.tainted_until,
+                    knots=knots,
+                    t_start_seconds=hold.t_start_seconds,
+                    boost_age_seconds=hold.boost_age_seconds,
+                )
+                total += part * Fraction(b - a, epoch_len)
+        s_w[w] = total
     rows: dict[ClusterId, ClusterScore] = {}
-    raw_scores: dict[ClusterId, float] = {}
+    raw_scores: dict[ClusterId, Fraction] = {}
     for cid, members in clustered.members.items():
-        lots = [lot for w in members for lot in lots_map.get(w, ())]
-        mem = set(members)
-        v_buy = v_sell = 0
-        for ev in events:
-            if not (inp.t1 - churn_s <= ev.ts < inp.t1):
-                continue
-            if ev.kind is EventKind.BUY and ev.dst in mem:
-                v_buy += ev.amount
-            elif ev.kind is EventKind.SELL and ev.src in mem:
-                v_sell += ev.amount
-        hold = amount_weighted_hold(lots, inp.t1, params.hold)
-        churn = churn_factor(v_buy, v_sell, twab_c[cid], params.churn)
-        boost = underwater_boost(lots, u_twap, inp.t1, params.underwater) if lots else 1.0
-        s = score(twab_c[cid], hold, churn, boost) if cid in eligible else 0.0
-        raw_scores[cid] = s
-        rows[cid] = ClusterScore(cid, twab_c[cid], hold, churn, boost, s, 0.0)
+        s_c = sum((s_w.get(w, Fraction(0)) for w in members), Fraction(0))
+        eff_h = float(s_c / Fraction(twab_c[cid])) if twab_c[cid] > 0 else 0.0
+        s_c = s_c if cid in eligible else Fraction(0)
+        raw_scores[cid] = s_c
+        # hold = effective multiplier s_c / B̄_c; churn and boost are gone in v0.3.3 (1.0).
+        rows[cid] = ClusterScore(cid, twab_c[cid], eff_h, 1.0, 1.0, float(s_c), 0.0)
     # §8 step 7 — soft vesting (D10); TWAP window from params (D14)
     unlocked = dict(prev.unlocked)
     forfeit_until = dict(prev.forfeit_until)
@@ -319,7 +333,7 @@ def run_epoch(
             params.vesting,
         )
     for cid in forfeited:
-        raw_scores[cid] = 0.0
+        raw_scores[cid] = Fraction(0)
         row = rows[cid]
         rows[cid] = ClusterScore(cid, row.twab, row.hold, row.churn, row.boost, 0.0, 0.0)
     # §8 step 8
@@ -329,16 +343,16 @@ def run_epoch(
     payouts: dict[WalletId, int] = {}
     rollover = 0
     dust = 0
-    shares: dict[ClusterId, float] = {cid: 0.0 for cid in rows}
+    shares: dict[ClusterId, Fraction] = {cid: Fraction(0) for cid in rows}
     if not skip:
-        # §8 step 9
-        shares = capped_shares(raw_scores, params.scoring.cap)
-        cluster_pay, rollover = allocate(budget, shares)
-        for cid, amt in cluster_pay.items():
+        # §8 step 9 — v0.3.3 §6: cap with uplift limit G, exact integer payout, exact split.
+        cap = Fraction(str(params.scoring.cap))
+        shares = capped_shares_v033(raw_scores, cap, DEFAULT_G)
+        exact = exact_payout(budget, shares)
+        rollover = exact.rollover_units
+        for cid, amt in exact.payouts.items():
             members = clustered.members.get(cid, (cid,))
-            weights = {w: twab_w.get(w, 0.0) * hold_w.get(w, 1.0) for w in members}
-            parts, d = split_to_wallets(amt, weights)
-            dust += d
+            parts = split_cluster_payout(amt, {w: s_w.get(w, Fraction(0)) for w in members})
             for w, pay in parts.items():
                 if pay:
                     payouts[w] = payouts.get(w, 0) + pay
@@ -346,7 +360,7 @@ def run_epoch(
     pot_next = pot if skip else pot - paid
     for cid, row in rows.items():
         rows[cid] = ClusterScore(
-            cid, row.twab, row.hold, row.churn, row.boost, row.score, shares.get(cid, 0.0)
+            cid, row.twab, row.hold, row.churn, row.boost, row.score, float(shares.get(cid, 0))
         )
     # §8 step 10
     prev_carry = {w: int(v) for w, v in prev.carry.items() if int(v)}
