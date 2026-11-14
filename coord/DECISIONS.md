@@ -78,3 +78,9 @@ a 1h 3.1× pump failing, raise to 36h rather than change M. `vesting_mode` stays
 Related: D7 stays valid only for a legacy SPL mint; for a Token-2022 mint the v1 rail is push
 payouts (report `reports/research_token2022_claims_2026-11.md` §5, #18). Decision on mint
 program stays open for kiwi/pad choice.
+
+## D15 · 2026-11-14 · `unlock_twap_hours` default 24 → 36 (supersedes D14 value; #43 sweep)
+Sweep (`reports/vesting_twap_sweep.md`): 1h pump unlocks at 24h TWAP: 3× = 4.97%, 3.1× = 5.21% (FAIL),
+3.5× = 6.16% (FAIL); at 36h: 3.5× = 4.17%, 4× = 4.97% (PASS). D14 said "if 3.1× fails, go 36h".
+M stays 5. Cost: honest price-driven unlock reacts ~1.5× slower than at 24h; the 7-day time unlock
+is unchanged. Sim re-run: pytest green (incl. §14 row 5 test).

@@ -548,7 +548,7 @@
           "type": "number"
         },
         "unlock_twap_hours": {
-          "default": 24.0,
+          "default": 36.0,
           "description": "UNLOCK_TWAP_H (§11)",
           "exclusiveMinimum": 0,
           "title": "Unlock Twap Hours",
@@ -686,7 +686,7 @@
         "mc_early_usd": null,
         "t_v_days": 7.0,
         "m": 5.0,
-        "unlock_twap_hours": 24.0,
+        "unlock_twap_hours": 36.0,
         "forfeit_days": 30.0
       }
     },

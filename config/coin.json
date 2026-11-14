@@ -80,7 +80,7 @@
     "mc_early_usd": null,
     "t_v_days": 7.0,
     "m": 5.0,
-    "unlock_twap_hours": 24.0,
+    "unlock_twap_hours": 36.0,
     "forfeit_days": 30.0
   },
   "treasury_bot": {
