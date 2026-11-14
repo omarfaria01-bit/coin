@@ -120,6 +120,63 @@
       },
       "title": "PadDevBuy",
       "type": "object"
+    },
+    "PadPriceSource": {
+      "additionalProperties": false,
+      "description": "Where p(t) is read from pool reserves (§0, §15).",
+      "properties": {
+        "before_graduation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Before Graduation"
+        },
+        "after_graduation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After Graduation"
+        },
+        "pool_type": {
+          "anyOf": [
+            {
+              "enum": [
+                "cpmm",
+                "clmm",
+                "curve"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pool Type"
+        },
+        "reserve_accounts": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Reserve Accounts",
+          "type": "array"
+        }
+      },
+      "title": "PadPriceSource",
+      "type": "object"
     }
   },
   "additionalProperties": false,
@@ -160,6 +217,21 @@
       ],
       "default": null,
       "title": "Token Program"
+    },
+    "quote_asset": {
+      "default": "SOL",
+      "description": "Unit of account Q for every price/cost (§0)",
+      "title": "Quote Asset",
+      "type": "string"
+    },
+    "price_source": {
+      "$ref": "#/$defs/PadPriceSource",
+      "default": {
+        "before_graduation": null,
+        "after_graduation": null,
+        "pool_type": null,
+        "reserve_accounts": []
+      }
     },
     "curve": {
       "$ref": "#/$defs/PadCurve",
@@ -206,6 +278,19 @@
         "max_pct": null,
         "lockable": null
       }
+    },
+    "burn_allowed": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Token allows Burn from our account (§10)",
+      "title": "Burn Allowed"
     },
     "anti_snipe": {
       "anyOf": [

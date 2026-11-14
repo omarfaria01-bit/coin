@@ -252,17 +252,29 @@ class PadDevBuy(_Strict):
     lockable: bool | None = None
 
 
+class PadPriceSource(_Strict):
+    """Where p(t) is read from pool reserves (§0, §15)."""
+
+    before_graduation: str | None = None
+    after_graduation: str | None = None
+    pool_type: Literal["cpmm", "clmm", "curve"] | None = None
+    reserve_accounts: tuple[str, ...] = ()
+
+
 class PadParams(_Strict):
     """Filled on launch day from the pad's public docs (§15); each field needs a source."""
 
     name: str | None = None
     program_ids: tuple[str, ...] = ()
     token_program: Literal["spl", "token2022"] | None = None
+    quote_asset: str = Field("SOL", description="Unit of account Q for every price/cost (§0)")
+    price_source: PadPriceSource = PadPriceSource()
     curve: PadCurve = PadCurve()
     creator_fee: PadCreatorFee = PadCreatorFee()
     vesting_mode: Literal["native", "soft"] | None = None
     native_vesting_params_map: dict[str, str] = Field(default_factory=dict)
     dev_buy: PadDevBuy = PadDevBuy()
+    burn_allowed: bool | None = Field(None, description="Token allows Burn from our account (§10)")
     anti_snipe: str | None = None
     transfer_hook_allowed: bool | None = None
     docs_url: str | None = None
