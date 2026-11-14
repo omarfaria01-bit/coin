@@ -15,7 +15,7 @@ phase: P1 decisions done → P2 engine build (Grok) + P3 sim harness
 - D15: unlock_twap_hours default 36h (sweep #43: 24h fails 1h 3.1×/3.5× pump). Merged also #26 #43 #44 #45.
 
 ## Grok queue (status:todo)
-#50 run_epoch CLI (offline) · #51 golden epoch replay · #52 tx→TokenEvent parser (fixtures) · #53 e2e param sensitivity · #54 runbook + dry-run checklist
+#51 run_epoch CLI (offline) · #52 golden epoch replay · #53 tx→TokenEvent parser (fixtures) · #54 e2e param sensitivity · #55 runbook + dry-run checklist
 
 ## Open / blockers
 - Claude Action errors on every @claude (#6, needs kiwi: app + token).
@@ -25,6 +25,6 @@ phase: P1 decisions done → P2 engine build (Grok) + P3 sim harness
 - Top technical risk: Token-2022 mint ⇒ D7 rail doesn't work (#18).
 
 ## Next 3 actions (Claude)
-1. Review Grok PRs for #50-#54 (money code line by line).
+1. Review Grok PRs for #51-#55 (money code line by line).
 2. #29 pad_rewards: needs kiwi OK + legal (#8) before enabling.
 3. Mint program choice (SPL vs Token-2022) with kiwi before any onchain work.
