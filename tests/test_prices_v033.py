@@ -9,6 +9,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from engine.prices import (
+    HarmonicOracle,
     ReservePoint,
     arithmetic_mean,
     constant_product_price_after,
@@ -17,6 +18,8 @@ from engine.prices import (
     price_at,
     untrusted_fraction,
 )
+
+SOL = 10**9
 
 
 def test_reserve_point_price_and_validation() -> None:
@@ -157,3 +160,37 @@ def test_dump_bound_arithmetic_mean_floor(
     p_bar = arithmetic_mean(points, t_start, t_start + epoch_seconds)
     bound = Fraction(epoch_seconds - tau, epoch_seconds) * a_rest
     assert p_bar >= bound
+
+
+@st.composite
+def _histories(draw: st.DrawFn) -> list[ReservePoint]:
+    n = draw(st.integers(1, 12))
+    gaps = draw(st.lists(st.integers(1, 40_000), min_size=n - 1, max_size=n - 1))
+    ts = [0]
+    for g in gaps:
+        ts.append(ts[-1] + g)
+    # quote 10..400 SOL straddles the ~81 SOL trust boundary for D_TRUST = 2 SOL
+    return [
+        ReservePoint(t, draw(st.integers(10, 400)) * 10**9, draw(st.integers(1, 50)) * 10**12)
+        for t in ts
+    ]
+
+
+@given(_histories(), st.integers(0, 600_000), st.sampled_from((60, 3_600, 86_400)))
+@settings(max_examples=150, deadline=None)
+def test_harmonic_oracle_matches_direct_computation(
+    points: list[ReservePoint], t: int, window: int
+) -> None:
+    oracle = HarmonicOracle(points, window, 2 * SOL)
+    got = oracle(t)
+    if t - window < points[0].ts:
+        assert got is None
+        return
+    trusted = untrusted_fraction(points, t - window, t, 2 * SOL) == 0
+    assert got == (harmonic_mean(points, t - window, t) if trusted else None)
+
+
+def test_harmonic_oracle_empty_and_bad_window() -> None:
+    assert HarmonicOracle([], 86_400, 2 * SOL)(10**6) is None
+    with pytest.raises(ValueError):
+        HarmonicOracle([], 0, 2 * SOL)

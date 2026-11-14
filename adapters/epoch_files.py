@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass, field, fields, is_dataclass
+from fractions import Fraction
 from pathlib import Path
 from typing import Any, Literal
 
@@ -34,7 +35,7 @@ def _types():
 class _VestingEntry:
     wallet: WalletId
     vested_amount: int
-    p_entry: float
+    p_entry: Fraction
     t0: int
 
 
@@ -98,6 +99,8 @@ def _jsonable(value: Any) -> Any:
         return [_jsonable(item) for item in value]
     if isinstance(value, list):
         return [_jsonable(item) for item in value]
+    if isinstance(value, Fraction):
+        return str(value)  # exact "num/den" (or "n")
     if isinstance(value, bytes):
         return value.hex()
     if isinstance(value, (str, int, bool)) or value is None:
@@ -267,7 +270,7 @@ def _build_state(data: dict[str, Any]):
         VestingEntry(
             wallet=row["wallet"],
             vested_amount=int(row["vested_amount"]),
-            p_entry=float(row["p_entry"]),
+            p_entry=Fraction(str(row["p_entry"])),
             t0=int(row["t0"]),
         )
         for row in data.get("vesting") or []

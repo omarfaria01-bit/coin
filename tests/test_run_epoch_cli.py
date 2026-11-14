@@ -162,3 +162,25 @@ def test_infinite_sol_usd_is_rejected(tmp_path: Path) -> None:
     data["sol_usd"] = "Infinity"
     with pytest.raises(InputError, match="sol_usd"):
         load_fixture(_write(tmp_path, data))
+
+
+def test_fixture_reserves_and_rational_p_entry_reach_the_engine() -> None:
+    from tools.run_epoch import build_inputs, load_fixture
+
+    raw = _fx()
+    raw["vesting"] = [
+        {"wallet": raw["events"][0]["dst"], "vested_amount": 1, "p_entry": "1/3", "t0": 0}
+    ]
+    raw["reserves"] = [
+        {"ts": -10, "reserve_quote": 300_000_000_000, "reserve_base": 10**11},
+        {"ts": 10**9, "reserve_quote": 1, "reserve_base": 1},
+    ]
+    fx, _ = load_fixture(FIXTURE)
+    fx = fx.model_validate(
+        {**fx.model_dump(), "vesting": raw["vesting"], "reserves": raw["reserves"]}
+    )
+    inp = build_inputs(fx, fx.epochs[0])
+    assert [r.ts for r in inp.reserves] == [-10]  # only points before t1
+    assert fx.vesting[0].p_entry == "1/3"
+    with pytest.raises(ValueError, match="positive rational"):
+        fx.model_validate({**fx.model_dump(), "vesting": [{**raw["vesting"][0], "p_entry": "0"}]})

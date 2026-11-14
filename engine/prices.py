@@ -160,3 +160,56 @@ def untrusted_fraction(
         if not is_trusted_second(point.reserve_quote, point.reserve_base, d_trust, pool_math):
             untrusted += seg_end - seg_start
     return Fraction(untrusted, t_end - t_start)
+
+
+class HarmonicOracle:
+    """P̃_h(t) over the `window` seconds before t, or None when it must not be used (§0, §11).
+
+    None when the window starts before the first reserve point or holds any untrusted
+    second ("u_price ... only if every second of the 24h window is trusted"). Points are
+    sorted once and Σ dt/p and untrusted seconds are kept as prefix sums, so each query is
+    two bisects instead of a pass over the history (vesting asks once per minute per lot).
+    """
+
+    def __init__(
+        self,
+        points: Sequence[ReservePoint],
+        window: int,
+        d_trust: int,
+        pool_math: PoolMath = constant_product_price_after,
+    ) -> None:
+        if window <= 0:
+            raise ValueError("window must be > 0")
+        self._window = window
+        self._pts = _sorted_points(points) if points else []
+        self._ts = [p.ts for p in self._pts]
+        self._recip = [Fraction(0)]  # Σ over whole segments [ts_i, ts_{i+1}) of dt/p_i
+        self._bad = [0]  # untrusted seconds over the same segments
+        self._trusted = [
+            is_trusted_second(p.reserve_quote, p.reserve_base, d_trust, pool_math)
+            for p in self._pts
+        ]
+        for i, (a, b) in enumerate(zip(self._pts, self._pts[1:], strict=False)):
+            dt = b.ts - a.ts
+            self._recip.append(self._recip[-1] + Fraction(dt) / a.price)
+            self._bad.append(self._bad[-1] + (0 if self._trusted[i] else dt))
+
+    def _prefix(self, t: int) -> tuple[Fraction, int]:
+        """(Σ dt/p, untrusted seconds) over [ts_0, t)."""
+        i = bisect_right(self._ts, t - 1) - 1  # state active in second t - 1
+        tail = t - self._ts[i]
+        point = self._pts[i]
+        return (
+            self._recip[i] + Fraction(tail) / point.price,
+            self._bad[i] + (0 if self._trusted[i] else tail),
+        )
+
+    def __call__(self, t: int) -> Fraction | None:
+        start = t - self._window
+        if not self._pts or start < self._ts[0]:
+            return None
+        recip_end, bad_end = self._prefix(t)
+        recip_start, bad_start = self._prefix(start) if start > self._ts[0] else (Fraction(0), 0)
+        if bad_end - bad_start:
+            return None
+        return Fraction(self._window) / (recip_end - recip_start)
