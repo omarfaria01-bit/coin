@@ -1,6 +1,6 @@
 # Claim rail if the launch mint is Token-2022 (issue #18)
 
-Access date for every source below: **2026-11-14** (Europe/Rome, CET).  
+Access date for every source below: **2026-11-14** (Europe/Rome, CET).
 Method: official docs and GitHub source first; program IDs and rent were checked read-only with `solana program show` / `getMinimumBalanceForRentExemption` against `https://api.mainnet-beta.solana.com` and `https://api.devnet.solana.com` (solana-cli 4.1.2). No wallets were connected. No transactions were sent. No keypairs were used.
 
 This report answers the five questions in #18 and recommends a claim rail for (a) a legacy SPL mint and (b) a Token-2022 mint. Claude records any DECISIONS.md change. It follows up items 2–3 and 8 in `reports/research_onchain_2026-11.md` §6.
@@ -166,4 +166,3 @@ Columns match `reports/research_onchain_2026-11.md` §1.1. Access date 2026-11-1
 - Jupiter audits page still has no distributor PDF.
 - Exact Token-2022 ATA size **for our mint** once `pad.json` / extensions are known (`GetAccountDataSize`).
 - pump.fun transfer-hook policy (item 8 in the #10 report) — still UNVERIFIED; not required to choose a claim rail.
-
