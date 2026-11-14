@@ -78,3 +78,21 @@ a 1h 3.1× pump failing, raise to 36h rather than change M. `vesting_mode` stays
 Related: D7 stays valid only for a legacy SPL mint; for a Token-2022 mint the v1 rail is push
 payouts (report `reports/research_token2022_claims_2026-11.md` §5, #18). Decision on mint
 program stays open for kiwi/pad choice.
+
+## D15 · 2026-11-14 · Enable CCR + LiteLLM routing of cheap work to free models
+kiwi approved in chat at 08:06 Europe/Rome, 2026-11-14, verbatim: "APPROVED: accendi il
+router verso i modelli gratuiti". Relayed by Grok from chat (this file is updated via PR
+for Claude to merge; Grok does not write `main`).
+Routing (box-local CCR 3.1.3 + LiteLLM 1.109.1): Haiku-class subagents, background, simple,
+and long-context-light tasks go to Gemini `gemini-3.1-flash-lite` (`GEMINI_API_KEY` from the
+environment). OpenCode public/free models are configured in CCR as a secondary free target
+when the Zen endpoint accepts them; the OpenCode CLI remains available for `opencode/*-free`
+models. Main reasoning and review stay on Claude Sonnet (`claude-sonnet-5` via the local
+Claude Code login imported into CCR). If a free model errors, CCR falls back to Claude
+Sonnet. Never route secrets, security reviews, or final merges. Keys stay in environment
+variables and CCR's local data dir, never in git. Router launch uses the isolated profile
+`ccr 'Claude via Router' cli` (separate settings under
+`~/.claude-code-router/profiles/claude-via-router/`); plain `claude` on kiwi's subscription
+must keep using `~/.claude/settings.json` with no `apiKeyHelper` or `ANTHROPIC_BASE_URL`.
+This supersedes the last sentence of D12 ("Routing Claude Code itself through a gateway
+stays off"); the rest of D12 still holds.
