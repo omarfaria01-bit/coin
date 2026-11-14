@@ -1,0 +1,182 @@
+{
+ "params": "../../config/coin.json",
+ "decimals": 9,
+ "total_supply": 1000000000000000000,
+ "sol_usd": 150.0,
+ "vesting": [
+  {
+   "wallet": "8gFw5LXWYcjXxYXzxcUMczV4ncz5LfyXBCqsEcmQPKug",
+   "vested_amount": 200000000000000,
+   "p_entry": "1/3000000",
+   "t0": -8000
+  }
+ ],
+ "events": [
+  {
+   "slot": 1000,
+   "ts": -9000,
+   "sig": "be3b5ec21540da719551aae7a1cdab98f0cf1eeaedde75fa9ac28d5cc2b232a5",
+   "ix": 0,
+   "kind": "buy",
+   "dst": "6rbFVxmTtSnkLVPYNrFHZNLLr8Yg2DT6fws8bbLPEwug",
+   "amount": 400000000000000,
+   "lamports": 400000000,
+   "fee_payer": "6rbFVxmTtSnkLVPYNrFHZNLLr8Yg2DT6fws8bbLPEwug"
+  },
+  {
+   "slot": 1100,
+   "ts": -8000,
+   "sig": "ee3fb9e9bd858375ad0401a5408011a6b624e72ae45c554129ae05da82dcac40",
+   "ix": 0,
+   "kind": "buy",
+   "dst": "8gFw5LXWYcjXxYXzxcUMczV4ncz5LfyXBCqsEcmQPKug",
+   "amount": 200000000000000,
+   "lamports": 66666666,
+   "fee_payer": "8gFw5LXWYcjXxYXzxcUMczV4ncz5LfyXBCqsEcmQPKug"
+  },
+  {
+   "slot": 1300,
+   "ts": -6000,
+   "sig": "189961de531964d5d3b808b4acfa78dfe12319bf41b2f666e88606784eefe6c7",
+   "ix": 0,
+   "kind": "buy",
+   "dst": "5QzWiAuJosg7EwvpV2b47YJb2z8a4MYUCdTfzCRsy7gG",
+   "amount": 50000000000000,
+   "lamports": 50000000,
+   "fee_payer": "5QzWiAuJosg7EwvpV2b47YJb2z8a4MYUCdTfzCRsy7gG"
+  },
+  {
+   "slot": 1400,
+   "ts": -5000,
+   "sig": "ad50598dea4e6a17623d9e29a8fee0a614566c360b878069cd0da428670fbc4a",
+   "ix": 0,
+   "kind": "buy",
+   "dst": "Aa3ouhbXnyRXrEcfWZqVgVg5FTKj6ZFn8LMeHbYCRCP",
+   "amount": 2000000000000,
+   "lamports": 2000000,
+   "fee_payer": "Aa3ouhbXnyRXrEcfWZqVgVg5FTKj6ZFn8LMeHbYCRCP"
+  },
+  {
+   "slot": 1500,
+   "ts": -4000,
+   "sig": "1d3a65818cf79bd3863228d67547573b159b277ec8cdfb90fe3d4670a4673fa7",
+   "ix": 0,
+   "kind": "buy",
+   "dst": "7VkAcJTSBVCWaNHWxUPnKUQ8yB4qu87Lncpc2JSqw3WK",
+   "amount": 30000000000000,
+   "lamports": 30000000,
+   "fee_payer": "7VkAcJTSBVCWaNHWxUPnKUQ8yB4qu87Lncpc2JSqw3WK"
+  },
+  {
+   "slot": 21000,
+   "ts": 20000,
+   "sig": "384729367973acf8034bf4e61f41c8a5633763d86cf6bdc6f1c6d0694258429c",
+   "ix": 0,
+   "kind": "transfer",
+   "src": "8gFw5LXWYcjXxYXzxcUMczV4ncz5LfyXBCqsEcmQPKug",
+   "dst": "7VkAcJTSBVCWaNHWxUPnKUQ8yB4qu87Lncpc2JSqw3WK",
+   "amount": 150000000000000,
+   "fee_payer": "8gFw5LXWYcjXxYXzxcUMczV4ncz5LfyXBCqsEcmQPKug"
+  },
+  {
+   "slot": 101000,
+   "ts": 100000,
+   "sig": "9c2005865842893f896f934dbfbb339d3aa40e2fd503f72617cebeb8962e9a81",
+   "ix": 0,
+   "kind": "buy",
+   "dst": "5gHuLoksBzUko1vvqw5j91z5U8oMjC9t818CqkUTGue9",
+   "amount": 80000000000000,
+   "lamports": 80000000,
+   "fee_payer": "5gHuLoksBzUko1vvqw5j91z5U8oMjC9t818CqkUTGue9"
+  },
+  {
+   "slot": 104000,
+   "ts": 103000,
+   "sig": "b7c12a9c3089d2a6284ece2507b60ea742955844711c8d78c44e9a05e1f75571",
+   "ix": 0,
+   "kind": "sell",
+   "src": "5gHuLoksBzUko1vvqw5j91z5U8oMjC9t818CqkUTGue9",
+   "amount": 80000000000000,
+   "lamports": 80000000,
+   "fee_payer": "5gHuLoksBzUko1vvqw5j91z5U8oMjC9t818CqkUTGue9"
+  },
+  {
+   "slot": 150000,
+   "ts": 150000,
+   "sig": "f42da6548e73e627994dcfec7a842db12e1eaa17157491c47c3c2136928b6e51",
+   "ix": 0,
+   "kind": "sell",
+   "src": "7VkAcJTSBVCWaNHWxUPnKUQ8yB4qu87Lncpc2JSqw3WK",
+   "amount": 150000000000000,
+   "lamports": 150000000,
+   "fee_payer": "7VkAcJTSBVCWaNHWxUPnKUQ8yB4qu87Lncpc2JSqw3WK"
+  },
+  {
+   "slot": 200000,
+   "ts": 200000,
+   "sig": "21613c3cdad8d6cd58f935e28d903749c8cf9581458159ebec751a45e8e3d250",
+   "ix": 0,
+   "kind": "buy",
+   "dst": "6rbFVxmTtSnkLVPYNrFHZNLLr8Yg2DT6fws8bbLPEwug",
+   "amount": 100000000000000,
+   "lamports": 100000000,
+   "fee_payer": "6rbFVxmTtSnkLVPYNrFHZNLLr8Yg2DT6fws8bbLPEwug"
+  }
+ ],
+ "sol_transfers": [
+  {
+   "slot": 1200,
+   "ts": -7000,
+   "sig": "a06b5042381512794ff30759c6830ae137f78e4c9dc0fc0cca840826021ff7c3",
+   "src": "6rbFVxmTtSnkLVPYNrFHZNLLr8Yg2DT6fws8bbLPEwug",
+   "dst": "5QzWiAuJosg7EwvpV2b47YJb2z8a4MYUCdTfzCRsy7gG",
+   "lamports": 1000000000
+  }
+ ],
+ "fundings": [],
+ "prices": [
+  {
+   "ts": -10000,
+   "price": 0.001
+  }
+ ],
+ "reserves": [
+  {
+   "ts": -90000,
+   "reserve_quote": 300000000000,
+   "reserve_base": 300000000000000000
+  }
+ ],
+ "epochs": [
+  {
+   "epoch": 0,
+   "t0": 0,
+   "t1": 86400,
+   "slot_range": [
+    1,
+    86400
+   ],
+   "pot_inflow": 1000000000
+  },
+  {
+   "epoch": 1,
+   "t0": 86400,
+   "t1": 172800,
+   "slot_range": [
+    86401,
+    172800
+   ],
+   "pot_inflow": 300000000
+  },
+  {
+   "epoch": 2,
+   "t0": 172800,
+   "t1": 259200,
+   "slot_range": [
+    172801,
+    259200
+   ],
+   "pot_inflow": 600000000
+  }
+ ]
+}
