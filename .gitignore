@@ -33,3 +33,4 @@ reports/sim/
 .aider.input.history
 .aider.tags.cache.v4/
 .aider*
+!tests/golden/**/state.json
