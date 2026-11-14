@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 MODULES = (
     "events", "prices", "ledger", "twab", "sybil", "scoring",
-    "rewards", "draws", "vesting", "merkle", "balances",
+    "rewards", "draws", "vesting", "merkle", "balances", "sybil_v033",
 )  # fmt: skip
 
 # (module, top-level def/class or "<module>") → still allowed until removed.

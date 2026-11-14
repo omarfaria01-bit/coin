@@ -1,0 +1,220 @@
+"""Sybil clustering, COIN_MATH v0.3.3 §7. Exact weights (Fraction), no floats. Owner: Grok.
+
+Nodes are holders plus the wallets that fund them. Evidence between two wallets is
+**strong** (merges alone: S1 co-signed tx, S2 funded buy, S3 manual override) or a
+**link** (L1–L6, merges only when the pair's links sum to ≥ 1 and include a two-sided
+L1/L2). A shared fee payer is informational only. Hubs' edges are ignored. Clusters are
+the connected components (union-find); the cluster id is the smallest wallet id.
+v0.2 ``engine/sybil.py`` stays until #82 wiring switches to this module.
+"""
+
+from __future__ import annotations
+
+from collections import defaultdict
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
+from enum import StrEnum
+from fractions import Fraction
+from itertools import combinations
+
+from networkx.utils.union_find import UnionFind
+
+from engine.types import ClusterId, EventKind, SolTransfer, TokenEvent, WalletId
+
+_DAY = 86_400
+MERGE_SUM = Fraction(1)
+REVIEW_CLUSTER_SIZE = 50  # clusters with more wallets than this go to review
+REVIEW_SHARED_PAYER = 5  # a fee payer shared by at least this many holders
+
+
+class Kind(StrEnum):
+    S1_COSIGNED = "s1_cosigned"
+    S2_FUNDED_BUY = "s2_funded_buy"
+    S3_OVERRIDE = "s3_override"
+    L1_TOKEN_BOTH_WAYS = "l1_token_both_ways"
+    L2_SOL_BOTH_WAYS = "l2_sol_both_ways"
+    L3_TOKEN_ONE_WAY = "l3_token_one_way"
+    L4_CO_TRADE = "l4_co_trade"
+    L5_IDENTICAL_BALANCES = "l5_identical_balances"
+    L6_SHARED_PROCEEDS = "l6_shared_proceeds"
+
+
+STRONG = frozenset({Kind.S1_COSIGNED, Kind.S2_FUNDED_BUY, Kind.S3_OVERRIDE})
+TWO_SIDED = frozenset({Kind.L1_TOKEN_BOTH_WAYS, Kind.L2_SOL_BOTH_WAYS})
+WEIGHTS: Mapping[Kind, Fraction] = {
+    Kind.L1_TOKEN_BOTH_WAYS: Fraction(3, 5),
+    Kind.L2_SOL_BOTH_WAYS: Fraction(1, 2),
+    Kind.L3_TOKEN_ONE_WAY: Fraction(3, 10),
+    Kind.L4_CO_TRADE: Fraction(2, 5),
+    Kind.L5_IDENTICAL_BALANCES: Fraction(3, 10),
+    Kind.L6_SHARED_PROCEEDS: Fraction(1, 2),
+}
+
+
+@dataclass(frozen=True, slots=True)
+class Edge:
+    a: WalletId  # a < b
+    b: WalletId
+    kind: Kind
+    ref: str  # first tx signature (or override id), for review.csv
+
+
+@dataclass(frozen=True, slots=True)
+class Clusters:
+    cluster_of: Mapping[WalletId, ClusterId]
+    members: Mapping[ClusterId, tuple[WalletId, ...]]
+    link_only: tuple[tuple[WalletId, WalletId], ...]  # merges resting only on links (review)
+    review: tuple[ClusterId, ...]  # clusters with > REVIEW_CLUSTER_SIZE wallets
+    shared_payers: tuple[WalletId, ...]  # informational: fee payer of ≥ 5 holders
+
+
+def _pair(a: WalletId, b: WalletId) -> tuple[WalletId, WalletId]:
+    return (a, b) if a < b else (b, a)
+
+
+def _add(out: dict[tuple[WalletId, WalletId, Kind], Edge], a: str, b: str, kind: Kind, ref: str):
+    lo, hi = _pair(a, b)
+    key = (lo, hi, kind)
+    if key not in out or ref < out[key].ref:
+        out[key] = Edge(lo, hi, kind, ref)
+
+
+def _order(e: TokenEvent) -> tuple[int, str, int]:
+    return (e.slot, e.sig, e.ix)
+
+
+def s1_cosigned(
+    holders: frozenset[WalletId], signers: Mapping[str, frozenset[WalletId]], hubs: frozenset
+) -> list[Edge]:
+    """S1: two holders signed the same transaction (``signers``: sig → signer set)."""
+    out: dict = {}
+    for sig in sorted(signers):
+        both = sorted(w for w in signers[sig] if w in holders and w not in hubs)
+        for a, b in combinations(both, 2):
+            _add(out, a, b, Kind.S1_COSIGNED, sig)
+    return list(out.values())
+
+
+def s2_funded_buys(
+    events: Sequence[TokenEvent], sols: Sequence[SolTransfer], hubs: frozenset[WalletId]
+) -> list[Edge]:
+    """S2: at the time of any pool buy by W, X (not a hub) has sent W ≥ 50% of all SOL W
+    received from other wallets **and** ≥ 50% of everything W has spent on buys so far.
+    Totals, not coin tracing (§7). X may hold no token: it joins W's cluster anyway.
+    """
+    sol_rows = [(s.ts, s.slot, s.sig, 0, s) for s in sols if s.src != s.dst]
+    buy_rows = [
+        (e.ts, e.slot, e.sig, 1 + e.ix, e)  # SOL landing in the same second counts first
+        for e in events
+        if e.kind is EventKind.BUY and e.dst is not None and e.lamports is not None
+    ]
+    received: dict[WalletId, int] = defaultdict(int)
+    from_x: dict[WalletId, dict[WalletId, int]] = defaultdict(lambda: defaultdict(int))
+    spent: dict[WalletId, int] = defaultdict(int)
+    out: dict = {}
+    for row in sorted([*sol_rows, *buy_rows], key=lambda r: r[:4]):
+        item = row[4]
+        if isinstance(item, SolTransfer):
+            received[item.dst] += item.lamports
+            if item.src not in hubs:
+                from_x[item.dst][item.src] += item.lamports
+            continue
+        w, lamports = item.dst, item.lamports
+        if w is None or lamports is None:  # pragma: no cover - filtered above
+            continue
+        spent[w] += lamports
+        if w in hubs:
+            continue
+        for x, amt in sorted(from_x[w].items()):
+            if 2 * amt >= received[w] and 2 * amt >= spent[w]:
+                _add(out, w, x, Kind.S2_FUNDED_BUY, item.sig)
+    return list(out.values())
+
+
+def s3_overrides(pairs: Iterable[tuple[WalletId, WalletId, str]]) -> list[Edge]:
+    """S3: manual merges from ``cluster_overrides.json`` as (a, b, override id)."""
+    out: dict = {}
+    for a, b, ref in pairs:
+        if a != b:
+            _add(out, a, b, Kind.S3_OVERRIDE, ref)
+    return list(out.values())
+
+
+def transfer_links(
+    events: Sequence[TokenEvent], sols: Sequence[SolTransfer], hubs: frozenset[WalletId]
+) -> list[Edge]:
+    """L1 token both ways, L2 SOL both ways, L3 one-way token on ≥ 2 distinct days."""
+    days: dict[tuple[WalletId, WalletId], set[int]] = defaultdict(set)
+    first: dict[tuple[WalletId, WalletId], str] = {}
+    for e in sorted(events, key=_order):
+        if e.kind is EventKind.TRANSFER and e.src and e.dst and e.src != e.dst:
+            if e.src in hubs or e.dst in hubs:
+                continue
+            days[(e.src, e.dst)].add(e.ts // _DAY)
+            first.setdefault((e.src, e.dst), e.sig)
+    out: dict = {}
+    for src, dst in sorted(days):
+        if (dst, src) in days:
+            _add(out, src, dst, Kind.L1_TOKEN_BOTH_WAYS, min(first[(src, dst)], first[(dst, src)]))
+        elif len(days[(src, dst)]) >= 2:
+            _add(out, src, dst, Kind.L3_TOKEN_ONE_WAY, first[(src, dst)])
+    sol_first: dict[tuple[WalletId, WalletId], str] = {}
+    for s in sorted(sols, key=lambda s: (s.slot, s.sig)):
+        if s.src != s.dst and s.src not in hubs and s.dst not in hubs:
+            sol_first.setdefault((s.src, s.dst), s.sig)
+    for src, dst in sorted(sol_first):
+        if (dst, src) in sol_first:
+            ref = min(sol_first[(src, dst)], sol_first[(dst, src)])
+            _add(out, src, dst, Kind.L2_SOL_BOTH_WAYS, ref)
+    return list(out.values())
+
+
+def cluster(
+    holders: Iterable[WalletId],
+    edges: Sequence[Edge],
+    hubs: frozenset[WalletId] = frozenset(),
+    events: Sequence[TokenEvent] = (),
+) -> Clusters:
+    """Merge rule (§7): any strong edge, or links summing to ≥ 1 incl. an L1/L2 signal.
+
+    Nodes are the holders plus every non-hub wallet on a strong edge (e.g. an S2
+    funder). ``events`` only feed the informational shared-fee-payer review list.
+    """
+    nodes = set(holders) - hubs
+    for e in edges:
+        if e.kind in STRONG and e.a not in hubs and e.b not in hubs:
+            nodes.update((e.a, e.b))
+    uf = UnionFind(sorted(nodes))
+    links: dict[tuple[WalletId, WalletId], Fraction] = defaultdict(Fraction)
+    sided: set[tuple[WalletId, WalletId]] = set()
+    for e in sorted(edges, key=lambda e: (e.a, e.b, e.kind, e.ref)):
+        if e.a not in nodes or e.b not in nodes:
+            continue
+        if e.kind in STRONG:
+            uf.union(e.a, e.b)
+            continue
+        links[(e.a, e.b)] += WEIGHTS[e.kind]
+        if e.kind in TWO_SIDED:
+            sided.add((e.a, e.b))
+    link_only = []
+    for pair in sorted(links):
+        if links[pair] >= MERGE_SUM and pair in sided:
+            if uf[pair[0]] != uf[pair[1]]:
+                link_only.append(pair)
+            uf.union(*pair)
+    groups: dict[WalletId, list[WalletId]] = defaultdict(list)
+    for w in sorted(nodes):
+        groups[uf[w]].append(w)
+    cluster_of: dict[WalletId, ClusterId] = {}
+    members: dict[ClusterId, tuple[WalletId, ...]] = {}
+    for mems in sorted((tuple(m) for m in groups.values()), key=lambda m: m[0]):
+        members[mems[0]] = mems
+        cluster_of.update({w: mems[0] for w in mems})
+    review = tuple(c for c, m in members.items() if len(m) > REVIEW_CLUSTER_SIZE)
+    payer_count: dict[WalletId, set[WalletId]] = defaultdict(set)
+    for e in events:
+        for w in (e.src, e.dst):
+            if w is not None and w in nodes and e.fee_payer != w:
+                payer_count[e.fee_payer].add(w)
+    shared = tuple(sorted(p for p, hs in payer_count.items() if len(hs) >= REVIEW_SHARED_PAYER))
+    return Clusters(cluster_of, members, tuple(link_only), review, shared)
