@@ -126,7 +126,7 @@ class VestingParams(_Strict):
     mc_early_usd: float | None = Field(None, description="Or until MC ≥ this; None = time only")
     t_v_days: float = Field(7.0, gt=0)
     m: float = Field(5.0, gt=1, description="Full unlock at M× entry (§11)")
-    unlock_twap_hours: float = Field(6.0, gt=0, description="UNLOCK_TWAP_H (§11)")
+    unlock_twap_hours: float = Field(24.0, gt=0, description="UNLOCK_TWAP_H (§11)")
     forfeit_days: float = Field(30.0, ge=0, description="Soft-mode forfeit duration (§11B)")
 
 

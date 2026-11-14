@@ -36,7 +36,7 @@ def test_spec_defaults():
         0.15,
     )
     assert p.draws.prize_split == (0.40,) + (0.10,) * 3 + (0.05,) * 6
-    assert p.vesting.unlock_twap_hours == 6.0
+    assert p.vesting.unlock_twap_hours == 24.0
     assert p.treasury_bot.mode == "paper"
 
 
