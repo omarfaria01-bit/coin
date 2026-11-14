@@ -10,6 +10,7 @@ data/*
 epochs/*
 !epochs/README.md
 state.json
+!tests/golden/**/state.json
 *.log
 STOP
 # python

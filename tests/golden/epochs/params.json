@@ -1,0 +1,105 @@
+{
+  "version": "0.2",
+  "epoch": {
+    "hours": 24
+  },
+  "eligibility": {
+    "min_eligible_usd": 0.0,
+    "min_hold_hours": 0.0
+  },
+  "hold": {
+    "horizon_days": 30.0
+  },
+  "churn": {
+    "window_hours": 48.0,
+    "kappa": 2.0
+  },
+  "underwater": {
+    "twap_hours": 6.0,
+    "min_age_hours": 48.0,
+    "beta": 0.5,
+    "d_max": 0.75
+  },
+  "scoring": {
+    "cap": 0.05
+  },
+  "sybil": {
+    "weights": {
+      "same_fee_payer": 1.0,
+      "direct_transfer": 1.0,
+      "same_first_funder": 1.0,
+      "co_buy": 0.7,
+      "identical_balances": 0.6
+    },
+    "strong_edge": 0.7,
+    "merge_threshold": 1.0,
+    "funder_window_hours": 72.0,
+    "co_buy_slot_tolerance": 1,
+    "co_buy_size_tolerance": 0.1,
+    "co_buy_min_occurrences": 3,
+    "identical_balance_tolerance": 0.001,
+    "identical_balance_min_wallets": 4,
+    "identical_balance_created_within_hours": 24.0,
+    "review_cluster_size": 10
+  },
+  "rewards": {
+    "enabled": true,
+    "alpha_per_day": 0.1,
+    "min_epoch_payout_lamports": 0,
+    "push_max_eligible": 500,
+    "push_min_transfer_lamports": 1,
+    "lst_fraction": 0.0
+  },
+  "draws": {
+    "enabled": true,
+    "period_days": 7.0,
+    "min_balance_usd": 10.0,
+    "min_hold_hours": 24.0,
+    "prize_split": [
+      0.4,
+      0.1,
+      0.1,
+      0.1,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05
+    ]
+  },
+  "fees": {
+    "dev": 0.25,
+    "holder_pot": 0.35,
+    "draw_pot": 0.25,
+    "buyback_burn": 0.15,
+    "router_interval_minutes": 60
+  },
+  "vesting": {
+    "t_early_minutes": 15.0,
+    "mc_early_usd": null,
+    "t_v_days": 7.0,
+    "m": 5.0,
+    "unlock_twap_hours": 24.0,
+    "forfeit_days": 30.0
+  },
+  "treasury_bot": {
+    "mode": "paper",
+    "seed_lamports": null,
+    "ema_halflife_hours": 6.0,
+    "var_halflife_hours": 24.0,
+    "f0": 0.5,
+    "gamma": 0.15,
+    "f_min": 0.1,
+    "f_max": 0.9,
+    "band": 0.05,
+    "max_pool_volume_fraction": 0.02,
+    "max_trade_lamports": null,
+    "no_trade_first_hours": 24.0,
+    "breaker_drawdown": 0.6,
+    "min_liquidity_lamports": null,
+    "daily_loss_limit_lamports": null,
+    "quiet_minutes": 15.0,
+    "sweep_fraction": 0.5
+  }
+}
