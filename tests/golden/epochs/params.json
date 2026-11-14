@@ -46,7 +46,7 @@
     "enabled": true,
     "alpha_per_day": 0.1,
     "min_epoch_payout_lamports": 0,
-    "push_max_eligible": 500,
+    "push_max_eligible": 0,
     "push_min_transfer_lamports": 1,
     "lst_fraction": 0.0
   },

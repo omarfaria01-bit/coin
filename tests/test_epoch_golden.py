@@ -13,9 +13,11 @@ engine's sort order ⇒ byte-identical artifacts on any machine. ``inputs_hash``
 covers ``params.model_dump()`` (float fields as JSON numbers) plus the events
 sorted by ``(slot, sig, ix)``, so a shuffle of input order must not change it.
 
-Regenerate (after a deliberate, reviewed engine change only)::
+Regenerate (after a deliberate, reviewed engine change only), then
+re-run *without* the env var so the new bytes are actually checked::
 
-    UPDATE_GOLDEN=1 uv run pytest tests/test_epoch_golden.py
+    UPDATE_GOLDEN=1 uv run pytest tests/test_epoch_golden.py::test_update_golden
+    uv run pytest tests/test_epoch_golden.py
 """
 
 from __future__ import annotations
@@ -27,12 +29,14 @@ from hashlib import sha256
 from pathlib import Path
 
 import base58
+import pytest
 
 from adapters.epoch_files import write_epoch
-from engine.epoch import EpochInputs, EpochResult, EpochState, empty_state, run_epoch
+from engine.epoch import EpochInputs, EpochResult, EpochState, VestingEntry, run_epoch
 from engine.merkle import MerkleTree, build, leaf
 from engine.params import CoinParams, EligibilityParams, RewardParams, VestingParams
 from engine.types import EventKind, FirstFunding, PricePoint, SolTransfer, TokenEvent
+from engine.vesting import locked_amount
 from sim.agents import wallet_id
 
 DAY = 86_400
@@ -57,9 +61,15 @@ def _params() -> CoinParams:
         rewards=RewardParams(
             min_epoch_payout_lamports=0,
             push_min_transfer_lamports=1,
+            push_max_eligible=0,  # force the merkle rail so claims/tree are golden
         ),
         vesting=VestingParams(unlock_twap_hours=24.0),
     )
+
+
+def _initial_state() -> EpochState:
+    # ga buys 1e9 at ts=100; vest that bag so locked_amount stays > 0 across the 3 days.
+    return EpochState(0, 0, {}, {}, {}, (VestingEntry(W("ga"), 1_000_000_000, 1.0, 0),))
 
 
 def _buy(tag: str, wallet: str, amount: int, ts: int, ix: int = 0) -> TokenEvent:
@@ -178,7 +188,7 @@ def run_scenario(
 ) -> list[tuple[EpochResult, EpochState, MerkleTree | None]]:
     params = _params()
     history = _history()
-    state = empty_state()
+    state = _initial_state()
     out: list[tuple[EpochResult, EpochState, MerkleTree | None]] = []
     for i in range(3):
         inp = _inputs(history, i * DAY, (i + 1) * DAY, shuffle_seed=shuffle_seed)
@@ -202,6 +212,11 @@ def test_params_pinned_in_golden() -> None:
     """Replay must use the committed params, not whatever CoinParams() defaults to today."""
     pinned = CoinParams.model_validate_json((GOLDEN / "params.json").read_text(encoding="utf-8"))
     assert pinned == _params()
+    # Literal pins so a wallet_id scheme change fails here, not as a mass golden mismatch.
+    assert W("ga") == "2JfAU5M88FQrGshUagcSKFbSDWjinB6xSK991oEpwHqf"
+    assert W("gb") == "HkGG5vFTMX5yHf991nwWMg2JJrMEVi95V4yufHD6rf2R"
+    assert W("gc") == "7mEKYs4HnUikxDDUPDUmqHJtAoQC3J1zr6gDXCc9Z7nL"
+    assert W("gd") == "9URyGbQcadwV6RapuizYdJpcrpx3Y4u88AhG1Q4zzFh8"
 
 
 def test_replay_matches_golden_bytes_and_inputs_hash(tmp_path: Path) -> None:
@@ -217,7 +232,21 @@ def test_replay_matches_golden_bytes_and_inputs_hash(tmp_path: Path) -> None:
             assert (dest / name).read_bytes() == (golden / name).read_bytes(), name
 
 
+def test_merkle_and_vesting_are_exercised() -> None:
+    rows = run_scenario()
+    for result, state, tree in rows:
+        assert result.rail == "merkle"
+        assert result.claims is not None and result.claims["root"]
+        assert tree is not None and tree.root.hex() == result.claims["root"]
+        # D7 claims_document always records amount_locked=0; the non-zero lock is in state.
+        assert all(int(c["amount_locked"]) == 0 for c in result.claims["claims"])
+        assert state.vesting and state.vesting[0].wallet == W("ga")
+        unlocked = state.unlocked.get(W("ga"), 0.0)
+        assert locked_amount(state.vesting[0].vested_amount, unlocked) > 0
+
+
 def test_event_order_shuffle_is_byte_identical() -> None:
+
     base = run_scenario()
     shuffled = run_scenario(shuffle_seed=20261114)
     for (a, sa, ta), (b, sb, tb) in zip(base, shuffled, strict=True):
@@ -233,14 +262,22 @@ def test_event_order_shuffle_is_byte_identical() -> None:
 
 
 def test_conservation_across_the_three_epochs() -> None:
-    prev = empty_state()
-    for result, nxt, _tree in run_scenario():
+    prev = _initial_state()
+    paid = 0
+    for result, nxt, _tr in run_scenario():
         lhs = prev.pot + INFLOW + sum(prev.carry.values())
-        rhs = nxt.pot + sum(result.transferred_or_claimable.values()) + sum(nxt.carry.values())
+        transferred = sum(result.transferred_or_claimable.values())
+        rhs = nxt.pot + transferred + sum(nxt.carry.values())
         assert lhs == rhs
+        assert nxt.carry == {}  # merkle rail claims the full due amount
+        paid += transferred
         prev = nxt
-    assert prev.epoch == 3 and prev.pot < 3 * INFLOW
+    assert prev.epoch == 3
+    assert prev.pot + paid == 3 * INFLOW
 
 
-if os.environ.get("UPDATE_GOLDEN") == "1":  # pragma: no cover
+@pytest.mark.skipif(
+    os.environ.get("UPDATE_GOLDEN") != "1", reason="set UPDATE_GOLDEN=1 to regenerate"
+)
+def test_update_golden() -> None:
     _write_golden(run_scenario())
