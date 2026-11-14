@@ -292,9 +292,16 @@ class RowResult:
     worst: str  # first failing seed's evidence, else seed 0's
 
 
+def all_rows() -> tuple[tuple[str, str, Callable[[random.Random], Outcome]], ...]:
+    """Score/payout rows here, then the attack rows (sim.acceptance_attacks_v033, #84 step 2)."""
+    from sim.acceptance_attacks_v033 import ROWS as ATTACK_ROWS  # imports this module
+
+    return (*ROWS, *ATTACK_ROWS)
+
+
 def run_rows(seeds: int) -> list[RowResult]:
     out = []
-    for name, cond, fn in ROWS:
+    for name, cond, fn in all_rows():
         results = [(s, fn(random.Random(f"{name}:{s}"))) for s in range(seeds)]
         fails = [(s, o) for s, o in results if not o.passed]
         s, o = fails[0] if fails else results[0]
