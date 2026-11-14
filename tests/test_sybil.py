@@ -174,3 +174,38 @@ def test_10k_sparse_benchmark() -> None:
     dt = time.perf_counter() - t0
     print(f"10k-holder sparse benchmark: {dt:.3f}s ev={len(evs)} clusters={len(result.members)}")
     assert dt < 5.0 and len(result.cluster_of) == n
+
+
+def test_identical_balances_many_equal_is_fast() -> None:
+    # Regression for the O(n^4) emit-every-subwindow bug: 2000 equal balances,
+    # all created within 24h, must finish in < 5s with C(2000, 2) evidence.
+    n = 2_000
+    holders = [f"W{i:04d}" for i in range(n)]
+    bals = {w: 1_000_000 for w in holders}
+    fundings = [ff(w, f"F{i:04d}", 0, i) for i, w in enumerate(holders)]
+    t0 = time.perf_counter()
+    evs = ev(holders, fundings=fundings, bals=bals)
+    dt = time.perf_counter() - t0
+    assert len(evs) == n * (n - 1) // 2
+    assert all(e.kind is EvidenceKind.IDENTICAL_BALANCES for e in evs)
+    assert dt < 5.0, f"identical-balances 2000 equal took {dt:.3f}s"
+    print(f"2000-holder equal-balance identical: {dt:.3f}s ev={len(evs)}")
+
+
+def test_overlapping_identical_windows_keep_smallest_ref() -> None:
+    # Two maximal created-time windows of 4 (ABCD and BCDE) share B,C,D; keep group:A.
+    holders = list("ABCDE")
+    bals = {w: 1_000 for w in holders}
+    fundings = [
+        ff("A", "F1", 0, 0),
+        ff("B", "F2", 0, 100),
+        ff("C", "F3", 0, 200),
+        ff("D", "F4", 0, H),
+        ff("E", "F5", 0, H + 100),
+    ]
+    evs = ev(holders, fundings=fundings, bals=bals)
+    refs = {(e.a, e.b): e.ref for e in evs}
+    assert refs[("B", "C")] == "group:A"
+    assert ("A", "E") not in refs
+    assert {("A", "B"), ("A", "C"), ("A", "D"), ("B", "C"), ("B", "D"), ("C", "D")} <= set(refs)
+    assert {("B", "E"), ("C", "E"), ("D", "E")} <= set(refs)

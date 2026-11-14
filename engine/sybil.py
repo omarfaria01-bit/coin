@@ -7,6 +7,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from itertools import combinations
+from operator import attrgetter
 
 from networkx.utils.union_find import UnionFind
 
@@ -151,37 +152,59 @@ def _co_buys(events, ok, slot_tol, size_tol, min_occ, weight, dst) -> None:
 
 
 def _identical_balances(
-    balances, fundings, ok, min_wallets, bal_tol, created_s, weight, dst
-) -> None:
+    balances, fundings, ok, min_wallets, bal_tol, created_s, weight
+) -> list[Evidence]:
     created: dict[WalletId, int] = {}
     for f in fundings:
         if f.wallet in ok and f.wallet not in created:
             created[f.wallet] = f.created_ts
     rows = sorted((balances[w], created[w], w) for w in ok if w in balances and w in created)
     if len(rows) < min_wallets:
-        return
+        return []
+
+    kind = EvidenceKind.IDENTICAL_BALANCES
+    chunks: list[list[Evidence]] = []
 
     def emit(group: list[WalletId]) -> None:
         if len(group) < min_wallets:
             return
         g = sorted(group)
         ref = f"group:{g[0]}"
-        for a, b in combinations(g, 2):
-            _keep_first(dst, Evidence(a, b, EvidenceKind.IDENTICAL_BALANCES, weight, ref))
+        chunks.append([Evidence(a, b, kind, weight, ref) for a, b in combinations(g, 2)])
 
-    left = 0
-    for right in range(len(rows)):
-        while left <= right and not _rel_close(rows[left][0], rows[right][0], bal_tol):
-            left += 1
-        window = rows[left : right + 1]
+    def emit_created(window: list[tuple[int, int, WalletId]]) -> None:
         if len(window) < min_wallets:
-            continue
+            return
         inner = sorted((c, w) for _b, c, w in window)
-        l2 = 0
-        for r2 in range(len(inner)):
+        l2, m = 0, len(inner)
+        for r2 in range(m):
             while inner[r2][0] - inner[l2][0] > created_s:
                 l2 += 1
-            emit([w for _c, w in inner[l2 : r2 + 1]])
+            at_end = r2 == m - 1
+            nxt = False if at_end else inner[r2 + 1][0] - inner[l2][0] > created_s
+            if at_end or nxt:
+                emit([w for _c, w in inner[l2 : r2 + 1]])
+
+    left, n = 0, len(rows)
+    for right in range(n):
+        while left <= right and not _rel_close(rows[left][0], rows[right][0], bal_tol):
+            left += 1
+        at_end = right == n - 1
+        nxt = False if at_end else not _rel_close(rows[left][0], rows[right + 1][0], bal_tol)
+        if (at_end or nxt) and (right - left + 1) >= min_wallets:
+            emit_created(rows[left : right + 1])
+
+    if not chunks:
+        return []
+    if len(chunks) == 1:
+        return chunks[0]  # combinations of a sorted group is already (a, b, kind, ref) order
+    acc: dict[tuple[WalletId, WalletId], Evidence] = {}
+    for chunk in chunks:
+        for ev in chunk:
+            prev = acc.get((ev.a, ev.b))
+            if prev is None or ev.ref < prev.ref:
+                acc[ev.a, ev.b] = ev
+    return sorted(acc.values(), key=attrgetter("a", "b", "kind", "ref"))
 
 
 def build_evidence(
@@ -217,7 +240,7 @@ def build_evidence(
         w.co_buy,
         dst,
     )
-    _identical_balances(
+    ib = _identical_balances(
         balances_at_epoch_end,
         fundings,
         ok,
@@ -225,9 +248,12 @@ def build_evidence(
         p.identical_balance_tolerance,
         p.identical_balance_created_within_hours * 3600.0,
         w.identical_balances,
-        dst,
     )
-    return sorted(dst.values(), key=lambda e: (e.a, e.b, e.kind, e.ref))
+    if not dst:
+        return ib
+    for ev in ib:
+        _keep_first(dst, ev)
+    return sorted(dst.values(), key=attrgetter("a", "b", "kind", "ref"))
 
 
 def cluster(
