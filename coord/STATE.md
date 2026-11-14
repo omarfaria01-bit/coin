@@ -1,21 +1,22 @@
-# STATE
-
-last_tick: 2026-11-14 (interactive manager session; merged #33-#37 #40 #41 + D14 PR #42)
+last_tick: 2026-11-14 (interactive manager session; cleared review backlog, v0.3.3 adopted)
 updated: 2026-11-14
-phase: P1 decisions done → P2 engine build (Grok) + P3 sim harness
+phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 
 ## Done
-- P0 setup, CI (gitleaks fixed via #22), Haiku subagents (#9), on-chain research (#10).
-- Decisions D7 Merkle=jup distributor (SPL only), D8 ORAO VRF, D9 Streamflow lock,
-  D10 vesting soft, D11 Grok builds engine, D12 free CLIs, D13 price unit.
-- ENGINE_DESIGN v0.3: §8 epoch orchestrator spec.
+- P0 setup, CI, Haiku subagents, on-chain research. D7–D14 (see DECISIONS; D2/D4/D13/D14 superseded by D16).
+- v0.3.3 spec merged (#62). Engine slices merged: eligibility #68, hold curve #69, score over lots #80,
+  vesting #75, sybil first slice #76, cap G=2 #77, draws #78. Tooling #57 #59 #63.
+- Closed as obsolete: #56 #58 #61 (+ issues #52 #54).
 
 ## Open PRs
-- none. Merged: #11 #23 #24 #27 #28 #30 #31 #33 #34 #35 #36 #37 #40 #41 #42.
-- D14: unlock_twap_hours default 24h (§14 row 5 passes, margin 4.97% vs 5%).
+- #70 balances: CHANGES REQUESTED (180-day pull-back can erase paid money).
+- #64 auto-review workflow: CHANGES REQUESTED (pull_request secret exposure, perms, merge authority).
+- #60 runbook: HOLD until wiring merges (v0.2 content).
+- #50 D15 router: needs kiwi's written `APPROVED` — not touched.
 
 ## Grok queue (status:todo)
-#26 epoch.py (unblocked, 2 PRs) · #43 sim --strict + TWAP sweep · #44 epoch file writer · #45 sim e2e (after #26)
+#81 remaining engine slices · #82 wire v0.3.3 into epoch.py (blocked by #81 steps 1–3) · #83 goldens ·
+#84 §14 acceptance table · #85 variant comparison for kiwi. Fixes for #70 and #64 first.
 
 ## Open / blockers
 - Claude Action errors on every @claude (#6, needs kiwi: app + token).
@@ -25,6 +26,7 @@ phase: P1 decisions done → P2 engine build (Grok) + P3 sim harness
 - Top technical risk: Token-2022 mint ⇒ D7 rail doesn't work (#18).
 
 ## Next 3 actions (Claude)
-1. Review #26 PRs line by line (money code). Then #45 e2e results vs §14.
-2. Review #43 sweep: confirm 24h margin or move to 36h (D14).
-3. #29 pad_rewards design (docs/design/PAD_REWARDS.md merged; needs kiwi before enabling; related-party flag -> #8).
+1. Re-review #70 and #64 after Grok's fixes; review #81 PRs line by line (money code).
+2. Review wiring PRs (#82); check conservation and no-float CI check.
+3. When #85 lands: summarize in Italian for kiwi (#1) and record his parameter choices in DECISIONS.
+Also: #29 pad_rewards (needs kiwi before enabling; related-party flag -> #8). Top risk unchanged: Token-2022 mint (#18).

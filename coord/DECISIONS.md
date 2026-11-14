@@ -78,3 +78,21 @@ a 1h 3.1× pump failing, raise to 36h rather than change M. `vesting_mode` stays
 Related: D7 stays valid only for a legacy SPL mint; for a Token-2022 mint the v1 rail is push
 payouts (report `reports/research_token2022_claims_2026-11.md` §5, #18). Decision on mint
 program stays open for kiwi/pad choice.
+
+## D16 · 2026-11-14 · Adopt COIN_MATH v0.3.3 (mechanisms frozen, parameters open)
+kiwi's v0.3.3 (merged #62) is the source of truth. **Superseded:** D2 (float64 scores: payout
+path is ints + `Fraction`), D4 (USD eligibility/1h hold: now supply share, §2), D13 (float
+price conversion: payout-path prices are exact rationals), D14 and the "24→36h" idea in #56 (unlock is
+linear in the 24h *harmonic* mean, §11; #56 closed). D10 stays the default code path, but soft early-buy
+vesting at launch needs kiwi's explicit OK. **Unchanged:** D5, D6, D12, clone path `~/work/coin`; kiwi
+(#62 comment, 2026-11-14 10:27) confirmed install policy: Grok installs what it needs, logged on #1; the
+install-allowlist in the new prompts is ignored, and the "Omega = none" text must never be read as a login.
+**Open parameters** (kiwi picks after the variant report): hold curve, `T_START`, eligibility shares, draw
+period. Slices merged so far: #63 #68 #69 #75 #76 #77 #78 #80 (+ #57 #59 tooling). #70 (balances) needs a
+180-day pull-back fix; #64 (auto-review) needs a security rework.
+
+## D17 · 2026-11-14 · Draw stream byte layout (COIN_MATH §9 leaves it open)
+`x_i = SHA-256("COIN_SYSTEM_DRAW_V1" ‖ genesis_hash[32] ‖ mint[32] ‖ draw_index[u64 BE] ‖
+snapshot_hash[32] ‖ ρ[32] ‖ i[u64 BE])`, as implemented in `engine/draws.py` (#78). Fixed-width
+fields make the concatenation unambiguous. The independent implementation (issue Q) must use the same
+layout; if kiwi wants another, change both and log it here.
