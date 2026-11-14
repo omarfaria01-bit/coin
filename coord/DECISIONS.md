@@ -105,3 +105,12 @@ each epoch by replaying the full log under the current map (`soft_vesting_breach
 `prev.forfeit_until` is ignored. **Forfeit window:** a cluster is forfeited in every epoch with
 `t0 < forfeit_until` (was: eligible iff `forfeit_until <= t1`). With 24h epochs and `forfeit_days = 30`
 that is the breach epoch plus the next 30, as COIN_MATH §11 B says; the old test gave only the next 29.
+
+## D19 · 2026-11-14 · §16 launch flags default off (#82 step 6, #107)
+`draws.enabled` = **false** (was true), new `underwater.enabled` = false and new `treasury_bot.enabled`
+= false, per COIN_MATH §16. Turn on: draws at ≥ 100 eligible clusters + VRF flow tested on devnet (the
+draw pot keeps accumulating meanwhile; `route_v033(draws_disabled=False)`, and once draw code reads
+`draws.enabled` it is the single source of truth); boost after 7 clean epochs; bot after the §14
+backtest passes and kiwi approves (`enabled=false` wins over any `mode`; `live` stays rejected without
+kiwi's `APPROVED`). `run_epoch` raises on `underwater.enabled=true` until §5 u_lot is wired, instead
+of ignoring it. Sim re-run: `sim.run --e2e --seeds 10`, all rows PASS.
