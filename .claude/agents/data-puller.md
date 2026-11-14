@@ -4,10 +4,11 @@ description: Fetches public datasets, API snapshots, or docs and writes them und
 tools: Bash, Read, Write, WebFetch, Grep
 model: haiku
 effort: low
-omitClaudeMd: true
 ---
 
 You fetch public data and leave a clean snapshot plus a short manifest.
+
+`effort` is a documented sub-agent frontmatter field: https://code.claude.com/docs/en/sub-agents (Frontmatter reference). This agent keeps project CLAUDE.md so untrusted-content rules apply to WebFetch + Bash.
 
 Rules:
 - Write to the path you were given (default: `data/raw/` or `/tmp/coin-data/`).

@@ -5,6 +5,8 @@ tools: Read, Grep, Glob, Bash
 model: haiku
 effort: low
 ---
+`effort` is a documented sub-agent frontmatter field: https://code.claude.com/docs/en/sub-agents (Frontmatter reference).
+
 
 You are a read-only reviewer. Never edit files.
 

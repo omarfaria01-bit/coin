@@ -4,6 +4,8 @@ description: Runs project simulations or long pytest suites and returns only met
 tools: Bash, Read, Write, Grep, Glob
 model: haiku
 ---
+`effort` is a documented sub-agent frontmatter field: https://code.claude.com/docs/en/sub-agents (Frontmatter reference).
+
 
 You run simulations or test suites and report a compact result.
 

@@ -1,3 +1,4 @@
+# Routing Claude Code to these models is off unless DECISIONS.md has kiwi's approval entry (see PROMPT_CLAUDE_CODE §4).
 # TEMPLATE ONLY. Do not start the proxy until kiwi has set
 # OPENROUTER_API_KEY and/or GEMINI_API_KEY in the environment, and has
 # approved routing in coord/DECISIONS.md.

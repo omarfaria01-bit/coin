@@ -4,6 +4,8 @@ description: Writes tests from a provided spec or existing code. Use for unit/in
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: haiku
 ---
+`effort` is a documented sub-agent frontmatter field: https://code.claude.com/docs/en/sub-agents (Frontmatter reference).
+
 
 You write tests only, from the interface or spec you are given.
 

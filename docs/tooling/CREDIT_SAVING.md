@@ -13,7 +13,7 @@ final merges.
    `reviewer-lite`, `data-puller`, `sim-runner`. Verbose output stays in the
    subagent context; only the summary returns. Subagent requests still count
    toward the same plan, but Haiku is much cheaper than Sonnet/Opus.
-   Docs: https://code.claude.com/docs/en/sub-agents
+   Docs: https://code.claude.com/docs/en/sub-agents (Frontmatter reference lists `effort` and `omitClaudeMd`). `data-puller` does **not** set `omitClaudeMd`, because it has Bash + WebFetch and must load CLAUDE.md untrusted-content rules. `researcher` (read-only) may omit it.
 2. **`/compact` while the cache is warm** (during a working session, not after a
    long idle gap). Warm compaction reuses the prompt cache. After a long pause
    the cache is cold and compaction is an expensive full re-read.
@@ -23,16 +23,32 @@ final merges.
    conversation; if you do not need continuity, `/clear` costs nothing.
 4. Keep `CLAUDE.md` short, disable unused MCP servers, and prefer `gh`/`rg`
    over always-on MCP tool lists.
-5. Track usage with `ccusage` and Claude Code `/usage`.
+5. Track usage with `ccusage` and Claude Code `/usage` **only where Claude Code actually runs** (kiwi's own sessions, not this bot computer). Grok's box may have the binary installed, but the usage that matters is kiwi's session.
 
-## Offload to other CLIs (kiwi login, no paid signup)
+## Offload to other CLIs (dedicated bot accounts only, no paid signup)
 
-- **Gemini CLI** (`gemini`): official Google CLI, free tier after Google login.
-  Use it for research, drafts, and second opinions so those tokens never hit
-  Claude. Models listed by `gemini --list-models` on 14 Nov 2026 (Europe/Rome):
-  `gemini-3.5-flash`, `gemini-3.1-flash-lite`, `gemini-2.5-pro`.
-- **OpenCode** (`opencode`): after kiwi signs in, Zen free models can do
-  parallel coding work in a separate agent.
+Do **not** sign in with kiwi's personal Google, OpenCode, or OpenRouter
+account on the bot computer. That would put kiwi's Gmail/Drive (or equivalent)
+session on a machine an agent drives, which is why Claude's login also stays
+off this box (DECISIONS D6). If a login is needed, create a **dedicated account
+for the bot only**: no payment method, no recovery email or phone tied to
+kiwi's personal accounts.
+
+- **Gemini CLI** (`gemini`): official Google CLI. Prefer an AI Studio API key
+  in `GEMINI_API_KEY` (environment only, never the repo). A Google login is
+  only acceptable on a dedicated bot Google account, never kiwi's personal
+  one. Use it for research, drafts, and second opinions so those tokens never
+  hit Claude. Models listed by `gemini --list-models` on 14 Nov 2026
+  (Europe/Rome): `gemini-3.5-flash`, `gemini-3.1-flash-lite`, `gemini-2.5-pro`.
+- **OpenCode** (`opencode`): free `opencode/*-free` models can run without
+  login. If a provider login is required, use a dedicated bot account, not
+  kiwi's.
+
+**Free-tier privacy:** free-tier models (OpenRouter `:free`, free Gemini tier,
+OpenCode free models) may log prompts and use them for training. Never send
+them `.env` content, keys, unreleased launch details (pad, timing, wallet
+addresses before they are public), or `coord/` strategy. They are fine for
+public-docs research and generic code.
 
 ## Optional gateways (keys required, not enabled)
 
@@ -64,28 +80,36 @@ on core money logic.
 
 ## Kiwi to-do (Italian)
 
-Vedi la fine di questa sezione.
+Non usare il tuo account Google (o OpenCode/OpenRouter) personale sul
+computer del bot. Se serve un login, crea un account dedicato solo per il
+bot: niente metodo di pagamento, niente email o telefono di recupero
+collegati ai tuoi account personali. Stessa regola di D6 per Claude.
 
-1. **Gemini CLI (consigliato, gratis con il tuo account Google)**
-   - Sul computer del bot, in un terminale: `cd ~/work/coin && gemini`
-   - Quando chiede l'accesso, accedi con il tuo account Google.
+1. **Gemini CLI (consigliato, piano gratuito)**
+   - Preferisci una chiave di AI Studio in `GEMINI_API_KEY` (solo ambiente,
+     mai nel repo): https://aistudio.google.com/apikey
+   - Un login Google va fatto solo con un account Google **nuovo, del bot**.
    - Non serve una carta. Resta sul piano gratuito.
-   - Opzionale, per il proxy: crea una chiave su https://aistudio.google.com/apikey
-     e mettila solo in una variabile d'ambiente `GEMINI_API_KEY` (mai nel repo).
+   - I modelli free possono registrare i prompt e usarli per l'addestramento:
+     non inviare `.env`, chiavi, dettagli di lancio non pubblici o `coord/`.
 
-2. **OpenCode Zen (consigliato, modelli free dopo il login)**
-   - `cd ~/work/coin && opencode auth`
-   - Completa il login del provider free/Zen che ti propone.
+2. **OpenCode (consigliato; i modelli `*-free` funzionano anche senza login)**
+   - `cd ~/work/coin && opencode run -m opencode/deepseek-v4.1-flash-free -p "…"`
+   - Se un login è richiesto, usa un account dedicato del bot, non il tuo.
    - Nessuna chiave va incollata in un file del repo.
 
 3. **OpenRouter (solo se vuoi il routing verso modelli :free)**
-   - Crea un account su https://openrouter.ai (il piano free basta).
+   - Crea un account **del bot** su https://openrouter.ai (il piano free basta).
    - Crea una chiave su https://openrouter.ai/keys
    - Esportala come `OPENROUTER_API_KEY` nell'ambiente, non in git.
    - Non avviare `ccr` o LiteLLM e non puntare Claude Code al proxy finché
      non hai scritto `APPROVED` in `coord/DECISIONS.md` per il routing.
    - Limite tipico free: 20 richieste/minuto, 50/giorno.
+   - Stesso avviso privacy dei modelli free: niente segreti né strategia.
 
 4. **Non fare**
    - Non pagare abbonamenti extra.
+   - Non accedere con i tuoi account personali su questa macchina.
    - Non incollare seed, chiavi wallet, o token in questi strumenti.
+   - Non avviare CCR, LiteLLM, Gemini o OpenCode *sul repo* finché non
+     decidi tu il routing in DECISIONS.md.
