@@ -71,6 +71,11 @@ def main(argv: list[str] | None = None) -> int:
         help="run the v0.3.3 §14 rows (sim.acceptance_v033); exit 1 if any row fails",
     )
     parser.add_argument(
+        "--report",
+        action="store_true",
+        help="write reports/sim_<date>.md (sim.report_v033); exit 1 if any §14 row fails",
+    )
+    parser.add_argument(
         "--strict",
         action="store_true",
         help="exit non-zero if any seed is skipped or failed, or if no run happened",
@@ -78,6 +83,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.seeds <= 0:
         raise SystemExit("--seeds must be > 0")
+    if args.report:
+        from sim.report_v033 import main as report_main
+
+        return report_main(args.seeds, args.out, args.strict)
     if args.acceptance:
         from sim.acceptance_v033 import render, run_rows
 

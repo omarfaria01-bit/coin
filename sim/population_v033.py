@@ -59,16 +59,15 @@ def _farmer_exit_day(params: CoinParams) -> int:
     return 10**6
 
 
-def _crowd(rng: random.Random, n: int) -> list[Agent]:
+def _crowd(rng: random.Random, n: int, stable: bool = False) -> list[Agent]:
     out: list[Agent] = []
 
     def add(kind: str, count: int, size: tuple[int, int], entry_days: int, hold_s: int = 0):
         for i in range(count):
             tokens = rng.randint(*size) * TOK
             entry = rng.randint(0, entry_days * DAY) + HOUR
-            out.append(
-                Agent(wallet_id(f"pop-{kind}-{i}-{rng.random()}"), kind, tokens, entry, hold_s)
-            )
+            k = "loyal" if stable and kind in ("casual", "farmer") else kind
+            out.append(Agent(wallet_id(f"pop-{kind}-{i}-{rng.random()}"), k, tokens, entry, hold_s))
 
     add("loyal", n // 4, (10**4, 10**6), 10)
     add("casual", n // 2, (10**4, 10**6), 60)
@@ -87,11 +86,13 @@ def simulate(
     days: int = 93,
     n: int = 48,
     inflow: Callable[[int], int] = lambda d: INFLOW,
+    stable: bool = False,
 ) -> Run:
-    """One seeded population over `days` epochs; same seed → same agents for every variant."""
+    """One seeded population over `days` epochs; same seed → same agents for every variant.
+    `stable`: casual holders and farmers never sell (the §14 "stable holder base")."""
     params = params or CoinParams()
     rng = random.Random(f"population:{seed}")
-    agents, tr = _crowd(rng, n), Trades(f"pop{seed}")
+    agents, tr = _crowd(rng, n, stable), Trades(f"pop{seed}")
     behave = random.Random(f"behaviour:{seed}")  # draws for leave decisions, variant-independent
     farmer_exit = _farmer_exit_day(params) * DAY
     run, state = Run(params, days, agents), empty_state()
