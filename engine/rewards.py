@@ -71,11 +71,10 @@ def allocate(budget: int, shares: Mapping[ClusterId, float]) -> tuple[dict[Clust
     payouts: dict[ClusterId, int] = {}
     paid = 0
     for cid in sorted(shares):
-        amt = _floor_prod(budget, Decimal(str(shares[cid])))
+        amt = min(_floor_prod(budget, Decimal(str(shares[cid]))), budget - paid)
         payouts[cid] = amt
         paid += amt
     rollover = budget - paid
-    assert rollover >= 0
     return payouts, rollover
 
 
@@ -87,16 +86,15 @@ def split_to_wallets(
         raise ValueError(f"payout must be >= 0, got {payout}")
     amounts = {wid: 0 for wid in sorted(weights)}
     positive = [wid for wid in amounts if weights[wid] > 0]
-    total_w = sum(weights[wid] for wid in positive)
+    total_w = sum((Decimal(str(weights[wid])) for wid in positive), Decimal(0))
     if total_w <= 0:
         return amounts, payout
     paid = 0
     for wid in amounts:
         if weights[wid] > 0:
-            frac = Decimal(str(weights[wid])) / Decimal(str(total_w))
-            amt = _floor_prod(payout, frac)
+            frac = Decimal(str(weights[wid])) / total_w
+            amt = min(_floor_prod(payout, frac), payout - paid)
             amounts[wid] = amt
             paid += amt
     dust = payout - paid
-    assert dust >= 0
     return amounts, dust

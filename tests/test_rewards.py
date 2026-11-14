@@ -108,7 +108,7 @@ def test_allocate_and_split_conservation_and_keys() -> None:
         min_size=0,
         max_size=25,
     ),
-    st.integers(0, 10**9),
+    st.integers(0, 10**24),
     st.floats(0.01, 0.5, allow_nan=False, allow_infinity=False),
 )
 @settings(max_examples=50, deadline=None)
@@ -127,7 +127,7 @@ def test_conservation_cap_and_order(scores: dict[str, float], budget: int, cap: 
 
 
 @given(
-    st.integers(0, 10**9),
+    st.integers(0, 10**24),
     st.dictionaries(
         st.text(min_size=1, max_size=4, alphabet="WXYZ"),
         st.floats(-5, 1e6, allow_nan=False, allow_infinity=False),
@@ -165,3 +165,16 @@ def test_splitting_a_score_does_not_raise_payout(n: int, budget: int, frac: floa
     new_pay, _ = allocate(budget, new_shares)
     # Linear pro-rata: combined payout must not rise, up to ±N lamports of floor.
     assert new_pay[a] + new_pay[b] <= payouts[victim] + len(new_scores)
+
+
+def test_allocate_and_split_large_budget_equal_scores() -> None:
+    budget = 10**18 + 7
+    n = 21
+    scores = {f"C{i:02d}": 1.0 for i in range(n)}
+    shares = capped_shares(scores, CAP)
+    payouts, rem = allocate(budget, shares)
+    assert rem >= 0
+    assert sum(payouts.values()) + rem == budget
+    amts, dust = split_to_wallets(budget, {f"w{i:02d}": 1.0 for i in range(n)})
+    assert dust >= 0
+    assert sum(amts.values()) + dust == budget
