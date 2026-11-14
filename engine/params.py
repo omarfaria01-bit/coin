@@ -94,6 +94,9 @@ class ChurnParams(_Strict):
 
 
 class UnderwaterParams(_Strict):
+    enabled: bool = Field(
+        False, description="§5 boost; off at launch, on after 7 clean epochs (§16). Not wired yet"
+    )
     twap_hours: float = Field(6.0, gt=0, description="P̃ window (§5)")
     min_age_hours: float = Field(48.0, ge=0, description="Only pool-buy lots this old count (§5)")
     beta: float = Field(0.5, ge=0, description="Max boost = 1+β (§5)")
@@ -147,7 +150,11 @@ class RewardParams(_Strict):
 
 
 class DrawParams(_Strict):
-    enabled: bool = Field(True, description="Legal switch (§16)")
+    enabled: bool = Field(
+        False,
+        description="§16: off at launch (draw pot keeps accumulating); on at ≥ 100 eligible "
+        "clusters + VRF tested on devnet. Also the legal switch",
+    )
     period_days: float = Field(7.0, gt=0)
     min_balance_usd: float = Field(10.0, ge=0, description="PROVISIONAL threshold (§9)")
     min_hold_hours: float = Field(24.0, ge=0)
@@ -190,6 +197,9 @@ class VestingParams(_Strict):
 
 
 class TreasuryBotParams(_Strict):
+    enabled: bool = Field(
+        False, description="§16: off; on only after the §14 backtest passes and kiwi approves"
+    )
     mode: Literal["paper", "devnet", "live"] = "paper"
     seed_lamports: int | None = Field(None, description="TREASURY_SEED_SOL, set by kiwi (§12)")
     ema_halflife_hours: float = 6.0

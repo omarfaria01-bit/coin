@@ -41,6 +41,16 @@ def test_spec_defaults():
     assert p.treasury_bot.mode == "paper"
 
 
+def test_launch_flags_default_off_section_16():
+    """COIN_MATH §16: boost, draws, LST and the treasury bot are off at launch."""
+    for p in (CoinParams(), load_coin(CONFIG_DIR / "coin.json")):
+        assert p.underwater.enabled is False
+        assert p.draws.enabled is False
+        assert p.rewards.lst_fraction == 0.0
+        assert p.treasury_bot.enabled is False and p.treasury_bot.mode == "paper"
+        assert p.rewards.enabled is True  # holder rewards are on (§16 row 2)
+
+
 def test_unknown_keys_rejected():
     raw = json.loads((CONFIG_DIR / "coin.json").read_text())
     raw["surprise"] = 1
