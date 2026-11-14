@@ -50,7 +50,7 @@ from engine.types import ClusterId, WalletId
 class EpochSnapshot(Protocol):
     """Already-computed epoch result. Treated as immutable by the hook."""
 
-    budget: int                    # R_e, lamports
+    budget: int  # R_e, lamports
     payouts: Mapping[WalletId, int]
     cluster_payouts: Mapping[ClusterId, int]
     rollover: int
@@ -73,9 +73,7 @@ class PadRewardsAnnotation(Protocol):
     suggested_off_engine: Mapping[str, str]
 
 
-def pad_rewards(
-    snapshot: EpochSnapshot, config: PadRewardsConfig
-) -> PadRewardsAnnotation:
+def pad_rewards(snapshot: EpochSnapshot, config: PadRewardsConfig) -> PadRewardsAnnotation:
     """Pure: no I/O, no wall clock, no network, integer money only if any
     amounts appear in annotations (and even then they are not paid by the engine).
     """
