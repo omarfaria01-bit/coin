@@ -156,15 +156,21 @@ def scenario_sniper(seed: int) -> Row:
     world = run_world(seed, 24 * 60, [holder, sniper])
     result, _nxt = run_slice(world, 0, DAY, params)
     h_pay, s_pay = _payout(result, holder.wallet), _payout(result, sniper.wallet)
-    s_row = _row_for_wallet(result, sniper.wallet)
+    h_row, s_row = _row_for_wallet(result, holder.wallet), _row_for_wallet(result, sniper.wallet)
+    h_score = 0.0 if h_row is None else h_row.score
     s_score = 0.0 if s_row is None else s_row.score
-    # Defaults: min_hold_hours=1 makes a 5-min sniper ineligible (score 0). Also allow ≤ 0.5%.
-    ratio = 0.0 if h_pay == 0 else s_pay / h_pay
+    # v0.3.3 §2 drops the 1h hold / USD gate. A 5-min sniper is still a tiny TWAB
+    # (~5/1440 of a full-day holder). Compare scores, not payouts: the 5% cap
+    # equalizes N=2 payouts. T_START=2h will zero this score in a later wiring PR.
+    ratio = 0.0 if h_score == 0 else s_score / h_score
     ok = s_score == 0.0 or ratio <= 0.005
-    ev = f"holder_pay={h_pay} sniper_pay={s_pay} sniper_score={s_score:.6f} pay_ratio={ratio:.6f}"
+    ev = (
+        f"holder_pay={h_pay} sniper_pay={s_pay} holder_score={h_score:.6f} "
+        f"sniper_score={s_score:.6f} score_ratio={ratio:.6f}"
+    )
     return Row(
         "sniper",
-        "5-min sniper: score 0 (min_hold) or payout ≤ 0.5% of a full-day holder",
+        "5-min sniper: score 0 or score ≤ 0.5% of a full-day holder",
         ok,
         ev,
     )

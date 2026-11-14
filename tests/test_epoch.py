@@ -43,7 +43,7 @@ def _params(
     *, cap: float = 1.0, enabled: bool = True, min_xfer: int = 1, push_max: int = 500
 ) -> CoinParams:
     return CoinParams(
-        eligibility=EligibilityParams(min_eligible_usd=0.0, min_hold_hours=0.0),
+        eligibility=EligibilityParams(min_eligible_share="0"),
         scoring=ScoringParams(cap=cap),
         rewards=RewardParams(
             enabled=enabled,
