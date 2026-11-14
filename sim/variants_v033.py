@@ -35,7 +35,7 @@ VARIANTS: dict[str, tuple[str, CoinParams]] = {
         "curve", _with(DEFAULT, hold={"knots": OLD, "t_start_seconds": 48 * H})),
     "curve middle (12h … 2.35× @90d)": (
         "curve", _with(DEFAULT, hold={"knots": MIDDLE, "t_start_seconds": 12 * H})),
-    "T_START 6h": ("t_start", _with(DEFAULT, hold={"t_start_seconds": 6 * H})),
+    "T_START 2h (old default)": ("t_start", _with(DEFAULT, hold={"t_start_seconds": 2 * H})),
     "T_START 12h": ("t_start", _with(DEFAULT, hold={"t_start_seconds": 12 * H})),
     "T_START 48h": ("t_start", _with(DEFAULT, hold={"t_start_seconds": 48 * H})),
     "eligibility 1/10,000,000": (

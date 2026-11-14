@@ -9,7 +9,7 @@ from engine.params import CoinParams
 
 def test_defaults_untouched_and_variants_differ() -> None:
     assert var.VARIANTS["default"][1] == CoinParams()
-    assert CoinParams().hold.t_start_seconds == 7_200
+    assert CoinParams().hold.t_start_seconds == 21_600
     t_starts = {p.hold.t_start_seconds for _, p in var.VARIANTS.values()}
     assert t_starts == {2 * 3600, 6 * 3600, 12 * 3600, 48 * 3600}
 
