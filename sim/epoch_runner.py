@@ -28,7 +28,6 @@ INFLOW = 10**12
 SOL_USD = 100.0
 DECIMALS = 9
 DAY = 86_400
-CAP = CoinParams().scoring.cap
 DEFAULT_REPORT = Path("reports/sim_epoch_e2e.md")
 SHALLOW = 200_000_000_000
 PUMP_3X = 150_000_000_000  # ~3.05× end mid on SHALLOW after a 1 SOL dev buy
@@ -40,6 +39,7 @@ class Row:
     condition: str
     passed: bool
     evidence: str
+    margin: float | None = None
 
 
 @dataclass
@@ -116,6 +116,26 @@ def run_slice(
     return result, nxt
 
 
+def _params(params: CoinParams | None) -> CoinParams:
+    return CoinParams() if params is None else params
+
+
+def _cap_slack(shares: Sequence[float], cap: float) -> float:
+    if not shares:
+        return 0.0
+    return (cap - max(shares)) / cap
+
+
+def _price_unlock(world: WorldResult, t1: int, p_entry: float, params: CoinParams) -> float:
+    """u_price only: unlocked_fraction at t = t0 so u_time is 0."""
+    from engine.epoch import _twap
+    from engine.vesting import unlocked_fraction
+
+    unlock_s = int(params.vesting.unlock_twap_hours * 3600)
+    twap = _twap(tuple(world.prices), t1 - unlock_s, t1, DECIMALS)
+    return unlocked_fraction(0.0, 0, 0, twap, p_entry, params.vesting)
+
+
 def _payout(result: EpochResult, wallet: str) -> int:
     return int(result.transferred_or_claimable.get(wallet, 0))
 
@@ -127,8 +147,9 @@ def _row_for_wallet(result: EpochResult, wallet: str):
     return None
 
 
-def scenario_honest(seed: int) -> Row:
-    params = CoinParams()
+def scenario_honest(seed: int, params: CoinParams | None = None) -> Row:
+    params = _params(params)
+    cap = params.scoring.cap
     agents = [Holder(f"h{i}", f"fh{i}", 10**9, 0) for i in range(3)]
     world = run_world(seed, 24 * 60, list(agents))
     result, nxt = run_slice(world, 0, DAY, params)
@@ -136,7 +157,7 @@ def scenario_honest(seed: int) -> Row:
     shares = [row.share for row in result.scores]
     ok = (
         all(p > 0 for p in paid)
-        and all(s <= CAP + 1e-12 for s in shares)
+        and all(s <= cap + 1e-12 for s in shares)
         and max(paid) == min(paid)
         and nxt.pot < INFLOW
     )
@@ -146,11 +167,12 @@ def scenario_honest(seed: int) -> Row:
         "3 equal holders: conservation, each paid, each π ≤ CAP, payouts equal",
         ok,
         ev,
+        0.0 if not ok else _cap_slack(shares, cap),
     )
 
 
-def scenario_sniper(seed: int) -> Row:
-    params = CoinParams()
+def scenario_sniper(seed: int, params: CoinParams | None = None) -> Row:
+    params = _params(params)
     holder = Holder("holder", "fh", 10**9, 0)
     sniper = snapshot_sniper("sniper", "fs", 10**9, t1=DAY)
     world = run_world(seed, 24 * 60, [holder, sniper])
@@ -161,17 +183,19 @@ def scenario_sniper(seed: int) -> Row:
     # Defaults: min_hold_hours=1 makes a 5-min sniper ineligible (score 0). Also allow ≤ 0.5%.
     ratio = 0.0 if h_pay == 0 else s_pay / h_pay
     ok = s_score == 0.0 or ratio <= 0.005
+    slack = 1.0 if s_score == 0.0 else (0.005 - ratio) / 0.005
     ev = f"holder_pay={h_pay} sniper_pay={s_pay} sniper_score={s_score:.6f} pay_ratio={ratio:.6f}"
     return Row(
         "sniper",
         "5-min sniper: score 0 (min_hold) or payout ≤ 0.5% of a full-day holder",
         ok,
         ev,
+        0.0 if not ok else slack,
     )
 
 
-def scenario_flipper(seed: int) -> Row:
-    params = CoinParams()
+def scenario_flipper(seed: int, params: CoinParams | None = None) -> Row:
+    params = _params(params)
     holder = Holder("holder", "fh", 10**9, 0)
     flipper = Flipper("flipper", "ff", 10**9, 0, t1=2 * DAY, per_day=5)
     world = run_world(seed, 48 * 60, [holder, flipper])
@@ -189,27 +213,31 @@ def scenario_flipper(seed: int) -> Row:
         "5×/day flipper, epoch 2: score ≤ 10% of a holder (cap binds payouts at N=2)",
         ok,
         ev,
+        0.0 if not ok else (0.10 - ratio) / 0.10,
     )
 
 
-def scenario_whale_cap(seed: int) -> Row:
-    params = CoinParams()
+def scenario_whale_cap(seed: int, params: CoinParams | None = None) -> Row:
+    params = _params(params)
+    cap = params.scoring.cap
     agents = [Holder(f"w{i}", f"fw{i}", 10**9 * (100 if i == 0 else 1), 0) for i in range(5)]
     world = run_world(seed, 24 * 60, list(agents))
     result, _nxt = run_slice(world, 0, DAY, params)
     shares = [row.share for row in result.scores]
-    ok = len(shares) == 5 and all(s <= CAP + 1e-12 for s in shares)
+    ok = len(shares) == 5 and all(s <= cap + 1e-12 for s in shares)
     ev = f"n={len(shares)} max_pi={max(shares, default=0):.6f}"
     return Row(
         "whale_cap",
         "1 whale + 4 small holders: every π ≤ CAP, conservation holds",
         ok,
         ev,
+        0.0 if not ok else _cap_slack(shares, cap),
     )
 
 
-def scenario_sybil(seed: int) -> Row:
-    params = CoinParams()
+def scenario_sybil(seed: int, params: CoinParams | None = None) -> Row:
+    params = _params(params)
+    cap = params.scoring.cap
     field = [Holder(f"o{i}", f"fo{i}", 10**9, 0) for i in range(4)]
     split = whale_splitter("sybil-funder", 10, 10**9, 0)
     world = run_world(seed, 24 * 60, [*split, *field])
@@ -221,29 +249,31 @@ def scenario_sybil(seed: int) -> Row:
     clustered = [row for row in result.scores if typ and row.twab >= 8 * typ]
     one = len(clustered) == 1
     members_paid = sum(1 for w in split_set if _payout(result, w) > 0)
-    ok = one and members_paid == 10 and clustered[0].share <= CAP + 1e-12
+    share = clustered[0].share if clustered else 0.0
+    ok = one and members_paid == 10 and share <= cap + 1e-12
     ev = (
-        f"big_clusters={len(clustered)} split_paid={members_paid} "
-        f"pi={clustered[0].share if clustered else 0:.6f} typ_twab={typ:.1f}"
+        f"big_clusters={len(clustered)} split_paid={members_paid} pi={share:.6f} typ_twab={typ:.1f}"
     )
     return Row(
         "sybil_cluster",
         "10 wallets, same first funder: one cluster, all 10 paid a split of one capped share",
         ok,
         ev,
+        0.0 if not ok else _cap_slack([share], cap),
     )
 
 
-def scenario_vest_pump(seed: int) -> Row:
-    params = CoinParams()
-    # Hold-only: 1h ~3× pump must not lift unlocked above u_time = 1/7.
+def scenario_vest_pump(seed: int, params: CoinParams | None = None) -> Row:
+    params = _params(params)
+    # Hold-only: 1h ~3× pump must not lift unlocked above u_time = 1 / t_v_days.
     dev = Holder("dev", "fd", 10**9, 0)
     pumper = BuyThenSell("pumper", "fp", PUMP_3X, buy_ts=23 * 3600, sell_ts=-1)
     hold_w = run_world(seed, 24 * 60, [dev, pumper], token_reserve=SHALLOW, sol_reserve=SHALLOW)
     prev = EpochState(0, 0, {}, {}, {}, (VestingEntry(dev.wallet, dev.tokens, 1.0, 0),))
     _rh, nh = run_slice(hold_w, 0, DAY, params, prev=prev)
     unlocked = nh.unlocked.get(dev.wallet, 0.0)
-    u_time = 1.0 / 7.0
+    u_time = 1.0 / params.vesting.t_v_days
+    u_price = _price_unlock(hold_w, DAY, 1.0, params)
     no_extra = abs(unlocked - u_time) < 1e-9
 
     # Sell the whole bag after the pump: soft-lock breach → forfeit, score 0.
@@ -260,19 +290,21 @@ def scenario_vest_pump(seed: int) -> Row:
     score0 = srow is not None and srow.score == 0.0
     ok = no_extra and forfeited and score0
     ev = (
-        f"unlocked={unlocked:.6f} u_time={u_time:.6f} forfeit={nf.forfeit_until} "
-        f"dev_score={0.0 if srow is None else srow.score}"
+        f"unlocked={unlocked:.6f} u_time={u_time:.6f} u_price={u_price:.6f} "
+        f"forfeit={nf.forfeit_until} dev_score={0.0 if srow is None else srow.score}"
     )
+    price_slack = (u_time - u_price) / u_time
     return Row(
         "vest_pump",
         "1h ~3× pump: no extra unlock beyond u_time (1/7); selling the bag forfeits",
         ok,
         ev,
+        0.0 if not ok else price_slack,
     )
 
 
-def scenario_underwater(seed: int) -> Row:
-    params = CoinParams()
+def scenario_underwater(seed: int, params: CoinParams | None = None) -> Row:
+    params = _params(params)
     farmer = Holder("farmer", "ff", 5_000_000_000, buy_ts=60)
     pumper = BuyThenSell("pumper", "fp", 80_000_000_000, buy_ts=0, sell_ts=120)
     # Last 24h of a 50h world so the farmer lot is ≥ 48h old (min_age_hours).
@@ -284,16 +316,18 @@ def scenario_underwater(seed: int) -> Row:
     boost = 1.0 if row is None else row.boost
     ok = row is not None and 1.0 < boost <= 1.5 + 1e-12 and mtm < 0
     ev = f"U={boost:.4f} mtm={mtm:.1f} mid={mid:.4f} farmer_pay={_payout(result, farmer.wallet)}"
+    slack = min((1.5 - boost) / 1.5, (boost - 1.0) / 1.0)
     return Row(
         "underwater",
         "Farmer buys near the top, 48h+ later: 1 < U ≤ 1.5 and mark-to-market loss",
         ok,
         ev,
+        0.0 if not ok else slack,
     )
 
 
-def scenario_rewards_off(seed: int) -> Row:
-    base = CoinParams()
+def scenario_rewards_off(seed: int, params: CoinParams | None = None) -> Row:
+    base = _params(params)
     params = base.model_copy(update={"rewards": base.rewards.model_copy(update={"enabled": False})})
     agents = [Holder(f"h{i}", f"fh{i}", 10**9, 0) for i in range(2)]
     world = run_world(seed, 24 * 60, list(agents))
@@ -305,10 +339,11 @@ def scenario_rewards_off(seed: int) -> Row:
         "rewards.enabled=False: zero payouts, pot += inflow only, conservation holds",
         ok,
         ev,
+        1.0 if ok else 0.0,
     )
 
 
-SCENARIOS: tuple[tuple[str, Callable[[int], Row]], ...] = (
+SCENARIOS: tuple[tuple[str, Callable[..., Row]], ...] = (
     ("honest_holders", scenario_honest),
     ("sniper", scenario_sniper),
     ("flipper", scenario_flipper),
