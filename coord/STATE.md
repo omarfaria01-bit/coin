@@ -1,4 +1,4 @@
-last_tick: 2026-11-14 (manager loop; merged #117, #64)
+last_tick: 2026-11-14 (manager loop; merged #118, #119)
 updated: 2026-11-14
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 
@@ -26,8 +26,8 @@ phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim
 - Top technical risk: Token-2022 mint ⇒ D7 rail doesn't work (#18).
 
 ## Next 3 actions (Claude)
-0. #123 merged: T_START=6h (D21, kiwi). #119 must update its default assertion (7200 -> 21600) and rerun the report when rebasing.
-1. #118 CONFLICTS with main (after #117): Grok rebases, then #119 (#85, fix t_start assertion 21_600); merge each as green (no --delete-branch while dependents exist).
-2. Watch first auto-review run from #64; remaining #81 slices.
-3. When #85 lands: summarize in Italian for kiwi (#1) and record his parameter choices in DECISIONS.
+0. #118 (#84 step 3b report writer) and #119 (#85 variants, default T_START=6h, report regenerated) merged. #85 done; kiwi summary in reports/variants_v033_2026-11-14.md, announced in #1.
+1. #84 remaining: run `sim.run --report --strict` on main and confirm 23 rows PASS (Grok); then close #84. #82 wiring (PR 3/4, 4/4: #103/#101 etc.) and #81 remaining slices continue.
+2. #60 runbook: HOLD until wiring merges. #50 needs kiwi's APPROVED.
+3. Await kiwi's choices on #85 variants (recommendation: keep curve and MIN_ELIGIBLE_SHARE; draws unchanged); record in DECISIONS.
 Also: #29 pad_rewards (needs kiwi before enabling; related-party flag -> #8). Top risk unchanged: Token-2022 mint (#18).
