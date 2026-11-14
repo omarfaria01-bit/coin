@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from adapters.parse_tx import ParseError, parse_tx, parse_tx_file
+from adapters.parse_tx import WSOL, ParseError, parse_tx, parse_tx_file
 from engine.types import EventKind
 from sim.agents import wallet_id
 
@@ -18,16 +18,18 @@ ALICE = wallet_id("parse-alice")
 BOB = wallet_id("parse-bob")
 CAROL = wallet_id("parse-carol")
 FEE_AUTH = wallet_id("parse-fee-auth")
-# Files the issue asks for, plus sol-only and inner-ix buy (8 total).
+# Issue minimum (buy, sell, transfer, multi-ix, failed) plus fee, SOL-only,
+# inner-ix buy, and a WSOL-leg buy.
 FIXTURES = (
     "buy",
+    "buy_inner",
+    "buy_wsol",
+    "failed",
+    "multi_ix",
     "sell",
+    "sol_transfer",
     "transfer",
     "transfer_2022_fee",
-    "multi_ix",
-    "failed",
-    "sol_transfer",
-    "buy_inner",
 )
 
 
@@ -35,7 +37,7 @@ def _load(name: str):
     return parse_tx_file(FIX / f"{name}.json", MINT)
 
 
-def test_eight_fixtures_present_and_amounts_are_ints() -> None:
+def test_fixtures_present_and_amounts_are_ints() -> None:
     assert [p.stem for p in sorted(FIX.glob("*.json"))] == sorted(FIXTURES)
     for name in FIXTURES:
         events, sols = _load(name)
@@ -126,6 +128,42 @@ def _blank_tx(signatures: list | None = None) -> dict:
             "message": {"accountKeys": ["A"], "instructions": []},
         },
     }
+
+
+def test_buy_wsol_uses_wrapped_sol_delta_and_adds_back_tx_fee() -> None:
+    assert len(WSOL) == 43
+    assert WSOL == "So11111111111111111111111111111111111111112"
+    events, sols = _load("buy_wsol")
+    assert sols == ()  # payment is WSOL, not a native system transfer
+    assert len(events) == 1
+    ev = events[0]
+    assert ev.kind is EventKind.BUY and ev.dst == ALICE and ev.src is None
+    assert ev.amount == 1_000_000_000
+    # Native SOL drops only by the 5000 tx fee; that fee is added back, so
+    # lamports is the 1 SOL WSOL payment, not 1_000_005_000.
+    assert ev.lamports == 1_000_000_000
+
+
+def test_token_2022_fee_ix_does_not_collide_and_sink_falls_back_to_mint() -> None:
+    events, _ = _load("transfer_2022_fee")
+    assert events[0].ix + 1_000_000 == events[1].ix
+    raw = json.loads((FIX / "transfer_2022_fee.json").read_text(encoding="utf-8"))
+
+    # Drop the visible fee account so the withheld sink is the mint.
+    def _drop_fee_acc(rows: list) -> list:
+        return [r for r in rows if r["accountIndex"] != 4]
+
+    raw["meta"]["preTokenBalances"] = _drop_fee_acc(raw["meta"]["preTokenBalances"])
+    raw["meta"]["postTokenBalances"] = _drop_fee_acc(raw["meta"]["postTokenBalances"])
+    evs, _ = parse_tx(raw, MINT)
+    assert [(e.dst, e.amount) for e in evs] == [(BOB, 990_000), (MINT, 10_000)]
+
+
+def test_failed_tx_with_short_balances_is_empty() -> None:
+    raw = json.loads((FIX / "failed.json").read_text(encoding="utf-8"))
+    raw["meta"]["preBalances"] = []
+    raw["meta"]["postBalances"] = []
+    assert parse_tx(raw, MINT) == ((), ())
 
 
 @pytest.mark.parametrize(

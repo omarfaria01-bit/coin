@@ -5,8 +5,11 @@ BUY/SELL/TRANSFER come from pre/post balances (native SOL + WSOL vs the
 target mint) plus which side signed, not from a launchpad program id.
 
 Token-2022 transfer fees: the destination is credited the received amount;
-the withheld fee is a second TRANSFER to a visible fee account, otherwise
-to the mint (withheld sink). Amounts are always ints.
+the withheld fee is a second TRANSFER. The fee sink is chosen by a documented
+heuristic (see `_fee_sink`): if several non-src/dst owners gained exactly the
+fee, the lexicographically smallest owner wins; if none did, the mint is the
+withheld sink. The fee event uses ix = transfer_ix + 1_000_000 so it cannot
+collide with another instruction index. Amounts are always ints.
 """
 
 from __future__ import annotations
@@ -21,7 +24,7 @@ from engine.types import EventKind, SolTransfer, TokenEvent, WalletId
 TOKEN_PROGRAM = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
 TOKEN_2022 = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
 SYSTEM = "11111111111111111111111111111111"
-WSOL = "So11111111111111111111111111111111112"
+WSOL = "So11111111111111111111111111111111111111112"
 _TOKEN_PROGS = frozenset({TOKEN_PROGRAM, TOKEN_2022, "spl-token", "spl-token-2022"})
 _XFER = frozenset({"transfer", "transferChecked", "transferCheckedWithFee"})
 
@@ -80,7 +83,9 @@ def _keys_and_signers(
     return keys, frozenset(signers)
 
 
-def _mint_rows(meta: Mapping[str, Any], mint: str) -> dict[int, dict[str, Any]]:
+def _mint_rows(
+    meta: Mapping[str, Any], mint: str, *, require_owner: bool = True
+) -> dict[int, dict[str, Any]]:
     rows: dict[int, dict[str, Any]] = {}
     for side in ("pre", "post"):
         entries = meta.get(f"{side}TokenBalances")
@@ -97,6 +102,8 @@ def _mint_rows(meta: Mapping[str, Any], mint: str) -> dict[int, dict[str, Any]]:
             qty = _int("uiTokenAmount.amount", ui.get("amount"))
             owner = entry.get("owner")
             if not isinstance(owner, str) or not owner:
+                if not require_owner:
+                    continue
                 raise ParseError(f"{side}TokenBalances accountIndex={idx} missing owner")
             rec = rows.setdefault(idx, {"owner": owner, "pre": 0, "post": 0})
             if rec["owner"] != owner:
@@ -213,7 +220,24 @@ def _kind(
         return EventKind.BUY
     if src in signers and sol_src > 0:
         return EventKind.SELL
-    return EventKind.BUY if sol_dst < 0 else EventKind.SELL
+    raise ParseError("ambiguous swap: neither side is a unique signer")
+
+
+def _fee_sink(rows: Mapping[int, dict[str, Any]], src: str, dst: str, xfee: int, mint: str) -> str:
+    """Pick a Token-2022 fee destination from pre/post mint balances.
+
+    jsonParsed `transferCheckedWithFee` does not always name the withheld
+    account. Heuristic: every non-src/dst owner whose mint balance rose by
+    exactly `xfee` is a candidate; we take the lexicographically smallest
+    owner so the choice is deterministic. If there is no such owner, the
+    mint itself is the withheld sink.
+    """
+    hits = [
+        rec["owner"]
+        for rec in rows.values()
+        if rec["owner"] not in {src, dst} and rec["post"] - rec["pre"] == xfee
+    ]
+    return min(hits) if hits else mint
 
 
 def parse_tx(
@@ -234,6 +258,9 @@ def parse_tx(
     if not signatures or not isinstance(signatures[0], str) or not signatures[0]:
         raise ParseError("transaction has no signatures")
     sig = signatures[0]
+    if meta.get("err") is not None:
+        # Failed txs emit nothing, even if pre/postBalances are odd or short.
+        return (), ()
     keys, signers = _keys_and_signers(tx, meta)
     fee_payer = keys[0]
     fee = _int("meta.fee", meta.get("fee") or 0)
@@ -241,12 +268,10 @@ def parse_tx(
     post_sol = [_int(f"postBalances[{i}]", b) for i, b in enumerate(meta.get("postBalances") or [])]
     if len(pre_sol) != len(keys) or len(post_sol) != len(keys):
         raise ParseError("pre/postBalances length must match accountKeys")
-    if meta.get("err") is not None:
-        return (), ()
 
     rows = _mint_rows(meta, mint)
     wsol_delta: dict[str, int] = {}
-    for rec in _mint_rows(meta, WSOL).values():
+    for rec in _mint_rows(meta, WSOL, require_owner=False).values():
         wsol_delta[rec["owner"]] = wsol_delta.get(rec["owner"], 0) + rec["post"] - rec["pre"]
 
     events: list[TokenEvent] = []
@@ -279,18 +304,13 @@ def parse_tx(
                     TokenEvent(slot, ts, sig, ix_n, kind, src, dst, received, None, fee_payer)
                 )
                 if xfee:
-                    sink = mint
-                    for idx, rec in rows.items():
-                        owner, delta = rec["owner"], rec["post"] - rec["pre"]
-                        if owner not in {src, dst} and delta == xfee and idx < len(keys):
-                            sink = rec["owner"]
-                            break
+                    sink = _fee_sink(rows, src, dst, xfee, mint)
                     events.append(
                         TokenEvent(
                             slot,
                             ts,
                             sig,
-                            ix_n + 1,
+                            ix_n + 1_000_000,
                             EventKind.TRANSFER,
                             src,
                             sink,
