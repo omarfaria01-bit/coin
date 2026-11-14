@@ -45,6 +45,16 @@ def run_scenario(name: str, seeds: int, out_dir: Path | None = None) -> dict:
     return payload
 
 
+def exit_code(payload: dict, *, strict: bool) -> int:
+    """Non-strict: skipped counts as success. Strict: every seed must pass."""
+    runs = payload.get("runs") or []
+    if strict:
+        if not runs:
+            return 1
+        return 0 if all(run.get("pass") is True for run in runs) else 1
+    return 0 if payload["pass"] in (True, "skipped") else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="sim.run")
     parser.add_argument("--scenario", required=False, choices=sorted(REGISTRY))
@@ -54,6 +64,11 @@ def main(argv: list[str] | None = None) -> int:
         "--e2e",
         action="store_true",
         help="run full-epoch §14 scenarios via sim.epoch_runner (requires engine.epoch)",
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="exit non-zero if any seed is skipped or failed, or if no run happened",
     )
     args = parser.parse_args(argv)
     if args.seeds <= 0:
@@ -77,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
             indent=2,
         )
     )
-    return 0 if payload["pass"] in (True, "skipped") else 1
+    return exit_code(payload, strict=args.strict)
 
 
 if __name__ == "__main__":
