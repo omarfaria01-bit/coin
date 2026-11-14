@@ -1,4 +1,4 @@
-last_tick: 2026-11-14 (manager loop; merged #93 #96 after Grok split/fix)
+last_tick: 2026-11-14 (manager loop; merged #97 sybil S1-S3/L1-L3; #99 needs rebase)
 updated: 2026-11-14
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 
@@ -12,7 +12,8 @@ phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim
 - #64 auto-review workflow: CHANGES REQUESTED (pull_request secret exposure, perms, merge authority).
 - #60 runbook: HOLD until wiring merges (v0.2 content).
 - #50 D15 router: needs kiwi's written `APPROVED` — not touched.
-- Merged: #93 prices, #96 events (#93 fixed + split), #91 fee routing v0.3.3, #94 soft vesting forfeit. Earlier: #70 balances (pull-back fixed), #87 exact payout, #88 params, #89 ledger v0.3.3, #90 no-float ratchet.
+- #99 sybil L4-L6: reviewed OK, CONFLICTS after #97 squash → Grok to rebase onto main.
+- Merged: #97 sybil strong+merge rule, #93 prices, #96 events (#93 fixed + split), #91 fee routing v0.3.3, #94 soft vesting forfeit. Earlier: #70 balances (pull-back fixed), #87 exact payout, #88 params, #89 ledger v0.3.3, #90 no-float ratchet.
 
 ## Grok queue (status:todo)
 #81 remaining engine slices · #82 wire v0.3.3 into epoch.py (blocked by #81 steps 1–3) · #83 goldens ·
@@ -26,7 +27,7 @@ phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim
 - Top technical risk: Token-2022 mint ⇒ D7 rail doesn't work (#18).
 
 ## Next 3 actions (Claude)
-1. Re-review #64 after Grok's fix; review remaining #81 PRs (sybil S1-S3/L4-L6) line by line.
+1. Merge #99 once rebased (CI green); re-review #64 after Grok's fix; review remaining #81 slices.
 2. Review wiring PRs (#82); check conservation and no-float CI check.
 3. When #85 lands: summarize in Italian for kiwi (#1) and record his parameter choices in DECISIONS.
 Also: #29 pad_rewards (needs kiwi before enabling; related-party flag -> #8). Top risk unchanged: Token-2022 mint (#18).
