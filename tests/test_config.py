@@ -79,3 +79,25 @@ def test_schema_files_up_to_date():
         text=True,
     )
     assert result.returncode == 0, result.stdout
+
+
+def test_hold_v033_defaults_match_scoring_table():
+    from fractions import Fraction
+
+    from engine.params import HoldParams, parse_rational
+    from engine.scoring import (
+        DEFAULT_BOOST_AGE_SECONDS,
+        DEFAULT_HOLD_KNOTS,
+        DEFAULT_T_START_SECONDS,
+    )
+
+    hold = CoinParams().hold
+    assert hold.knot_fractions() == DEFAULT_HOLD_KNOTS
+    assert hold.t_start_seconds == DEFAULT_T_START_SECONDS
+    assert hold.boost_age_seconds == DEFAULT_BOOST_AGE_SECONDS
+    assert parse_rational("1.15") == Fraction(23, 20)
+    with pytest.raises(TypeError):
+        parse_rational(1.15)  # type: ignore[arg-type]
+    for bad in (((7200, "2"), (7200, "3")), ((7200, "2"), (9000, "1")), ()):
+        with pytest.raises(ValidationError, match="knots"):
+            HoldParams(knots=bad)

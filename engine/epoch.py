@@ -64,7 +64,13 @@ class EpochInputs:
     pot_inflow: int
     excluded: frozenset[WalletId]
     hubs: frozenset[WalletId]
-    total_supply: int = 0  # token base units; 0 → share floor is 0
+    total_supply: int  # token base units, > 0 (v0.3.3 §2 eligibility floor)
+
+    def __post_init__(self) -> None:
+        if isinstance(self.total_supply, bool) or not isinstance(self.total_supply, int):
+            raise TypeError("total_supply must be an int (token base units)")
+        if self.total_supply <= 0:
+            raise ValueError(f"total_supply must be > 0, got {self.total_supply}")
 
 
 @dataclass(frozen=True, slots=True)

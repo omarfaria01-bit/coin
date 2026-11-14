@@ -31,6 +31,8 @@ DAY = 86_400
 CAP = CoinParams().scoring.cap
 DEFAULT_REPORT = Path("reports/sim_epoch_e2e.md")
 SHALLOW = 200_000_000_000
+# The toy world's whole supply starts in the pool, so supply = initial token reserve.
+TOTAL_SUPPLY = SHALLOW
 PUMP_3X = 150_000_000_000  # ~3.05× end mid on SHALLOW after a 1 SOL dev buy
 
 
@@ -90,6 +92,7 @@ def inputs_from_world(
         pot_inflow=pot_inflow,
         excluded=frozenset(),
         hubs=frozenset(),
+        total_supply=TOTAL_SUPPLY,
     )
 
 
