@@ -8,6 +8,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal
 
+from engine.eligibility import is_eligible
 from engine.ledger import build_lots
 from engine.merkle import claims_document
 from engine.params import CoinParams
@@ -59,10 +60,11 @@ class EpochInputs:
     fundings: tuple[FirstFunding, ...]
     prices: tuple[PricePoint, ...]
     decimals: int
-    sol_usd: float
+    sol_usd: float  # display-only leftover; not used for eligibility (v0.3.3 §2)
     pot_inflow: int
     excluded: frozenset[WalletId]
     hubs: frozenset[WalletId]
+    total_supply: int = 0  # token base units; 0 → share floor is 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -234,17 +236,11 @@ def run_epoch(
     # §8 step 4
     twab_w = {w: twab(0, paths.get(w, ()), inp.t0, inp.t1) for w in holder_list}
     twab_c = {cid: sum(twab_w[w] for w in members) for cid, members in clustered.members.items()}
-    epoch_twap = twap(inp.t0, inp.t1)
-    min_hold = int(params.eligibility.min_hold_hours * 3600)
-    # §8 step 5
+    # §8 step 5 — price-free supply-share eligibility (COIN_MATH v0.3.3 §2)
     eligible: set[ClusterId] = set()
-    for cid, members in clustered.members.items():
-        lots = [lot for w in members for lot in lots_map.get(w, ())]
-        earliest = min((lot.t_acquired for lot in lots), default=inp.t1 + 1)
-        usd = twab_c[cid] * epoch_twap / 1e9 * inp.sol_usd
+    for cid in clustered.members:
         if (
-            usd >= params.eligibility.min_eligible_usd
-            and earliest <= inp.t1 - min_hold
+            is_eligible(twab_c[cid], inp.total_supply, params.eligibility.min_eligible_share)
             and prev.forfeit_until.get(cid, 0) <= inp.t1
         ):
             eligible.add(cid)

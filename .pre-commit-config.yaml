@@ -1,11 +1,31 @@
+# Local quality gates that match CI in .github/workflows/ci.yml
+# (ruff check/format, schema check, tests + 90% coverage).
+# After clone or merge:  pre-commit install
 repos:
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.21.2
     hooks:
       - id: gitleaks
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.7.0
+    rev: v0.17.5
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+        exclude: ^coord/
+      - id: end-of-file-fixer
+        exclude: ^coord/
+      - id: trailing-whitespace
+        exclude: ^coord/
+  - repo: local
+    hooks:
+      - id: coin-schema-check
+        name: check generated JSON schemas are up to date
+        entry: uv run python tools/gen_schema.py --check
+        language: system
+        pass_filenames: false
+        files: ^(engine/params\.py|config/.*\.schema\.json|tools/gen_schema\.py)$

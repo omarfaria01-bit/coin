@@ -27,6 +27,7 @@ def test_committed_pad_json_is_unfilled_template():
 
 def test_spec_defaults():
     p = CoinParams()
+    assert p.eligibility.min_eligible_share == "1/1000000"
     assert p.scoring.cap == 0.05
     assert p.rewards.alpha_per_day == 0.10
     assert (p.fees.dev, p.fees.holder_pot, p.fees.draw_pot, p.fees.buyback_burn) == (

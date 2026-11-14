@@ -1,6 +1,6 @@
 # On-chain building blocks (P1 research)
 
-Access date for every source below: **2026-11-14** (Europe/Rome).  
+Access date for every source below: **2026-11-14** (Europe/Rome).
 Method: official docs and GitHub source first; program IDs were also checked read-only with `solana program show` against `https://api.mainnet-beta.solana.com` and `https://api.devnet.solana.com`. No wallets were connected. No transactions were sent.
 
 This report recommends existing maintained programs and libraries. It does not implement code. Claude decides in `coord/DECISIONS.md`. kiwi's reuse rule: fork, vendor, or depend on the best-maintained option (license, stars, recent commits) instead of writing a custom on-chain program.
