@@ -218,3 +218,114 @@ def cluster(
                 payer_count[e.fee_payer].add(w)
     shared = tuple(sorted(p for p, hs in payer_count.items() if len(hs) >= REVIEW_SHARED_PAYER))
     return Clusters(cluster_of, members, tuple(link_only), review, shared)
+
+
+# ---------------------------------------------------------------- one-sided links L4–L6
+
+CO_TRADE_SECONDS = 1
+CO_TRADE_MIN = 3
+SIZE_TOL = Fraction(1, 10)
+BALANCE_TOL = Fraction(1, 1000)
+L5_MIN_WALLETS = 4
+L5_CREATED_WITHIN = _DAY
+L6_WINDOW = _DAY
+HUB_CANDIDATE_COUNTERPARTIES = 25
+
+
+def _close(x: int, y: int, tol: Fraction) -> bool:
+    """|x − y| ≤ tol · max(x, y), exactly."""
+    hi = max(x, y)
+    return abs(x - y) <= tol * hi
+
+
+def l4_co_trades(events: Sequence[TokenEvent], hubs: frozenset[WalletId]) -> list[Edge]:
+    """L4: same direction, same second ±1, size within 10%, on ≥ 3 occasions.
+
+    An occasion counts once per trade on each side, so the pair needs ≥ 3 distinct
+    trades of A and ≥ 3 distinct trades of B that match the other wallet.
+    """
+    raw = [
+        (e.ts, e.kind, e.dst if e.kind is EventKind.BUY else e.src, e.amount, e.sig)
+        for e in events
+        if e.kind in (EventKind.BUY, EventKind.SELL)
+    ]
+    trades = sorted(t for t in raw if t[2] is not None and t[2] not in hubs)
+    matched: dict[tuple[WalletId, WalletId], tuple[set[str], set[str], str]] = {}
+    for i, (ts, kind, w, amt, sig) in enumerate(trades):
+        j = i + 1
+        while j < len(trades) and trades[j][0] - ts <= CO_TRADE_SECONDS:
+            ts2, kind2, w2, amt2, sig2 = trades[j]
+            j += 1
+            if kind2 is not kind or w2 == w or not _close(amt, amt2, SIZE_TOL):
+                continue
+            (a, sa), (b, sb) = sorted(((w, sig), (w2, sig2)))
+            sides = matched.setdefault((a, b), (set(), set(), min(sa, sb)))
+            sides[0].add(sa)
+            sides[1].add(sb)
+    out: dict = {}
+    for (a, b), (sa, sb, ref) in sorted(matched.items()):
+        if min(len(sa), len(sb)) >= CO_TRADE_MIN:
+            _add(out, a, b, Kind.L4_CO_TRADE, ref)
+    return list(out.values())
+
+
+def l5_identical_balances(
+    balances: Mapping[WalletId, int],
+    created: Mapping[WalletId, int],
+    hubs: frozenset[WalletId],
+) -> list[Edge]:
+    """L5: ≥ 4 wallets with balances within ±0.1% that were all created within 24h."""
+    rows = sorted(
+        (bal, w) for w, bal in balances.items() if bal > 0 and w in created and w not in hubs
+    )
+    out: dict = {}
+    for i, (low, _w) in enumerate(rows):
+        near = [w for bal, w in rows[i:] if _close(bal, low, BALANCE_TOL)]
+        if len(near) < L5_MIN_WALLETS:
+            continue
+        by_time = sorted((created[w], w) for w in near)
+        for k, (t_first, _wf) in enumerate(by_time):
+            group = [w for t, w in by_time[k:] if t - t_first <= L5_CREATED_WITHIN]
+            if len(group) >= L5_MIN_WALLETS:
+                for a, b in combinations(sorted(group), 2):
+                    _add(out, a, b, Kind.L5_IDENTICAL_BALANCES, f"balance~{low}")
+    return list(out.values())
+
+
+def l6_shared_proceeds(
+    events: Sequence[TokenEvent], sols: Sequence[SolTransfer], hubs: frozenset[WalletId]
+) -> list[Edge]:
+    """L6: two sellers each send SOL to the same non-hub destination within 24h after
+    one of their sales (the destination is a third wallet, not one of the two)."""
+    sales: dict[WalletId, list[int]] = defaultdict(list)
+    for e in events:
+        if e.kind is EventKind.SELL and e.src is not None and e.src not in hubs:
+            sales[e.src].append(e.ts)
+    sent_to: dict[WalletId, dict[WalletId, str]] = defaultdict(dict)  # dest → seller → sig
+    for s in sorted(sols, key=lambda s: (s.slot, s.sig)):
+        after_sale = any(0 <= s.ts - t <= L6_WINDOW for t in sales.get(s.src, ()))
+        if after_sale and s.dst not in hubs and s.dst != s.src:
+            sent_to[s.dst].setdefault(s.src, s.sig)
+    out: dict = {}
+    for dest, sellers in sorted(sent_to.items()):
+        for a, b in combinations(sorted(w for w in sellers if w != dest), 2):
+            _add(out, a, b, Kind.L6_SHARED_PROCEEDS, min(sellers[a], sellers[b]))
+    return list(out.values())
+
+
+def hub_candidates(
+    events: Sequence[TokenEvent], sols: Sequence[SolTransfer], hubs: frozenset[WalletId]
+) -> tuple[WalletId, ...]:
+    """Review list only: wallets with ≥ 25 distinct counterparties. Never automatic (§7)."""
+    peers: dict[WalletId, set[WalletId]] = defaultdict(set)
+    pairs = [(e.src, e.dst) for e in events if e.kind is EventKind.TRANSFER]
+    pairs += [(s.src, s.dst) for s in sols]
+    for src, dst in pairs:
+        if src is not None and dst is not None and src != dst:
+            peers[src].add(dst)
+            peers[dst].add(src)
+    return tuple(
+        sorted(
+            w for w, p in peers.items() if w not in hubs and len(p) >= HUB_CANDIDATE_COUNTERPARTIES
+        )
+    )
