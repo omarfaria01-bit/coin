@@ -91,8 +91,6 @@ def _stringify_ints(value: Any) -> Any:
         return value
     if isinstance(value, int):
         return str(value)
-    if isinstance(value, float):
-        raise TypeError("canonical_json forbids float: use int or fractions.Fraction")
     if isinstance(value, Mapping):
         bad_keys = [k for k in value if not isinstance(k, str)]
         if bad_keys:
@@ -104,4 +102,8 @@ def _stringify_ints(value: Any) -> Any:
         return value.hex()
     if value is None or isinstance(value, str):
         return value
-    raise TypeError(f"canonical_json cannot serialize {type(value).__name__}")
+    # Anything else (notably float) is rejected: exact arithmetic only (§0).
+    raise TypeError(
+        f"canonical_json cannot serialize {type(value).__name__} "
+        "(no float: use int or fractions.Fraction)"
+    )

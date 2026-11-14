@@ -6,6 +6,7 @@ COIN_MATH §0). Price comes from pool reserves, never from swap prints.
 
 from __future__ import annotations
 
+from bisect import bisect_right
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from fractions import Fraction
@@ -66,15 +67,19 @@ def _segments(
     points: Sequence[ReservePoint], t_start: int, t_end: int
 ) -> Iterator[tuple[int, int, ReservePoint]]:
     """Yield `(seg_start, seg_end, point)` covering `[t_start, t_end)`; one reserve state
-    (`point`) is active throughout each segment."""
+    (`point`) is active throughout each segment. One linear pass after a bisect."""
     if t_end <= t_start:
         raise ValueError("window must be non-empty: t_end > t_start")
     ordered = _sorted_points(points)
     if t_start < ordered[0].ts:
         raise ValueError(f"no reserve point known before t_start={t_start}")
-    boundaries = [t_start, *(p.ts for p in ordered if t_start < p.ts < t_end), t_end]
-    for seg_start, seg_end in zip(boundaries, boundaries[1:], strict=False):
-        yield seg_start, seg_end, _point_at(ordered, seg_start)
+    i = bisect_right([p.ts for p in ordered], t_start) - 1  # state active at t_start
+    seg_start = t_start
+    while seg_start < t_end:
+        nxt = ordered[i + 1].ts if i + 1 < len(ordered) else t_end
+        seg_end = min(nxt, t_end)
+        yield seg_start, seg_end, ordered[i]
+        seg_start, i = seg_end, i + 1
 
 
 def arithmetic_mean(points: Sequence[ReservePoint], t_start: int, t_end: int) -> Fraction:
