@@ -17,7 +17,7 @@ from engine.params import CoinParams
 from engine.rewards import (
     DEFAULT_G,
     capped_shares_v033,
-    epoch_budget,
+    epoch_budget_v033,
     exact_payout,
     split_cluster_payout,
 )
@@ -32,7 +32,7 @@ from engine.sybil_v033 import (
     s3_overrides,
     transfer_links,
 )
-from engine.twab import twab
+from engine.twab import twab_exact
 from engine.types import (
     ClusterId,
     EventKind,
@@ -206,6 +206,8 @@ def _inputs_hash(inp: EpochInputs, params: CoinParams) -> str:
 def run_epoch(
     inp: EpochInputs, params: CoinParams, prev: EpochState
 ) -> tuple[EpochResult, EpochState]:
+    if params.epoch.hours != 24:
+        raise ValueError("v0.3.3 §0: epochs are 86,400 s (epoch.hours must be 24)")
     expected = params.epoch.hours * 3600
     if inp.t1 - inp.t0 != expected:
         raise ValueError(f"t1-t0 must equal epoch.hours*3600, got {inp.t1 - inp.t0} vs {expected}")
@@ -274,9 +276,10 @@ def run_epoch(
     for entry, value in zip(kept, breaches.unlocked, strict=True):
         unlocked[entry.wallet] = float(value)
     # §8 step 4
-    twab_w = {w: twab(0, paths.get(w, ()), inp.t0, inp.t1) for w in holder_list}
+    twab_w = {w: twab_exact(0, paths.get(w, ()), inp.t0, inp.t1) for w in holder_list}
     twab_c = {
-        cid: sum(twab_w.get(w, 0.0) for w in members) for cid, members in clustered.members.items()
+        cid: sum((twab_w.get(w, Fraction(0)) for w in members), Fraction(0))
+        for cid, members in clustered.members.items()
     }
     # §8 step 5 — price-free supply-share eligibility (COIN_MATH v0.3.3 §2)
     eligible: set[ClusterId] = {
@@ -320,18 +323,18 @@ def run_epoch(
     raw_scores: dict[ClusterId, Fraction] = {}
     for cid, members in clustered.members.items():
         s_c = sum((s_w.get(w, Fraction(0)) for w in members), Fraction(0))
-        eff_h = float(s_c / Fraction(twab_c[cid])) if twab_c[cid] > 0 else 0.0
+        eff_h = float(s_c / twab_c[cid]) if twab_c[cid] > 0 else 0.0
         s_c = s_c if cid in eligible else Fraction(0)
         raw_scores[cid] = s_c
         # hold = effective multiplier s_c / B̄_c; churn and boost are gone in v0.3.3 (1.0).
-        rows[cid] = ClusterScore(cid, twab_c[cid], eff_h, 1.0, 1.0, float(s_c), 0.0)
+        rows[cid] = ClusterScore(cid, float(twab_c[cid]), eff_h, 1.0, 1.0, float(s_c), 0.0)
     for cid in forfeited & rows.keys():
         raw_scores[cid] = Fraction(0)
         row = rows[cid]
         rows[cid] = ClusterScore(cid, row.twab, row.hold, row.churn, row.boost, 0.0, 0.0)
     # §8 step 8
     pot = prev.pot + inp.pot_inflow
-    budget = epoch_budget(pot, params.rewards.alpha_per_day, params.epoch.hours)
+    budget = epoch_budget_v033(pot, Fraction(str(params.rewards.alpha_per_day)))
     skip = (not params.rewards.enabled) or budget < params.rewards.min_epoch_payout_lamports
     payouts: dict[WalletId, int] = {}
     rollover = 0

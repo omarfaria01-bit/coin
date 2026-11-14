@@ -7,8 +7,10 @@ BASELINE by (module, top-level name). The list may only shrink:
 - a violation not in BASELINE fails (new float code);
 - a BASELINE entry that is now clean fails too (delete it, so it cannot come back).
 
-#82 (wiring) and #81 step 4 (sybil Fractions) remove the v0.2 code; BASELINE must be
-empty before #81 closes. Usage: uv run python tools/check_no_float.py
+Since #82, run_epoch calls none of the BASELINE names (budget, TWAB, scores, cap and
+payout are exact). The entries left are v0.2 code that only sim/acceptance.py and the
+v0.2 tests still import; they are deleted with that table's rebuild in #84, which must
+leave BASELINE empty. Usage: uv run python tools/check_no_float.py
 """
 
 from __future__ import annotations

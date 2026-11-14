@@ -8,7 +8,13 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from engine.rewards import capped_shares_v033, exact_payout, split_cluster_payout
+from engine.rewards import (
+    capped_shares_v033,
+    epoch_budget,
+    epoch_budget_v033,
+    exact_payout,
+    split_cluster_payout,
+)
 
 
 def test_ten_equal_clusters_pay_half_and_roll_half() -> None:
@@ -92,3 +98,28 @@ def test_property_wallet_split_sums_to_cluster_payout(payout: int, s_w: dict) ->
     s_c = sum(s_w.values())
     for wid, s in s_w.items():
         assert payout * s / s_c - 1 < parts[wid] < payout * s / s_c + 1
+
+
+@given(st.integers(0, 10**24), st.integers(1, 1000), st.integers(1, 1000))
+@settings(max_examples=200, deadline=None)
+def test_epoch_budget_v033_is_floor_alpha_pot(pot: int, a: int, b: int) -> None:
+    alpha = Fraction(min(a, b), max(a, b))
+    r = epoch_budget_v033(pot, alpha)
+    assert 0 <= r <= pot
+    assert r <= alpha * pot < r + 1
+
+
+@given(st.integers(0, 10**24))
+@settings(max_examples=100, deadline=None)
+def test_epoch_budget_v033_matches_v02_for_one_day_alpha_tenth(pot: int) -> None:
+    assert epoch_budget_v033(pot, Fraction(1, 10)) == epoch_budget(pot, 0.10, 24) == pot // 10
+
+
+@pytest.mark.parametrize(
+    ("pot", "alpha", "exc"),
+    [(-1, Fraction(1, 10), ValueError), (True, Fraction(1, 10), TypeError),
+     (10, Fraction(0), ValueError), (10, Fraction(11, 10), ValueError), (10, 0.1, ValueError)],
+)  # fmt: skip
+def test_epoch_budget_v033_rejects_bad_input(pot, alpha, exc) -> None:
+    with pytest.raises(exc):
+        epoch_budget_v033(pot, alpha)
