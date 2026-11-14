@@ -27,7 +27,8 @@ def _write(tmp_path: Path, data: dict, params: Path | None = None) -> Path:
 def _conserved(rows: list[dict], inflows: list[int]) -> None:
     carry = 0
     for row, inflow in zip(rows, inflows, strict=True):
-        assert row["pot_in"] + inflow + carry == row["pot_next"] + row["paid"] + row["carry_next"]
+        assert row["pot_prev"] + inflow + carry == row["pot_next"] + row["paid"] + row["carry_next"]
+        assert row["pot_inflow"] == inflow
         carry = row["carry_next"]
 
 
@@ -35,7 +36,7 @@ def test_two_epochs_one_call_writes_both_and_state(tmp_path: Path) -> None:
     rows = run(FIXTURE, tmp_path)
     assert [r["epoch"] for r in rows] == [0, 1]
     _conserved(rows, [w["pot_inflow"] for w in _fx()["epochs"]])
-    assert rows[1]["pot_in"] == rows[0]["pot_next"] > 0
+    assert rows[1]["pot_prev"] == rows[0]["pot_next"] > 0
     state = json.loads((tmp_path / "state.json").read_text(encoding="utf-8"))
     assert state["epoch"] == 2 and state["pot"] == rows[1]["pot_next"]
     assert state["carry"] and sum(state["carry"].values()) == rows[1]["carry_next"]
@@ -141,3 +142,20 @@ def test_conservation_check_catches_tampering(tmp_path: Path) -> None:
     check_conservation(prev, fx.epochs[0].pot_inflow, res, nxt)
     with pytest.raises(AssertionError, match="conservation failed"):
         check_conservation(prev, fx.epochs[0].pot_inflow, res, replace(nxt, pot=nxt.pot + 1))
+
+
+def test_events_before_t0_are_kept_as_ledger_history() -> None:
+    """ENGINE_DESIGN §8: events are all history from launch through t1, not only [t0, t1)."""
+    from tools.run_epoch import build_inputs
+
+    fx, _params = load_fixture(FIXTURE)
+    inp = build_inputs(fx, fx.epochs[0])
+    assert any(e.ts < fx.epochs[0].t0 for e in inp.events)
+    assert all(e.ts < fx.epochs[0].t1 for e in inp.events)
+
+
+def test_infinite_sol_usd_is_rejected(tmp_path: Path) -> None:
+    data = _fx()
+    data["sol_usd"] = "Infinity"
+    with pytest.raises(InputError, match="sol_usd"):
+        load_fixture(_write(tmp_path, data))

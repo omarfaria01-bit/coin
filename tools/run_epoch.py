@@ -78,13 +78,13 @@ class FundingIn(_Strict):
 
 class PriceIn(_Strict):
     ts: int
-    price: float = Field(gt=0)
+    price: float = Field(gt=0, allow_inf_nan=False)
 
 
 class VestingIn(_Strict):
     wallet: str
     vested_amount: int = Field(ge=0)
-    p_entry: float = Field(gt=0)
+    p_entry: float = Field(gt=0, allow_inf_nan=False)
     t0: int
 
 
@@ -107,7 +107,7 @@ class Fixture(_Strict):
 
     params: str = Field(description="Path to coin.json, relative to the fixture file")
     decimals: int = Field(ge=0, le=18)
-    sol_usd: float = Field(gt=0)
+    sol_usd: float = Field(gt=0, allow_inf_nan=False)
     excluded: list[str] = []
     hubs: list[str] = []
     vesting: list[VestingIn] = Field([], description="Seeds epoch 0 only (no state.json yet)")
@@ -219,11 +219,14 @@ def claims_tree(res: EpochResult) -> MerkleTree | None:
     return tree
 
 
-def summary(prev: EpochState, res: EpochResult, nxt: EpochState, dest: Path | None) -> dict:
+def summary(
+    prev: EpochState, inflow: int, res: EpochResult, nxt: EpochState, dest: Path | None
+) -> dict:
     return {
         "epoch": res.epoch,
         "rail": res.rail,
-        "pot_in": prev.pot,
+        "pot_prev": prev.pot,
+        "pot_inflow": inflow,
         "pot_next": nxt.pot,
         "paid": sum(res.transferred_or_claimable.values()),
         "carry_next": sum(nxt.carry.values()),
@@ -257,11 +260,11 @@ def run(
         dest = None
         if not dry_run:
             dest = write_epoch(out, res, nxt, claims_tree(res))
-            tmp = state_path.with_suffix(".json.tmp")
+            tmp = state_path.parent / (state_path.name + ".tmp")
             tmp.parent.mkdir(parents=True, exist_ok=True)
             tmp.write_bytes((dest / "state.json").read_bytes())
             tmp.replace(state_path)
-        rows.append(summary(state, res, nxt, dest))
+        rows.append(summary(state, w.pot_inflow, res, nxt, dest))
         state = nxt
     return rows
 
