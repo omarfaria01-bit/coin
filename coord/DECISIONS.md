@@ -126,3 +126,11 @@ P̃_h = window · 2^128 / Σ. Rounding up only lowers P̃_h (relative error < n 
 when P̃_h ≲ window), so the unlock
 is never above the exact one; the independent implementation (§14) must use the same rule. This is the
 one place in the payout path that rounds before the final payout step; COIN_MATH §0 and §11 say so.
+
+## D21 · 2026-11-14 · T_START = 6h (kiwi, #85)
+kiwi decided **T_START = 6 hours** (was 2h) after the #119 variant report; his decision relayed on #85 and
+by the operator instruction of this loop. Other parameters unchanged (default curve, eligibility 1/1,000,000,
+draws off at launch, draw period later). The knot table is unchanged: `h` is 0 below 6h and jumps to the
+6h knot (1.15) at T_START, exactly the "T_START 6h" variant in the #119 report. Effect measured there:
+the 4-hour-cycle trader earns 0; €100 holder first paid in 1.7 days. Changed: `hold.t_start_seconds`
+21600, `DEFAULT_T_START_SECONDS`, config/coin.json + schema, COIN_MATH §3–4, goldens regenerated.

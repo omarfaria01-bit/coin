@@ -69,14 +69,14 @@ def score(twab_balance: float, hold: float, churn: float, boost: float) -> float
 
 
 # ---------------------------------------------------------------------------
-# COIN_MATH v0.3.3 §3–4. Defaults match the published knot table / T_START=2h.
+# COIN_MATH v0.3.3 §3–4. Defaults match the published knot table / T_START=6h (D21).
 # Config/schema adoption is a later issue (gap A). Callers may pass another
 # knot table or T_START; this module does not choose kiwi's variants.
 # ---------------------------------------------------------------------------
 
 HOUR = 3_600
 # _DAY already defined above as 86_400.
-DEFAULT_T_START_SECONDS = 2 * HOUR
+DEFAULT_T_START_SECONDS = 6 * HOUR
 DEFAULT_BOOST_AGE_SECONDS = 48 * HOUR  # E1/E2 split; §5 boost may start here
 DEFAULT_HOLD_KNOTS: tuple[tuple[int, Fraction], ...] = (
     (2 * HOUR, Fraction(1)),

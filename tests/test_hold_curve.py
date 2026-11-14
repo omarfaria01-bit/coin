@@ -20,7 +20,7 @@ from engine.scoring import (
 KNOT_TABLE = (
     (0, Fraction(0)),
     (DEFAULT_T_START_SECONDS - 1, Fraction(0)),
-    (2 * HOUR, Fraction(1)),
+    (2 * HOUR, Fraction(0)),  # below the default T_START (6h, D21)
     (6 * HOUR, Fraction(23, 20)),
     (12 * HOUR, Fraction(13, 10)),
     (24 * HOUR, Fraction(3, 2)),
@@ -38,11 +38,13 @@ KNOT_TABLE = (
 def test_knot_table_and_t_start_discontinuity() -> None:
     for age, expected in KNOT_TABLE:
         assert h_of_age(age) == expected
-    # Not a ramp from 0: one second under T_START is exactly 0, then it jumps to 1.
-    assert h_of_age(DEFAULT_T_START_SECONDS) == 1
+    # Not a ramp from 0: one second under T_START is exactly 0, then it jumps to the 6h knot.
+    assert DEFAULT_T_START_SECONDS == 6 * HOUR
+    assert h_of_age(DEFAULT_T_START_SECONDS) == Fraction(23, 20)
     assert h_of_age(DEFAULT_T_START_SECONDS - 1) == 0
-    # Midpoint of the 2h–6h segment is exact 1.075.
-    assert h_of_age(4 * HOUR) == Fraction(43, 40)
+    # The earlier 2h start is still available as a variant; midpoint of 2h–6h is exact 1.075.
+    assert h_of_age(2 * HOUR, t_start_seconds=2 * HOUR) == 1
+    assert h_of_age(4 * HOUR, t_start_seconds=2 * HOUR) == Fraction(43, 40)
     # Custom T_START / knots are accepted and do not change the default table.
     late = h_of_age(6 * HOUR, t_start_seconds=12 * HOUR)
     assert late == 0
@@ -54,7 +56,7 @@ def test_knot_table_and_t_start_discontinuity() -> None:
         (90 * _DAY, Fraction(47, 20)),  # 2.35
     )
     assert h_of_age(90 * _DAY, knots=mid_curve, t_start_seconds=12 * HOUR) == Fraction(47, 20)
-    assert h_of_age(2 * HOUR) == 1  # default unchanged
+    assert h_of_age(6 * HOUR) == Fraction(23, 20)  # default unchanged
 
 
 @given(st.integers(-100, 200 * _DAY), st.integers(-100, 200 * _DAY))
@@ -84,7 +86,7 @@ def test_sum_h_matches_second_by_second_on_a_short_window() -> None:
 def test_e1_e2_split_taint_and_zero_below_t_start() -> None:
     amount = 100
     t0, t1 = 0, 24 * HOUR
-    # Acquired at t0: ages 0..24h over the epoch. First 2h score 0; rest is E1; no E2.
+    # Acquired at t0: ages 0..24h over the epoch. First 6h (T_START) score 0; rest is E1; no E2.
     e1, e2 = lot_epoch_parts(amount, t_acquired=0, t0=t0, t1=t1)
     assert e2 == 0
     expected_e1 = Fraction(amount, t1 - t0) * sum_h_of_age(0, 24 * HOUR)
@@ -99,10 +101,10 @@ def test_e1_e2_split_taint_and_zero_below_t_start() -> None:
     assert e1_old == 0
     assert e2_old == Fraction(amount, t1 - t0) * sum_h_of_age(t0 - acquired, t1 - acquired)
     assert e2_old > 0
-    # Taint excludes the first 3 hours of the epoch (including the 2h start).
-    e1_t, e2_t = lot_epoch_parts(amount, t_acquired=0, t0=t0, t1=t1, tainted_until=3 * HOUR)
+    # Taint excludes the first 9 hours of the epoch (past the 6h start).
+    e1_t, e2_t = lot_epoch_parts(amount, t_acquired=0, t0=t0, t1=t1, tainted_until=9 * HOUR)
     assert e2_t == 0
-    assert e1_t == Fraction(amount, t1 - t0) * sum_h_of_age(3 * HOUR, 24 * HOUR)
+    assert e1_t == Fraction(amount, t1 - t0) * sum_h_of_age(9 * HOUR, 24 * HOUR)
     assert e1_t < e1
     # Zero amount / empty epoch.
     assert lot_epoch_parts(0, 0, 0, t1) == (0, 0)

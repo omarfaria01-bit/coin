@@ -64,9 +64,9 @@ def test_score_lots_sums_and_forces_transfer_u_to_one() -> None:
     assert boosted == score_lot(60, old.t_acquired, t0, t1, u_lot=Fraction(3, 2)) + score_lot(
         60, xfer.t_acquired, t0, t1, u_lot=1
     )
-    # Taint on the first 3 hours of a same-day lot reduces the score, never below 0.
+    # Taint on the first 9 hours (past T_START=6h) reduces the score, never below 0.
     full = score_lots([young], t0, t1)
-    tainted = score_lots([young], t0, t1, tainted_until=(3 * HOUR,))
+    tainted = score_lots([young], t0, t1, tainted_until=(9 * HOUR,))
     assert 0 <= tainted < full
     with pytest.raises(ValueError, match="u_lots"):
         score_lots([young], t0, t1, u_lots=(1, 1))
