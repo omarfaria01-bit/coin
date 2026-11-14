@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from engine.types import WalletId
 
@@ -61,30 +61,27 @@ class ClaimEscrow:
             raise ValueError("claim amount must be > 0")
 
 
+def _check_amount(amount: int) -> None:
+    if isinstance(amount, bool) or not isinstance(amount, int):
+        raise TypeError("amount must be an int")
+    if amount < 0:
+        raise ValueError(f"amount must be >= 0, got {amount}")
+
+
 def credit(bal: WalletBalance, amount: int) -> WalletBalance:
     """Add holder rewards or draw prizes to earned_total.
 
     Pending never expires and is never clawed back for ineligibility.
     """
-    if isinstance(amount, bool) or not isinstance(amount, int):
-        raise TypeError("amount must be an int")
-    if amount < 0:
-        raise ValueError(f"amount must be >= 0, got {amount}")
-    if amount == 0:
-        return bal
+    _check_amount(amount)
     return WalletBalance(bal.wallet, bal.earned_total + amount, bal.paid_total)
 
 
 def record_payment(bal: WalletBalance, amount: int) -> WalletBalance:
     """Move ``amount`` from pending to paid_total (push or distributor funding)."""
-    if isinstance(amount, bool) or not isinstance(amount, int):
-        raise TypeError("amount must be an int")
-    if amount < 0:
-        raise ValueError(f"amount must be >= 0, got {amount}")
+    _check_amount(amount)
     if amount > bal.pending:
         raise ValueError("payment exceeds pending")
-    if amount == 0:
-        return bal
     return WalletBalance(bal.wallet, bal.earned_total, bal.paid_total + amount)
 
 
@@ -114,38 +111,31 @@ def apply_push(
 
 def recredit_unclaimed(bal: WalletBalance, amount: int) -> WalletBalance:
     """30-day pull-back: amount previously marked paid returns to pending."""
-    if isinstance(amount, bool) or not isinstance(amount, int):
-        raise TypeError("amount must be an int")
-    if amount < 0:
-        raise ValueError(f"amount must be >= 0, got {amount}")
+    _check_amount(amount)
     if amount > bal.paid_total:
         raise ValueError("recredit exceeds paid_total")
-    if amount == 0:
-        return bal
     return WalletBalance(bal.wallet, bal.earned_total, bal.paid_total - amount)
 
 
-def return_to_pot(bal: WalletBalance, amount: int) -> WalletBalance:
-    """180-day no-claim: drop ``amount`` from the wallet (caller credits the pot).
+def return_to_pot(
+    bal: WalletBalance, amount: int, *, recredited: bool
+) -> tuple[WalletBalance, int]:
+    """180-day no-claim return (§13). Returns (balance, units the pot receives).
 
-    After a 30-day recredit the amount sits in pending, so only earned_total
-    decreases. If it is still escrowed (paid_total includes it), both totals
-    decrease. The caller must pass an amount that is still in the wallet.
+    This and payment are the only decreases of ``pending``; only unclaimed money
+    goes back, and money the wallet already received is never touched.
+    - Still escrowed (never recredited): the escrow is unclaimed, so ``amount``
+      leaves both earned_total and paid_total; pending is unchanged.
+    - Recredited at 30 days: the amount sits in pending and may since have been
+      paid again. Take ``min(amount, pending)`` from earned_total only.
     """
-    if isinstance(amount, bool) or not isinstance(amount, int):
-        raise TypeError("amount must be an int")
-    if amount < 0:
-        raise ValueError(f"amount must be >= 0, got {amount}")
-    if amount == 0:
-        return bal
-    if amount > bal.earned_total:
-        raise ValueError("pot return exceeds earned_total")
-    if bal.pending >= amount:
-        return WalletBalance(bal.wallet, bal.earned_total - amount, bal.paid_total)
-    still_escrowed = amount - bal.pending
-    if still_escrowed > bal.paid_total:
-        raise ValueError("pot return exceeds wallet totals")
-    return WalletBalance(bal.wallet, bal.earned_total - amount, bal.paid_total - still_escrowed)
+    _check_amount(amount)
+    if recredited:
+        take = min(amount, bal.pending)
+        return WalletBalance(bal.wallet, bal.earned_total - take, bal.paid_total), take
+    if amount > bal.paid_total:
+        raise ValueError("escrowed pot return exceeds paid_total")
+    return WalletBalance(bal.wallet, bal.earned_total - amount, bal.paid_total - amount), amount
 
 
 def credit_many(
@@ -184,7 +174,7 @@ def mark_claimed(claim: ClaimEscrow) -> ClaimEscrow:
         raise ValueError("claim already marked claimed")
     if claim.recredited or claim.returned_to_pot:
         raise ValueError("claim already pulled back")
-    return ClaimEscrow(claim.wallet, claim.amount, claim.escrowed_at, claimed=True)
+    return replace(claim, claimed=True)
 
 
 def apply_pullbacks(
@@ -203,29 +193,14 @@ def apply_pullbacks(
         age = now - claim.escrowed_at
         if age >= UNCLAIMED_TO_POT_SECONDS:
             bal = out.get(claim.wallet) or WalletBalance(claim.wallet)
-            out[claim.wallet] = return_to_pot(bal, claim.amount)
-            pot_in += claim.amount
-            updated.append(
-                ClaimEscrow(
-                    claim.wallet,
-                    claim.amount,
-                    claim.escrowed_at,
-                    recredited=claim.recredited,
-                    returned_to_pot=True,
-                )
-            )
+            out[claim.wallet], taken = return_to_pot(bal, claim.amount, recredited=claim.recredited)
+            pot_in += taken
+            updated.append(replace(claim, returned_to_pot=True))
             continue
         if (not claim.recredited) and age >= UNCLAIMED_RECREDIT_SECONDS:
             bal = out.get(claim.wallet) or WalletBalance(claim.wallet)
             out[claim.wallet] = recredit_unclaimed(bal, claim.amount)
-            updated.append(
-                ClaimEscrow(
-                    claim.wallet,
-                    claim.amount,
-                    claim.escrowed_at,
-                    recredited=True,
-                )
-            )
+            updated.append(replace(claim, recredited=True))
             continue
         updated.append(claim)
     return out, tuple(updated), pot_in

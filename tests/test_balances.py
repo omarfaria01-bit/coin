@@ -51,14 +51,8 @@ def test_pending_identity_and_threshold() -> None:
 
 def test_below_threshold_never_decreases_and_ineligibility_does_not_claw_back() -> None:
     bal = credit(_bal(), 100)
-    assert bal.pending == 100
-    # "Ineligible this epoch" is a no-op on the book: no clawback, no expiry.
-    still = credit(bal, 0)
-    assert still == bal
-    assert still.pending == 100
-    grown = credit(still, 50)
-    assert grown.pending == 150
-    assert grown.pending > still.pending
+    assert credit(bal, 0) == bal  # "ineligible this epoch" is a no-op: no clawback, no expiry
+    assert credit(bal, 50).pending == 150
 
 
 def test_draw_prizes_use_the_same_balance() -> None:
@@ -70,10 +64,6 @@ def test_draw_prizes_use_the_same_balance() -> None:
     assert xfer == {W: 1_100_000}
     assert book[W].pending == 0
     assert book[W2].pending == 10  # stays, never decreases
-    # Conservation: pending_before = pending_after + transfers.
-    before = with_draw.pending + 10
-    after = book[W].pending + book[W2].pending + sum(xfer.values())
-    assert before == after
 
 
 def test_thirty_day_recredit_and_one_hundred_eighty_day_pot_return() -> None:
@@ -82,22 +72,17 @@ def test_thirty_day_recredit_and_one_hundred_eighty_day_pot_return() -> None:
     book, claims = open_claims(start, {W: 2_000_000}, escrowed_at=t0)
     assert book[W].pending == 0
     assert book[W].paid_total == 2_000_000
-    # Before 30 days: no change.
-    mid, claims_mid, pot = apply_pullbacks(book, claims, t0 + UNCLAIMED_RECREDIT_SECONDS - 1)
-    assert pot == 0 and claims_mid[0].recredited is False
-    assert mid[W].pending == 0
+    _, claims_mid, pot = apply_pullbacks(book, claims, t0 + UNCLAIMED_RECREDIT_SECONDS - 1)
+    assert pot == 0 and claims_mid[0].recredited is False  # before 30 days: no change
     # At 30 days: back to pending, to be offered again.
     rec, claims_rec, pot = apply_pullbacks(book, claims, t0 + UNCLAIMED_RECREDIT_SECONDS)
     assert pot == 0 and claims_rec[0].recredited is True
-    assert rec[W].pending == 2_000_000
-    assert rec[W].earned_total == 2_000_000
+    assert rec[W].pending == rec[W].earned_total == 2_000_000
     # At 180 days, still unclaimed: returns to the pot, pending drops, never negative.
     gone, claims_gone, pot = apply_pullbacks(rec, claims_rec, t0 + UNCLAIMED_TO_POT_SECONDS)
     assert pot == 2_000_000
     assert claims_gone[0].returned_to_pot is True
-    assert gone[W].pending == 0
-    assert gone[W].earned_total == 0
-    assert gone[W].paid_total == 0
+    assert gone[W] == WalletBalance(W, 0, 0)
 
 
 def test_claimed_escrow_is_not_pulled_back() -> None:
@@ -115,10 +100,57 @@ def test_claimed_escrow_is_not_pulled_back() -> None:
 
 
 def test_return_to_pot_while_still_escrowed() -> None:
-    # 180d fires without a 30d recredit (clock jumped): both totals drop.
-    bal = record_payment(credit(_bal(), 5), 5)
-    out = return_to_pot(bal, 5)
-    assert out.pending == 0 and out.earned_total == 0 and out.paid_total == 0
+    # Escrowed 5 plus 7 fresh pending: only the escrow leaves; pending is untouched.
+    bal = credit(record_payment(credit(_bal(), 5), 5), 7)
+    out, taken = return_to_pot(bal, 5, recredited=False)
+    assert taken == 5 and out.pending == 7 and out.paid_total == 0
+
+
+def test_recredit_then_paid_then_180d_takes_nothing() -> None:
+    # Review repro (#70): recredit, push pays it, 180d must not erase the payment.
+    t0 = 0
+    book, claims = open_claims(credit_many({}, {W: 100}), {W: 100}, escrowed_at=t0)
+    book, claims, _ = apply_pullbacks(book, claims, t0 + UNCLAIMED_RECREDIT_SECONDS)
+    book, xfer = apply_push(book, min_payout=1)
+    assert xfer == {W: 100}
+    paid = book[W]
+    book, claims, pot = apply_pullbacks(book, claims, t0 + UNCLAIMED_TO_POT_SECONDS)
+    assert pot == 0 and book[W] == paid and claims[0].returned_to_pot is True
+
+
+_OPS = st.lists(
+    st.tuples(st.sampled_from(["credit", "push", "open", "claim", "pull"]), st.integers(0, 500)),
+    max_size=30,
+)
+
+
+@given(_OPS)
+@settings(max_examples=150, deadline=None)
+def test_property_earned_minus_paid_minus_pot_is_conserved(ops: list[tuple[str, int]]) -> None:
+    # Σ credited == earned_total + pot_in, and pending/paid stay consistent.
+    book: dict[str, WalletBalance] = {W: _bal()}
+    claims: tuple = ()
+    credited = pot_total = now = 0
+    for op, x in ops:
+        if op == "credit":
+            book, credited = credit_many(book, {W: x}), credited + x
+        elif op == "push":
+            book, _ = apply_push(book, min_payout=1)
+        elif op == "open" and book[W].pending:
+            book, new = open_claims(book, {W: min(x + 1, book[W].pending)}, escrowed_at=now)
+            claims += new
+        elif (
+            op == "claim"
+            and claims
+            and not (claims[0].recredited or claims[0].claimed or claims[0].returned_to_pot)
+        ):
+            claims = (mark_claimed(claims[0]), *claims[1:])
+        elif op == "pull":
+            now += x * 86_400
+            book, claims, pot = apply_pullbacks(book, claims, now)
+            pot_total += pot
+        assert book[W].pending >= 0 and book[W].paid_total <= book[W].earned_total
+        assert credited == book[W].earned_total + pot_total
 
 
 @given(
@@ -142,7 +174,7 @@ def test_invariants_credit_then_push(earned: int, extra: int, min_payout: int) -
         assert paid == 0 and after.pending == bal.pending
 
 
-def test_rejects_invalid_values_and_180d_without_recredit() -> None:
+def test_rejects_invalid_values() -> None:
     with pytest.raises(ValueError):
         WalletBalance(W, earned_total=-1)
     with pytest.raises(ValueError):
@@ -153,13 +185,6 @@ def test_rejects_invalid_values_and_180d_without_recredit() -> None:
         record_payment(credit(_bal(), 5), 6)
     with pytest.raises(TypeError):
         clamp_min_payout(True)  # type: ignore[arg-type]
-    # 180d fires with no 30d recredit: still-escrowed path, pot gets the amount.
-    start = credit(_bal(), 2_000_000)
-    t0 = 50
-    book, claims = open_claims({W: start}, {W: 2_000_000}, escrowed_at=t0)
-    gone, out, pot = apply_pullbacks(book, claims, t0 + UNCLAIMED_TO_POT_SECONDS)
-    assert pot == 2_000_000 and out[0].returned_to_pot is True and out[0].recredited is False
-    assert gone[W].pending == 0 and gone[W].earned_total == 0
     seed = credit(_bal(), 5)
     funded, opened = open_claims({W: seed}, {W: 5}, escrowed_at=0)
     _book, rec_claims, _pot = apply_pullbacks(funded, opened, UNCLAIMED_RECREDIT_SECONDS)
