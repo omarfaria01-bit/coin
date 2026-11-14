@@ -6,7 +6,7 @@ Nodes are holders plus the wallets that fund them. Evidence between two wallets 
 L1/L2). A shared fee payer is informational only. Hubs' edges are ignored. Clusters are
 the connected components (union-find); the cluster id is its smallest holder wallet
 (the smallest wallet only if it has no holder), so ids stay holder addresses.
-v0.2 ``engine/sybil.py`` stays until #82 wiring switches to this module.
+``run_epoch`` uses this module since #82 PR3; v0.2 ``engine/sybil.py`` is deleted in PR4.
 """
 
 from __future__ import annotations

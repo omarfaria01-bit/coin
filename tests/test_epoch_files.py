@@ -75,6 +75,20 @@ def test_round_trip(tmp_path: Path) -> None:
     assert tree._layers == TREE._layers
 
 
+def test_balances_json_is_the_running_book(tmp_path: Path) -> None:
+    """COIN_MATH §13: earned_total = paid_total + pending, per wallet, Q base units."""
+    dest = write_epoch(tmp_path, _result(), _state(paid_total={W_A: 7, "Z" * 32: 5}), TREE)
+    book = json.loads((dest / "balances.json").read_text(encoding="utf-8"))
+    assert book == {
+        W_A: {"earned_total": 8, "paid_total": 7, "pending": 1},
+        W_B: {"earned_total": 3, "paid_total": 0, "pending": 3},
+        "Z" * 32: {"earned_total": 5, "paid_total": 5, "pending": 0},
+    }
+    assert list(book) == sorted(book)
+    _, state, _ = read_epoch(dest)
+    assert state.paid_total == {W_A: 7, "Z" * 32: 5}
+
+
 def test_byte_identical_on_repeat_and_shuffled_order(tmp_path: Path) -> None:
     a = write_epoch(tmp_path / "a", _result(), _state(), TREE)
     shuffled = _result(

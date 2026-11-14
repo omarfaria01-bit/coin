@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import Any, Literal
 
+from engine.balances import WalletBalance, apply_push, credit_many, open_claims
 from engine.eligibility import is_eligible
 from engine.ledger import ledger_segments
 from engine.merkle import claims_document
@@ -56,7 +57,12 @@ class VestingEntry:
 
 @dataclass(frozen=True, slots=True)
 class EpochState:
-    """Carried between epochs (epoch 0 is empty, pot 0)."""
+    """Carried between epochs (epoch 0 is empty, pot 0).
+
+    The §13 running balance per wallet is (``carry``, ``paid_total``): ``carry`` is
+    ``pending`` (earned, not yet paid; never expires) and ``earned_total`` is
+    ``paid_total + pending`` (see ``balances``).
+    """
 
     epoch: int
     pot: int
@@ -64,6 +70,18 @@ class EpochState:
     forfeit_until: Mapping[ClusterId, int]
     unlocked: Mapping[WalletId, float]
     vesting: tuple[VestingEntry, ...]
+    paid_total: Mapping[WalletId, int] = field(default_factory=dict)
+
+    @property
+    def balances(self) -> dict[WalletId, WalletBalance]:
+        """§13 book: every wallet that ever earned, sorted by wallet id."""
+        wallets = sorted(set(self.carry) | set(self.paid_total))
+        return {
+            w: WalletBalance(
+                w, self.paid_total.get(w, 0) + self.carry.get(w, 0), self.paid_total.get(w, 0)
+            )
+            for w in wallets
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,8 +92,6 @@ class EpochInputs:
     events: tuple[TokenEvent, ...]
     sol_transfers: tuple[SolTransfer, ...]
     fundings: tuple[FirstFunding, ...]
-    # prices/decimals are unread since #82 PR3 (price unlock paused); kept for PR4's
-    # pool-reserve harmonic mean.
     # Not read by v0.3.3 run_epoch (no price in eligibility/score); kept for the
     # price unlock once pool reserves are wired (#82 PR4).
     prices: tuple[PricePoint, ...]
@@ -339,38 +355,30 @@ def run_epoch(
         rows[cid] = ClusterScore(
             cid, row.twab, row.hold, row.churn, row.boost, row.score, float(shares.get(cid, 0))
         )
-    # §8 step 10
+    # §8 step 10 / §13: credit this epoch's payouts onto the running balances, then pay
+    # pending by push (each wallet whose pending reaches MIN_PAYOUT_Q) or by claims.
+    book = credit_many(prev.balances, payouts)
     prev_carry = {w: int(v) for w, v in prev.carry.items() if int(v)}
-    due: dict[WalletId, int] = dict(prev_carry)
-    for w, amt in payouts.items():
-        due[w] = due.get(w, 0) + amt
-    due = {w: amt for w, amt in due.items() if amt > 0}
     n_eligible = len(eligible - forfeited)
     transferred: dict[WalletId, int] = {}
-    next_carry: dict[WalletId, int] = {}
     claims: dict[str, Any] | None = None
     push: tuple[tuple[WalletId, int], ...] = ()
     rail: Literal["push", "merkle", "none"] = "none"
-    if skip or not due:
-        next_carry = dict(sorted((due or prev_carry).items()))
-        transferred = {}
-        rail = "none"
+    if skip or not any(b.pending for b in book.values()):
+        book = prev.balances
     elif n_eligible < params.rewards.push_max_eligible:
         rail = "push"
-        min_x = params.rewards.push_min_transfer_lamports
-        paid_now: list[tuple[WalletId, int]] = []
-        for w in sorted(due):
-            if due[w] >= min_x:
-                paid_now.append((w, due[w]))
-                transferred[w] = due[w]
-            else:
-                next_carry[w] = due[w]
-        push = tuple(paid_now)
+        book, transferred = apply_push(book, params.rewards.push_min_transfer_lamports)
+        push = tuple(transferred.items())
     else:
         rail = "merkle"
+        due = {w: b.pending for w, b in book.items() if b.pending > 0}
+        # TODO(#82 follow-up): carry the escrows in state for the 30/180-day pull-backs.
+        book, _escrows = open_claims(book, due, inp.t1)
         transferred = dict(sorted(due.items()))
         claims = claims_document(transferred, version=prev.epoch)
-        next_carry = {}
+    next_carry = {w: b.pending for w, b in book.items() if b.pending > 0}
+    paid_total = {w: b.paid_total for w, b in book.items() if b.paid_total > 0}
     # Conservation (§8)
     lhs = prev.pot + inp.pot_inflow + sum(prev_carry.values())
     rhs = pot_next + sum(transferred.values()) + sum(next_carry.values())
@@ -397,5 +405,6 @@ def run_epoch(
         forfeit_until=dict(sorted(forfeit_until.items())),
         unlocked=dict(sorted(unlocked.items())),
         vesting=prev.vesting,
+        paid_total=dict(sorted(paid_total.items())),
     )
     return result, nxt

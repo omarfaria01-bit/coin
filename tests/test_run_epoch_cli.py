@@ -40,6 +40,9 @@ def test_two_epochs_one_call_writes_both_and_state(tmp_path: Path) -> None:
     state = json.loads((tmp_path / "state.json").read_text(encoding="utf-8"))
     assert state["epoch"] == 2 and state["pot"] == rows[1]["pot_next"]
     assert state["carry"] and sum(state["carry"].values()) == rows[1]["carry_next"]
+    book = json.loads((tmp_path / "1" / "balances.json").read_text(encoding="utf-8"))
+    assert sum(b["paid_total"] for b in book.values()) == rows[0]["paid"] + rows[1]["paid"]
+    assert {w: b["pending"] for w, b in book.items() if b["pending"]} == state["carry"]
     for n in (0, 1):
         result, nxt, _tree = read_epoch(tmp_path / str(n))
         assert result.epoch == n and nxt.epoch == n + 1

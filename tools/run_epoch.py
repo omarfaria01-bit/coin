@@ -140,6 +140,7 @@ class StateIn(_Strict):
     forfeit_until: dict[str, int]
     unlocked: dict[str, float]
     vesting: list[VestingIn]
+    paid_total: dict[str, int] = {}
 
 
 class InputError(ValueError):
@@ -232,6 +233,7 @@ def summary(
         "pot_next": nxt.pot,
         "paid": sum(res.transferred_or_claimable.values()),
         "carry_next": sum(nxt.carry.values()),
+        "paid_total": sum(nxt.paid_total.values()),
         "wallets_paid": len(res.transferred_or_claimable),
         "inputs_hash": res.inputs_hash,
         "written": str(dest) if dest else None,

@@ -266,7 +266,8 @@
         },
         "push_min_transfer_lamports": {
           "default": 1000000,
-          "description": "PROVISIONAL (0.001 SOL): smaller amounts carry forward (§13)",
+          "description": "MIN_PAYOUT_Q (§13): pending below it stays pending; published max 0.005 SOL",
+          "maximum": 5000000,
           "minimum": 0,
           "title": "Push Min Transfer Lamports",
           "type": "integer"

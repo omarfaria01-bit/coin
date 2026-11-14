@@ -218,22 +218,43 @@ def test_soft_vesting_transfer_then_sell_forfeits_cluster() -> None:
 
 
 def test_push_carry_below_min_transfer_paid_next_epoch() -> None:
+    """§13: pending below MIN_PAYOUT_Q stays pending, then is paid in full once it reaches it."""
     w = W("solo")
     events = [_buy("s", w, 1_000_000_000, T0)]
-    # Huge min_transfer → this epoch's payout is carried.
-    p = _params(min_xfer=10**18)
-    result, mid = run_epoch(_inputs(events, inflow=10**12), p, empty_state())
-    assert result.payouts[w] > 0
+    # Pot 10**7 → R_e = 10**6 lamports, below the published-max threshold of 0.005 SOL.
+    p = _params(min_xfer=5_000_000)
+    result, mid = run_epoch(_inputs(events, inflow=10**7), p, empty_state())
+    assert 0 < result.payouts[w] < 5_000_000
     assert result.push == ()
     assert mid.carry[w] == result.payouts[w]
-    # Second epoch: same inflow, carry + new payout exceeds a small min (still huge? lower it).
+    assert mid.paid_total == {}
+    assert mid.balances[w].earned_total == result.payouts[w]
     p2 = _params(min_xfer=1)
-    result2, nxt = run_epoch(_inputs(events, inflow=10**12), p2, mid)
+    result2, nxt = run_epoch(_inputs(events, inflow=10**7), p2, mid)
     paid = result2.transferred_or_claimable[w]
     assert paid == result2.payouts[w] + mid.carry[w]
     assert result2.push == ((w, paid),)
     assert nxt.carry == {}
-    assert mid.pot + 10**12 + mid.carry[w] == result2.pot + paid
+    assert nxt.paid_total == {w: paid}
+    assert nxt.balances[w].earned_total == result.payouts[w] + result2.payouts[w]
+    assert mid.pot + 10**7 + mid.carry[w] == result2.pot + paid
+
+
+def test_pending_never_expires_when_wallet_stops_being_eligible() -> None:
+    """§13: pending is kept (and later paid) even after the wallet sold out."""
+    w, other = W("gone"), W("stays")
+    e1 = [_buy("g", w, 1_000_000_000, T0), _buy("st", other, 1_000_000_000, T0, ix=1)]
+    _, mid = run_epoch(_inputs(e1, inflow=10**7), _params(min_xfer=5_000_000), empty_state())
+    owed = mid.carry[w]
+    assert owed > 0
+    e2 = [*e1, _sell("gs", w, 1_000_000_000, T0 + 10)]
+    _, nxt = run_epoch(_inputs(e2, inflow=10**7), _params(min_xfer=5_000_000), mid)
+    assert nxt.carry[w] == owed  # no longer earning, nothing taken back
+
+
+def test_min_payout_above_published_max_is_rejected() -> None:
+    with pytest.raises(ValueError, match="less than or equal"):
+        _params(min_xfer=5_000_001)
 
 
 def test_determinism_shuffled_events() -> None:
