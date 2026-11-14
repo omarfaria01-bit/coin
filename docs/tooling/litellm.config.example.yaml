@@ -1,0 +1,52 @@
+# Routing Claude Code to these models is off unless DECISIONS.md has kiwi's approval entry (see PROMPT_CLAUDE_CODE §4).
+# TEMPLATE ONLY. Do not start the proxy until kiwi has set
+# OPENROUTER_API_KEY and/or GEMINI_API_KEY in the environment, and has
+# approved routing in coord/DECISIONS.md.
+#
+# Usage (after keys exist):
+#   export LITELLM_MASTER_KEY="..."   # local proxy auth, not a provider key
+#   litellm --config docs/tooling/litellm.config.example.yaml --host 127.0.0.1 --port 4000
+#   export ANTHROPIC_BASE_URL=http://127.0.0.1:4000
+#   export ANTHROPIC_AUTH_TOKEN="$LITELLM_MASTER_KEY"
+#   claude --model north-mini-code
+#
+# Never point this proxy at mainnet tooling or send secrets/wallet material.
+
+model_list:
+  - model_name: north-mini-code
+    litellm_params:
+      model: openrouter/cohere/north-mini-code:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: flint
+    litellm_params:
+      model: openrouter/recursive/flint-v1.0:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: inkling
+    litellm_params:
+      model: openrouter/thinkingmachines/inkling-2-small:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: nemotron-ultra
+    litellm_params:
+      model: openrouter/nvidia/nemotron-3-ultra-550b-a55b:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: openrouter-free
+    litellm_params:
+      model: openrouter/openrouter/free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: gemini-flash
+    litellm_params:
+      model: gemini/gemini-3.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: gemini-lite
+    litellm_params:
+      model: gemini/gemini-3.1-flash-lite
+      api_key: os.environ/GEMINI_API_KEY
+
+litellm_settings:
+  drop_params: true

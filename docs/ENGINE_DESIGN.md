@@ -1,4 +1,4 @@
-# ENGINE_DESIGN.md — module interfaces (v0.2)
+# ENGINE_DESIGN.md — module interfaces (v0.3)
 
 Source of truth for the math: `COIN_MATH.md`. This file fixes **interfaces, types and
 determinism rules** so modules can be written in parallel. Signatures live in the stub files
@@ -109,11 +109,13 @@ Required tests: determinism (same randomness → same winners, different randomn
 with high probability); no duplicates; `k > N`; conservation; a chi-square check over many seeds
 that first-pick frequency ∝ sqrt(score) (tolerance documented in the test).
 
-## 6. Other modules (owner: Claude)
+## 6. Other modules (owner: Grok since D11, Claude reviews)
 
 `ledger`, `twab`, `scoring`, `rewards`, `vesting`, `fees`, `treasury_bot`: signatures and
-docstrings in the stubs are the contract. `merkle`: leaf format waits for the distributor
-decision after the P1 research issue.
+docstrings in the stubs are the contract; exact edge-case rules are in the issues
+(#13 ledger/twab, #14 scoring, #15 rewards, #16 fees/vesting). `merkle`: jup-ag/distributor leaf
+(D7), golden vectors from upstream Rust (#17). Price unit everywhere: lamports per token base
+unit (D13).
 
 ## 7. Property tests that must hold (CI)
 
@@ -123,3 +125,65 @@ decision after the P1 research issue.
 - With clustering disabled and the cap not binding, splitting a wallet never increases reward.
 - Vesting: locked amount never increases over time.
 - Draws and claims: same inputs → byte-identical outputs.
+
+## 8. `engine/epoch.py` — epoch orchestrator (pure)
+
+```python
+@dataclass(frozen=True, slots=True)
+class VestingEntry:          # one vested wallet (dev buy / early buy), soft mode
+    wallet: WalletId; vested_amount: int; p_entry: float; t0: int   # p_entry in D13 units
+
+@dataclass(frozen=True, slots=True)
+class EpochState:            # carried between epochs; epoch 0 = all empty, pot 0
+    epoch: int
+    pot: int                                   # holder pot, lamports-equivalent token units*
+    carry: Mapping[WalletId, int]              # push amounts below min_transfer, carried forward
+    forfeit_until: Mapping[ClusterId, int]     # unix ts
+    unlocked: Mapping[WalletId, float]         # monotone vesting state per vested wallet
+    vesting: tuple[VestingEntry, ...]
+
+@dataclass(frozen=True, slots=True)
+class EpochInputs:
+    t0: int; t1: int                            # [t0, t1), t1 − t0 == epoch.hours·3600
+    slot_range: tuple[int, int]
+    events: tuple[TokenEvent, ...]              # ALL events from launch to t1 (ledger history)
+    sol_transfers: tuple[SolTransfer, ...]; fundings: tuple[FirstFunding, ...]
+    prices: tuple[PricePoint, ...]              # 1-min series, SOL per whole token
+    decimals: int; sol_usd: float
+    pot_inflow: int                             # routed to holder pot during the epoch
+    excluded: frozenset[WalletId]; hubs: frozenset[WalletId]
+
+def run_epoch(inp: EpochInputs, params: CoinParams, prev: EpochState) -> tuple[EpochResult, EpochState]
+```
+\* The pot unit is whatever the payout asset is (lamports if paid in SOL). The engine treats it as an
+opaque int.
+
+Steps (all deterministic, every int split checked for conservation):
+1. `twap(a, b)` helper over `prices`, converted to D13 units. A time-weighted mean of the 1-min
+   series on `[a, b)`; it raises if the window has no price.
+2. `lots = build_lots(events ≤ t1, excluded, lambda ts: twap(ts − 3600, ts))`.
+3. Holders = wallets with lots at t1 or a non-zero balance inside `[t0, t1)`. Clusters via
+   `build_evidence` + `cluster` (balances at t1).
+4. Per-wallet balance changes from events → `twab` per wallet; `B̄_c = Σ_w B̄_w`.
+5. Eligibility (§2): `B̄_c · twap(t0,t1) / 1e9 · sol_usd ≥ min_eligible_usd` (base units ×
+   lamports per base unit = lamports), earliest lot `t_acquired` of the cluster `≤ t1 − min_hold`,
+   and `forfeit_until.get(c, 0) ≤ t1`.
+6. `H_c` = amount-weighted hold over all the cluster's lots at t1. `F_c` from BUY/SELL volume of
+   the cluster in `[t1 − window, t1)` (transfers don't count). `U_c` with `twap(t1 − 6h, t1)`.
+7. Soft vesting (D10): for each `VestingEntry`, each outflow event (SELL or TRANSFER out) from
+   that wallet in `[t0, t1)`: update `unlocked` with `twap(ts − unlock_twap_h, ts)`, compute
+   `locked`, and if `breaches_soft_lock` → `forfeit_until[cluster] = ts + forfeit_days`. Forfeited
+   clusters this epoch score 0.
+8. `pot = prev.pot + pot_inflow`. `R = epoch_budget(pot, …)`. If `!rewards.enabled` or
+   `R < min_epoch_payout` → no payouts, everything rolls over.
+9. `capped_shares` → `allocate(R)` → per cluster `split_to_wallets(weights = B̄_w·H_w)`.
+   `pot_next = pot − Σ paid`. Rollover and dust stay in the pot.
+10. Rail (§13): `N_eligible < push_max_eligible` → push list. `amount + carry[w] ≥ min_transfer` is
+    paid, otherwise it is carried (carried amounts are already out of the pot). Otherwise
+    `merkle.claims_document(payouts, version = epoch)`.
+11. `EpochResult`: per-wallet payouts, per-cluster score rows (B̄, H, F, U, s, π), rollover, dust,
+    rail + claims doc/push list, review clusters, `inputs_hash` = sha256 of a canonical JSON of
+    `(slot_range, params.model_dump(), counts + sha256 of the sorted events)`.
+
+Conservation, asserted inside `run_epoch`:
+`prev.pot + pot_inflow + Σ prev.carry == pot_next + Σ transferred_or_claimable_now + Σ next.carry`.
