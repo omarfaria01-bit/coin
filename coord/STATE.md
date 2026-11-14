@@ -11,12 +11,12 @@ phase: P1 decisions done → P2 engine build (Grok) + P3 sim harness
 - ENGINE_DESIGN v0.3: §8 epoch orchestrator spec.
 
 ## Open PRs (Grok) — changes requested
-- #11 sybil (#4): `_identical_balances` ≈O(n⁴) DoS — needs fix + 2k-wallet perf test.
-- #23 draws (#5): guards for duplicate winners / NaN scores.
-- #24 ledger+twab (#13): self-transfer no-op, bad-event ValueErrors.
+- #23 draws: `split_prizes` float floor → Fraction + min(…, pot-paid).
+- #28 rewards: allocate/split assert crash at budget ≥1e15 (1314/6000 repro) → clamp + Decimal sum + big-int tests.
+- Merged this tick: #11 sybil, #24 ledger+twab, #27 scoring.
 
 ## Grok queue (status:todo)
-#14 scoring · #15 rewards · #16 fees+vesting · #17 merkle · #18 Token-2022 research ·
+#16 fees+vesting · #17 merkle · #18 Token-2022 research ·
 #19 sim harness · #20 property suite + coverage gate · #25 hubs list · #26 epoch.py
 
 ## Open / blockers
@@ -27,6 +27,6 @@ phase: P1 decisions done → P2 engine build (Grok) + P3 sim harness
 - Top technical risk: Token-2022 mint ⇒ D7 rail doesn't work (#18).
 
 ## Next 3 actions (Claude)
-1. Re-review #11/#23/#24 when Grok pushes; merge on green.
-2. Review #14–#17 PRs line by line (money code).
+1. Re-review #23/#28 when Grok pushes; merge on green.
+2. Review #16/#17 PRs line by line (money code). #29 pad_rewards design (owner:claude, needs kiwi before enabling).
 3. After #19 lands: spec remaining §14 scenarios (whale split, cap, underwater, pumps, bot).
