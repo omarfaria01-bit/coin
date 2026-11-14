@@ -74,8 +74,6 @@ class EpochInputs:
     events: tuple[TokenEvent, ...]
     sol_transfers: tuple[SolTransfer, ...]
     fundings: tuple[FirstFunding, ...]
-    # prices/decimals are unread since #82 PR3 (price unlock paused); kept for PR4's
-    # pool-reserve harmonic mean.
     # Not read by v0.3.3 run_epoch (no price in eligibility/score); kept for the
     # price unlock once pool reserves are wired (#82 PR4).
     prices: tuple[PricePoint, ...]

@@ -128,3 +128,7 @@ def test_cluster_id_is_smallest_holder_not_funder() -> None:
     assert c.cluster_of[holder] == holder
     assert c.cluster_of[funder] == holder
     assert c.members[holder] == (funder, holder)
+    # Keys stay sorted by id even when the id is not the smallest member.
+    other = "5" * 32
+    c2 = cluster([holder, other], [Edge(funder, holder, Kind.S2_FUNDED_BUY, "sig")], NO_HUBS)
+    assert list(c2.members) == [other, holder]
