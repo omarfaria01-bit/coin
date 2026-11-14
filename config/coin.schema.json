@@ -25,8 +25,8 @@
       "additionalProperties": false,
       "properties": {
         "enabled": {
-          "default": true,
-          "description": "Legal switch (§16)",
+          "default": false,
+          "description": "§16: off at launch (draw pot keeps accumulating); on at ≥ 100 eligible clusters + VRF tested on devnet. Also the legal switch",
           "title": "Enabled",
           "type": "boolean"
         },
@@ -412,6 +412,12 @@
     "TreasuryBotParams": {
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "default": false,
+          "description": "§16: off; on only after the §14 backtest passes and kiwi approves",
+          "title": "Enabled",
+          "type": "boolean"
+        },
         "mode": {
           "default": "paper",
           "enum": [
@@ -549,6 +555,12 @@
     "UnderwaterParams": {
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "default": false,
+          "description": "§5 boost; off at launch, on after 7 clean epochs (§16). Not wired yet",
+          "title": "Enabled",
+          "type": "boolean"
+        },
         "twap_hours": {
           "default": 6.0,
           "description": "P̃ window (§5)",
@@ -721,6 +733,7 @@
     "underwater": {
       "$ref": "#/$defs/UnderwaterParams",
       "default": {
+        "enabled": false,
         "twap_hours": 6.0,
         "min_age_hours": 48.0,
         "beta": 0.5,
@@ -769,7 +782,7 @@
     "draws": {
       "$ref": "#/$defs/DrawParams",
       "default": {
-        "enabled": true,
+        "enabled": false,
         "period_days": 7.0,
         "min_balance_usd": 10.0,
         "min_hold_hours": 24.0,
@@ -811,6 +824,7 @@
     "treasury_bot": {
       "$ref": "#/$defs/TreasuryBotParams",
       "default": {
+        "enabled": false,
         "mode": "paper",
         "seed_lamports": null,
         "ema_halflife_hours": 6.0,

@@ -427,3 +427,10 @@ def test_epoch_length_other_than_one_day_is_rejected() -> None:
     inp = replace(_inputs([_buy("h12", W("h12"), 10, T0)]), t1=T0 + 12 * 3600)
     with pytest.raises(ValueError, match="86,400"):
         run_epoch(inp, p, empty_state())
+
+
+def test_underwater_boost_flag_is_refused_until_wired() -> None:
+    p = _params()
+    p = p.model_copy(update={"underwater": p.underwater.model_copy(update={"enabled": True})})
+    with pytest.raises(ValueError, match="underwater.enabled"):
+        run_epoch(_inputs([_buy("uw", W("uw"), 10, T0)]), p, empty_state())

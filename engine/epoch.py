@@ -206,6 +206,9 @@ def _inputs_hash(inp: EpochInputs, params: CoinParams) -> str:
 def run_epoch(
     inp: EpochInputs, params: CoinParams, prev: EpochState
 ) -> tuple[EpochResult, EpochState]:
+    if params.underwater.enabled:
+        # §16: the boost is off at launch; wiring u_lot (§5) needs trusted pool reserves.
+        raise ValueError("underwater.enabled: the §5 boost is not wired into run_epoch yet")
     if params.epoch.hours != 24:
         raise ValueError("v0.3.3 §0: epochs are 86,400 s (epoch.hours must be 24)")
     expected = params.epoch.hours * 3600
