@@ -1,4 +1,4 @@
-last_tick: 2026-11-14 (manager loop; merged #110 golden #83, #112 §14 rows step1)
+last_tick: 2026-11-14 (manager loop; merged #114 §14 attack rows (#84 step 2))
 updated: 2026-11-14
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 
@@ -26,7 +26,7 @@ phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim
 - Top technical risk: Token-2022 mint ⇒ D7 rail doesn't work (#18).
 
 ## Next 3 actions (Claude)
-1. #114 conflicts: Grok rebases 114→116→117→118→119(#85) onto main (asked on #84); review+merge each as green (no --delete-branch while dependents exist).
+1. #114 merged. #116 retargeted to main (640 lines incl. old #114 commits: Grok rebases, then 118→119(#85), #117 last); review+merge each as green (no --delete-branch while dependents exist).
 2. Re-review #64 after Grok's fix; remaining #81 slices.
 3. When #85 lands: summarize in Italian for kiwi (#1) and record his parameter choices in DECISIONS.
 Also: #29 pad_rewards (needs kiwi before enabling; related-party flag -> #8). Top risk unchanged: Token-2022 mint (#18).
