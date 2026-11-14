@@ -2,7 +2,7 @@
 cap, pending, split). Every row drives `engine.epoch.run_epoch` (or the exact engine
 function it calls) on seeded random trades; a row passes only if it passes on every seed.
 
-    uv run python -m sim.run --acceptance --seeds 20 --strict
+    uv run python -m sim.run --acceptance --seeds 20   # exits 1 on any failing row
 """
 
 from __future__ import annotations
@@ -123,7 +123,7 @@ def row_scalper(rng: random.Random) -> Outcome:
 def row_sniper(rng: random.Random) -> Outcome:
     """Buys shortly before the epoch ends: score 0 for 2h."""
     tr, w = Trades("snipe"), _w(rng, "snipe")
-    tr.buy(w, rng.randint(1_000, 10**6) * TOK, T1 - rng.randint(1, 2 * HOUR))
+    tr.buy(w, rng.randint(1_000, 10**6) * TOK, T1 - rng.randint(1, 2 * HOUR - 1))  # strictly < 2h
     s = _score(_run(tr)[0], w)
     return Outcome(s == 0, f"score={float(s)}")
 
@@ -224,7 +224,7 @@ def row_pending(rng: random.Random) -> Outcome:
     tr, w, big = Trades("pend"), _w(rng, "pend"), _w(rng, "pend-big")
     tr.buy(w, rng.randint(1_000, 3_000) * TOK, T0 - 10 * DAY)
     tr.buy(big, 10**6 * TOK, T0 - 10 * DAY)
-    prev, seen, paid_at = empty_state(), [], None
+    prev, seen, paid_at, ok_paid = empty_state(), [], None, False
     for e in range(60):
         res, prev = _run(tr, t0=e * DAY, inflow=10**8, prev=prev)
         if w in res.transferred_or_claimable:
@@ -247,7 +247,8 @@ def row_split_never_gains(rng: random.Random) -> Outcome:
         one.buy(w1, amt, ts)
         many.buy(rng.choice(ws), amt, ts)
     s1 = _score(_run(one)[0], w1)
-    sn = sum(_score(_run(many)[0], w) for w in ws)
+    res_many, _ = _run(many)
+    sn = sum(_score(res_many, w) for w in ws)
     return Outcome(sn <= s1 or _same(sn, s1), f"n={n} split={float(sn):.0f} single={float(s1):.0f}")
 
 
