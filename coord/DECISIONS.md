@@ -68,3 +68,13 @@ at the primary source. Routing Claude Code itself through a gateway stays off.
 `PricePoint.price` (SOL per whole token) is converted once in the orchestrator:
 `lamports_per_base = price · 1e9 / 10**decimals`. Why: BUY cost is `lamports/amount` with no
 conversion, so comparisons are unit-safe.
+
+## D14 · 2026-11-14 · `unlock_twap_hours` default 6 → 24 (COIN_MATH §11 / §14 row 5)
+Test (tests/test_vesting.py): a 1h pump to 3× entry on a 6h TWAP unlocks ln(4/3)/ln5 = 17.9% (> 5%
+limit, FAIL); on a 24h TWAP it unlocks ln(1+2/24)/ln5 = 4.97% (PASS, thin margin). Chose the longer
+window over raising M (M=5 keeps the 2× ⇒ 43% curve). Cost: honest price-driven unlock reacts
+~4× slower; the 7-day time unlock is unchanged. Margin is thin (4.97% vs 5%): if sim shows
+a 1h 3.1× pump failing, raise to 36h rather than change M. `vesting_mode` stays soft (D10).
+Related: D7 stays valid only for a legacy SPL mint; for a Token-2022 mint the v1 rail is push
+payouts (report `reports/research_token2022_claims_2026-11.md` §5, #18). Decision on mint
+program stays open for kiwi/pad choice.

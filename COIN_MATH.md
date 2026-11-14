@@ -161,7 +161,7 @@ Scope: the dev buy, plus buys in the first `T_EARLY` (default 15 min, or until M
 
 ```
 u_time  = clamp((t − t0) / T_v, 0, 1)                        T_v = 7 days
-u_price = clamp(ln(P̃ / P_entry) / ln(M), 0, 1)              M = 5, P̃ = TWAP over UNLOCK_TWAP_H (default 6h)
+u_price = clamp(ln(P̃ / P_entry) / ln(M), 0, 1)              M = 5, P̃ = TWAP over UNLOCK_TWAP_H (default 24h, D14)
 unlocked(t) = max(unlocked(t−), u_time, u_price)             ← monotone: lock only decreases
 locked = (1 − unlocked) · vested_amount
 ```
