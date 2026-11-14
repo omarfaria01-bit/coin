@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from fractions import Fraction
+
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from engine.twab import twab
+from engine.twab import twab, twab_exact
 
 EPOCH = 24 * 3600  # 24h in seconds
 
@@ -72,3 +74,10 @@ def test_twab_within_seen_balance_bounds(
     # Numerator is exact; a one-step window of 1 second equals the opening or in-window bal.
     if span == 1 and not any(t0 <= ts < t1 for ts, _ in changes):
         assert got == float(seen[0])
+
+
+def test_twab_exact_is_a_fraction_and_matches_float_view() -> None:
+    changes = [(10, 3), (20, 0), (25, 7)]
+    exact = twab_exact(0, changes, 0, 30)
+    assert exact == Fraction(3 * 10 + 7 * 5, 30)
+    assert twab(0, changes, 0, 30) == float(exact)

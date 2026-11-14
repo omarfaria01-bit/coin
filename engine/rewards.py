@@ -32,6 +32,20 @@ def epoch_budget(pot_lamports: int, alpha_per_day: float, epoch_hours: int) -> i
     return min(pot_lamports, payout)
 
 
+def epoch_budget_v033(pot: int, alpha: Fraction) -> int:
+    """R_e = floor(α · Pot_e) for the fixed 86,400 s epoch (COIN_MATH v0.3.3 §0, §8).
+
+    Exact integers only; 0 < α ≤ 1, so 0 ≤ R_e ≤ Pot_e.
+    """
+    if isinstance(pot, bool) or not isinstance(pot, int):
+        raise TypeError("pot must be an int (Q base units)")
+    if pot < 0:
+        raise ValueError(f"pot must be >= 0, got {pot}")
+    if not isinstance(alpha, Fraction) or not 0 < alpha <= 1:
+        raise ValueError(f"alpha must be a Fraction in (0, 1], got {alpha!r}")
+    return pot * alpha.numerator // alpha.denominator
+
+
 def capped_shares(scores: Mapping[ClusterId, float], cap: float) -> dict[ClusterId, float]:
     """Water-filling: shares ∝ score, each ≤ cap, Σ ≤ 1 (< 1 only when N < 1/cap).
 
