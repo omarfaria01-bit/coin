@@ -160,3 +160,67 @@ def untrusted_fraction(
         if not is_trusted_second(point.reserve_quote, point.reserve_base, d_trust, pool_math):
             untrusted += seg_end - seg_start
     return Fraction(untrusted, t_end - t_start)
+
+
+HARMONIC_SCALE_BITS = 128  # fixed-point scale of the oracle's Σ dt/p (DECISIONS D20)
+
+
+class HarmonicOracle:
+    """P̃_h(t) over the `window` seconds before t, or None when it must not be used (§0, §11).
+
+    None when the window starts before the first reserve point or holds any untrusted second
+    ("u_price ... only if every second of the 24h window is trusted").
+
+    Exact Σ dt/p over a real history is unusable: its denominator is the lcm of every quote
+    reserve (tens of thousands of 11-digit integers). Each constant-reserve piece of the window
+    therefore contributes ``ceil(len · reserve_base · 2^K / reserve_quote)`` (K = 128), an
+    integer, and P̃_h = window · 2^K / Σ — an exact rational of bounded size. Rounding every
+    piece up can only *lower* P̃_h (relative gap < n · P̃_h / (window · 2^K) for n pieces), so
+    the unlock is never larger than the exact one. Full pieces are prefix sums: each query is
+    two bisects.
+    """
+
+    def __init__(
+        self,
+        points: Sequence[ReservePoint],
+        window: int,
+        d_trust: int,
+        pool_math: PoolMath = constant_product_price_after,
+    ) -> None:
+        if window <= 0:
+            raise ValueError("window must be > 0")
+        self._window = window
+        self._pts = _sorted_points(points) if points else []
+        self._ts = [p.ts for p in self._pts]
+        self._trusted = [
+            is_trusted_second(p.reserve_quote, p.reserve_base, d_trust, pool_math)
+            for p in self._pts
+        ]
+        self._sum = [0]  # Σ over full pieces [ts_0, ts_i) of the rounded-up terms
+        self._bad = [0]  # untrusted seconds over the same pieces
+        for i, (a, b) in enumerate(zip(self._pts, self._pts[1:], strict=False)):
+            dt = b.ts - a.ts
+            self._sum.append(self._sum[-1] + self._term(i, dt))
+            self._bad.append(self._bad[-1] + (0 if self._trusted[i] else dt))
+
+    def _term(self, i: int, dt: int) -> int:
+        point = self._pts[i]
+        return -(-(dt * point.reserve_base << HARMONIC_SCALE_BITS) // point.reserve_quote)
+
+    def __call__(self, t: int) -> Fraction | None:
+        start = t - self._window
+        if not self._pts or start < self._ts[0]:
+            return None
+        i = bisect_right(self._ts, start) - 1  # piece active at `start`
+        j = bisect_right(self._ts, t - 1) - 1  # piece active in second t - 1
+        if i == j:
+            total, bad = self._term(i, t - start), 0 if self._trusted[i] else t - start
+        else:
+            head = self._ts[i + 1] - start
+            tail = t - self._ts[j]
+            total = self._term(i, head) + (self._sum[j] - self._sum[i + 1]) + self._term(j, tail)
+            bad = (0 if self._trusted[i] else head) + (self._bad[j] - self._bad[i + 1])
+            bad += 0 if self._trusted[j] else tail
+        if bad:
+            return None
+        return Fraction(self._window << HARMONIC_SCALE_BITS, total)

@@ -114,3 +114,15 @@ draw pot keeps accumulating meanwhile; `route_v033(draws_disabled=False)`, and o
 backtest passes and kiwi approves (`enabled=false` wins over any `mode`; `live` stays rejected without
 kiwi's `APPROVED`). `run_epoch` raises on `underwater.enabled=true` until §5 u_lot is wired, instead
 of ignoring it. Sim re-run: `sim.run --e2e --seeds 10`, all rows PASS.
+
+## D20 · 2026-11-14 · §11 price unlock from reserves (#82, #108)
+New param `prices.d_trust_lamports` = 2 SOL (D_TRUST, §0). `VestingEntry.p_entry` is an exact `Fraction`
+in Q base units per token base unit (the unit of `prices.price_at`); `state.json` stores `"num/den"`, and
+legacy JSON floats still load by their repr. u_price is skipped for any minute whose 24h window starts
+before the first known reserve point or holds an untrusted second (§11). **Fixed-point P̃_h:** exact
+Σ dt/p needs the lcm of every quote reserve (a 50k-point history exhausts memory), so each
+constant-reserve piece of the window adds `ceil(len · reserve_base · 2^128 / reserve_quote)` and
+P̃_h = window · 2^128 / Σ. Rounding up only lowers P̃_h (relative error < n · P̃_h / (window · 2^128) for n pieces; < (n+2)/2^128
+when P̃_h ≲ window), so the unlock
+is never above the exact one; the independent implementation (§14) must use the same rule. This is the
+one place in the payout path that rounds before the final payout step; COIN_MATH §0 and §11 say so.

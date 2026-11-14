@@ -14,6 +14,7 @@ from engine.eligibility import is_eligible
 from engine.ledger import ledger_segments
 from engine.merkle import claims_document
 from engine.params import CoinParams
+from engine.prices import HarmonicOracle, ReservePoint
 from engine.rewards import (
     DEFAULT_G,
     capped_shares_v033,
@@ -47,12 +48,20 @@ from engine.vesting import VestedLot, soft_vesting_breaches
 
 @dataclass(frozen=True, slots=True)
 class VestingEntry:
-    """Soft-mode vested wallet; p_entry is D13 units."""
+    """Soft-mode vested lot. ``p_entry``: Q base units per token base unit (the unit of
+    ``engine.prices.price_at``), exact; ints, "num/den" strings and floats (by their repr)
+    are normalized to a Fraction."""
 
     wallet: WalletId
     vested_amount: int
-    p_entry: float
+    p_entry: Fraction
     t0: int
+
+    def __post_init__(self) -> None:
+        value = self.p_entry
+        if isinstance(value, bool) or not isinstance(value, Fraction | int | str | float):
+            raise TypeError("p_entry must be a Fraction, int, 'num/den' string or float")
+        object.__setattr__(self, "p_entry", Fraction(str(value)))
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,8 +101,8 @@ class EpochInputs:
     events: tuple[TokenEvent, ...]
     sol_transfers: tuple[SolTransfer, ...]
     fundings: tuple[FirstFunding, ...]
-    # Not read by v0.3.3 run_epoch (no price in eligibility/score); kept for the
-    # price unlock once pool reserves are wired (#82 PR4).
+    # v0.2 swap-print prices: not read by run_epoch (eligibility and score read no price;
+    # the §11 price unlock reads `reserves`). Kept until the adapters drop them.
     prices: tuple[PricePoint, ...]
     decimals: int
     sol_usd: float  # display-only leftover; not used for eligibility (v0.3.3 §2)
@@ -104,6 +113,9 @@ class EpochInputs:
     # v0.3.3 §7 S1: tx signature → signer set (from the parser); S3: logged manual merges.
     signers: Mapping[str, frozenset[WalletId]] = field(default_factory=dict)
     overrides: tuple[tuple[WalletId, WalletId, str], ...] = ()
+    # §0 pool reserves (price + trusted seconds) for the §11 price unlock; () = none known.
+    # Points after t1 are harmless: unlock queries stop at t1 (the CLI drops them anyway).
+    reserves: tuple[ReservePoint, ...] = ()
 
     def __post_init__(self) -> None:
         if isinstance(self.total_supply, bool) or not isinstance(self.total_supply, int):
@@ -246,17 +258,15 @@ def run_epoch(
     ]
     clustered = cluster(holder_list, edges, hubs, events)
     # §8 step 7 (moved before scoring, §1 order: clusters → ledger → score) — v0.3.3 §11 B.
-    # Replayed over the full history under this cluster map. Price unlock is paused
-    # (p_harmonic → None) until pool reserves are wired in: only the time unlock runs.
+    # Replayed over the full history under this cluster map. u_price reads P̃_h from pool
+    # reserves and is skipped for any minute whose 24h window is not fully trusted (§0).
     kept = [e for e in prev.vesting if e.vested_amount > 0 and e.p_entry > 0]
-    # TODO(#82 PR4): p_entry is a float; Fraction(str(.)) is exact on its repr, but
-    # VestingEntry.p_entry should become a Fraction/int ratio.
     vested = [
         VestedLot(
             clustered.cluster_of.get(e.wallet, e.wallet),
             e.vested_amount,
             e.t0,
-            Fraction(str(e.p_entry)),
+            e.p_entry,
         )
         for e in kept
     ]
@@ -264,7 +274,11 @@ def run_epoch(
         events,
         vested,
         params.vesting,
-        lambda _t: None,
+        HarmonicOracle(
+            inp.reserves,
+            int(Fraction(str(params.vesting.unlock_twap_hours)) * 3600),
+            params.prices.d_trust_lamports,
+        ),
         cluster_of=clustered.cluster_of,
         excluded=inp.excluded,
         t_end=inp.t1,

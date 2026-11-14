@@ -35,7 +35,7 @@ Design principles:
 **Numbers.**
 - Token amounts and Q amounts are integers in base units.
 - The **payout path** (sections 1–9, 11, 13) uses only integers and exact rationals (`fractions.Fraction` in the reference implementation). Binary floats, `ln`, `exp` and non-integer `sqrt` are forbidden there.
-- Rounding happens only at the final payout step (section 6).
+- Rounding happens only at the final payout step (section 6). One exception: the 24h harmonic mean P̃_h in section 11 is computed in 2^128 fixed point, rounded so that it can only be lower than the exact value (D20).
 - The treasury bot (section 12) may use floats, because it never affects claims.
 
 **One clock: block time in whole seconds.**
@@ -352,6 +352,7 @@ locked_c = Σ_lots (1 − unlocked_lot) · amount_lot
 
 - `unlocked` is evaluated at every minute boundary (`t` divisible by 60).
 - `u_price` is evaluated only when `t ≥ t0 + 24h` **and** every second of the 24h window is trusted (section 0). Otherwise it is skipped for that minute; the time unlock continues.
+- Fixed point (D20): each constant-reserve piece of the window adds `ceil(len · reserve_base · 2^128 / reserve_quote)` to Σ, and P̃_h = window · 2^128 / Σ. This can only lower P̃_h, by a relative amount < n · P̃_h / (window · 2^128) for n pieces, so u_price is never above the exact value. The independent implementation (section 14) must use the same rule.
 - Plain reading: each +1× above the entry price unlocks 25%. At 5× everything is unlocked. After 7 days everything is unlocked anyway.
 - If the price dumps, nothing extra unlocks.
 

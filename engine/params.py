@@ -196,6 +196,14 @@ class VestingParams(_Strict):
     forfeit_days: float = Field(30.0, ge=0, description="Soft-mode forfeit duration (§11B)")
 
 
+class PriceParams(_Strict):
+    d_trust_lamports: int = Field(
+        2_000_000_000,
+        gt=0,
+        description="D_TRUST (§0): trusted second if a swap this big moves p < 5%",
+    )
+
+
 class TreasuryBotParams(_Strict):
     enabled: bool = Field(
         False, description="§16: off; on only after the §14 backtest passes and kiwi approves"
@@ -242,6 +250,7 @@ class CoinParams(_Strict):
     draws: DrawParams = DrawParams()
     fees: FeeParams = FeeParams()
     vesting: VestingParams = VestingParams()
+    prices: PriceParams = PriceParams()
     treasury_bot: TreasuryBotParams = TreasuryBotParams()
 
 

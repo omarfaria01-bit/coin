@@ -13,6 +13,7 @@ from hypothesis import strategies as st
 
 from engine.epoch import (
     EpochInputs,
+    EpochResult,
     EpochState,
     VestingEntry,
     empty_state,
@@ -24,6 +25,7 @@ from engine.params import (
     RewardParams,
     ScoringParams,
 )
+from engine.prices import ReservePoint
 from engine.rewards import epoch_budget_v033
 from engine.types import EventKind, FirstFunding, PricePoint, SolTransfer, TokenEvent
 from sim.agents import wallet_id
@@ -434,3 +436,43 @@ def test_underwater_boost_flag_is_refused_until_wired() -> None:
     p = p.model_copy(update={"underwater": p.underwater.model_copy(update={"enabled": True})})
     with pytest.raises(ValueError, match="underwater.enabled"):
         run_epoch(_inputs([_buy("uw", W("uw"), 10, T0)]), p, empty_state())
+
+
+# --- #82: §11 price unlock from pool reserves (P̃_h, trusted seconds only) ---
+
+
+def _price_unlock_run(reserve_quote: int) -> tuple[EpochResult, EpochState]:
+    """Lot bought 2 days before T0 at p_entry 1; pool flat at p = 3 since 3 days before T0.
+    At T0+1h: u_time = 49/168 ≈ 0.29, u_price = (3 − 1)/(5 − 1) = 1/2. Selling 45% breaches
+    the time-only lock (needs ≥ 71% kept) but not the price unlock (needs ≥ 50%)."""
+    v, h = W("pu-v"), W("pu-h")
+    events = [
+        _buy("puv", v, AMT, -2 * T1),
+        _buy("puh", h, AMT, -2 * T1, ix=1),
+        _sell("pus", v, AMT * 45 // 100, 3_600),
+    ]
+    reserves = (ReservePoint(-3 * T1, reserve_quote, reserve_quote // 3),)
+    inp = replace(_inputs(events), reserves=reserves)
+    prev = EpochState(0, 0, {}, {}, {}, (VestingEntry(v, AMT, "1", -2 * T1),))
+    return run_epoch(inp, _params(), prev)
+
+
+def test_price_unlock_from_trusted_reserves_prevents_breach() -> None:
+    result, nxt = _price_unlock_run(300 * 10**9)  # 300 SOL in the pool: every second trusted
+    assert nxt.forfeit_until == {}
+    assert nxt.unlocked[W("pu-v")] == pytest.approx(0.5)
+    assert result.payouts[W("pu-v")] > 0
+
+
+def test_price_unlock_paused_on_untrusted_window() -> None:
+    result, nxt = _price_unlock_run(10 * 10**9)  # 10 SOL: a 2 SOL swap moves p > 5%
+    assert W("pu-v") in nxt.forfeit_until
+    assert nxt.unlocked[W("pu-v")] < 0.5
+    assert result.payouts.get(W("pu-v"), 0) == 0
+
+
+def test_vesting_entry_p_entry_is_exact() -> None:
+    assert VestingEntry(W("x"), 1, "1/3", 0).p_entry == Fraction(1, 3)
+    assert VestingEntry(W("x"), 1, 0.1, 0).p_entry == Fraction(1, 10)  # by repr
+    with pytest.raises(TypeError):
+        VestingEntry(W("x"), 1, True, 0)

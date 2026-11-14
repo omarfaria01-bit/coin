@@ -98,6 +98,9 @@
     "unlock_twap_hours": 24.0,
     "forfeit_days": 30.0
   },
+  "prices": {
+    "d_trust_lamports": 2000000000
+  },
   "treasury_bot": {
     "enabled": false,
     "mode": "paper",

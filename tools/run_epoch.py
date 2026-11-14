@@ -13,10 +13,11 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from fractions import Fraction
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
@@ -29,6 +30,7 @@ from adapters.epoch_files import write_epoch  # noqa: E402
 from engine.epoch import EpochInputs, EpochResult, EpochState, VestingEntry, run_epoch  # noqa: E402
 from engine.merkle import MerkleTree, build, leaf  # noqa: E402
 from engine.params import CoinParams  # noqa: E402
+from engine.prices import ReservePoint  # noqa: E402
 from engine.types import EventKind, FirstFunding, PricePoint, SolTransfer, TokenEvent  # noqa: E402
 
 
@@ -84,8 +86,27 @@ class PriceIn(_Strict):
 class VestingIn(_Strict):
     wallet: str
     vested_amount: int = Field(ge=0)
-    p_entry: float = Field(gt=0, allow_inf_nan=False)
+    p_entry: str | int | float = Field(
+        description="Q base units per token base unit: 'num/den' string (exact), int or float"
+    )
     t0: int
+
+    @field_validator("p_entry")
+    @classmethod
+    def _positive_rational(cls, v: str | int | float) -> str | int | float:
+        try:
+            ok = Fraction(str(v)) > 0
+        except (ValueError, ZeroDivisionError):
+            ok = False
+        if not ok:
+            raise ValueError("p_entry must be a positive rational")
+        return v
+
+
+class ReserveIn(_Strict):
+    ts: int
+    reserve_quote: int = Field(gt=0)
+    reserve_base: int = Field(gt=0)
 
 
 class WindowIn(_Strict):
@@ -116,6 +137,7 @@ class Fixture(_Strict):
     sol_transfers: list[SolTransferIn] = []
     fundings: list[FundingIn] = []
     prices: list[PriceIn] = Field(min_length=1)
+    reserves: list[ReserveIn] = Field([], description="§0 pool reserves for the §11 unlock")
     epochs: list[WindowIn] = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -200,6 +222,7 @@ def build_inputs(fx: Fixture, w: WindowIn) -> EpochInputs:
         excluded=frozenset(fx.excluded),
         hubs=frozenset(fx.hubs),
         total_supply=fx.total_supply,
+        reserves=tuple(ReservePoint(**r.model_dump()) for r in fx.reserves if r.ts < w.t1),
     )
 
 

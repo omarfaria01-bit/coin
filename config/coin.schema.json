@@ -233,6 +233,20 @@
       "title": "HoldParams",
       "type": "object"
     },
+    "PriceParams": {
+      "additionalProperties": false,
+      "properties": {
+        "d_trust_lamports": {
+          "default": 2000000000,
+          "description": "D_TRUST (§0): trusted second if a swap this big moves p < 5%",
+          "exclusiveMinimum": 0,
+          "title": "D Trust Lamports",
+          "type": "integer"
+        }
+      },
+      "title": "PriceParams",
+      "type": "object"
+    },
     "RewardParams": {
       "additionalProperties": false,
       "properties": {
@@ -819,6 +833,12 @@
         "m": 5.0,
         "unlock_twap_hours": 24.0,
         "forfeit_days": 30.0
+      }
+    },
+    "prices": {
+      "$ref": "#/$defs/PriceParams",
+      "default": {
+        "d_trust_lamports": 2000000000
       }
     },
     "treasury_bot": {
