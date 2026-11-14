@@ -146,10 +146,88 @@
       "properties": {
         "horizon_days": {
           "default": 30.0,
-          "description": "h(a)=1+min(1, ln(1+a)/ln(1+H)) (§3)",
+          "description": "v0.2 h(a); removed when #82 wires score_lots",
           "exclusiveMinimum": 0,
           "title": "Horizon Days",
           "type": "number"
+        },
+        "knots": {
+          "default": [
+            [
+              7200,
+              "1"
+            ],
+            [
+              21600,
+              "23/20"
+            ],
+            [
+              43200,
+              "13/10"
+            ],
+            [
+              86400,
+              "3/2"
+            ],
+            [
+              172800,
+              "7/4"
+            ],
+            [
+              259200,
+              "19/10"
+            ],
+            [
+              604800,
+              "21/10"
+            ],
+            [
+              1209600,
+              "23/10"
+            ],
+            [
+              2592000,
+              "5/2"
+            ],
+            [
+              5184000,
+              "27/10"
+            ],
+            [
+              7776000,
+              "14/5"
+            ]
+          ],
+          "description": "v0.3.3 h(a) knots [age_s, 'num/den'], linear between (§3)",
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Knots",
+          "type": "array"
+        },
+        "t_start_seconds": {
+          "default": 7200,
+          "description": "T_START: lot-time below scores 0 (§4)",
+          "minimum": 0,
+          "title": "T Start Seconds",
+          "type": "integer"
+        },
+        "boost_age_seconds": {
+          "default": 172800,
+          "description": "E1/E2 split, boost start (§3, §5)",
+          "minimum": 0,
+          "title": "Boost Age Seconds",
+          "type": "integer"
         }
       },
       "title": "HoldParams",
@@ -581,7 +659,55 @@
     "hold": {
       "$ref": "#/$defs/HoldParams",
       "default": {
-        "horizon_days": 30.0
+        "horizon_days": 30.0,
+        "knots": [
+          [
+            7200,
+            "1"
+          ],
+          [
+            21600,
+            "23/20"
+          ],
+          [
+            43200,
+            "13/10"
+          ],
+          [
+            86400,
+            "3/2"
+          ],
+          [
+            172800,
+            "7/4"
+          ],
+          [
+            259200,
+            "19/10"
+          ],
+          [
+            604800,
+            "21/10"
+          ],
+          [
+            1209600,
+            "23/10"
+          ],
+          [
+            2592000,
+            "5/2"
+          ],
+          [
+            5184000,
+            "27/10"
+          ],
+          [
+            7776000,
+            "14/5"
+          ]
+        ],
+        "t_start_seconds": 7200,
+        "boost_age_seconds": 172800
       }
     },
     "churn": {

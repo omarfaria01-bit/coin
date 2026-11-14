@@ -107,6 +107,7 @@ class Fixture(_Strict):
 
     params: str = Field(description="Path to coin.json, relative to the fixture file")
     decimals: int = Field(ge=0, le=18)
+    total_supply: int = Field(gt=0, description="Token base units (v0.3.3 §2)")
     sol_usd: float = Field(gt=0, allow_inf_nan=False)
     excluded: list[str] = []
     hubs: list[str] = []
@@ -197,6 +198,7 @@ def build_inputs(fx: Fixture, w: WindowIn) -> EpochInputs:
         pot_inflow=w.pot_inflow,
         excluded=frozenset(fx.excluded),
         hubs=frozenset(fx.hubs),
+        total_supply=fx.total_supply,
     )
 
 

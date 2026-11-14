@@ -28,6 +28,8 @@ from engine.types import EventKind, FirstFunding, PricePoint, SolTransfer, Token
 from sim.agents import wallet_id
 
 T0, T1 = 0, 86_400
+# Small supply so the default 1/1e6 floor is one base unit: these tests are not about dust.
+TOTAL_SUPPLY = 1_000_000
 LAMPORTS_PER_TOKEN = 1_000_000_000  # 1 SOL / whole token, decimals=9 → D13 = 1.0
 
 
@@ -123,6 +125,7 @@ def _inputs(events: list[TokenEvent], inflow: int = 10**12, fundings=None) -> Ep
         decimals=9,
         sol_usd=100.0,
         pot_inflow=inflow,
+        total_supply=TOTAL_SUPPLY,
         excluded=frozenset(),
         hubs=frozenset(),
     )
@@ -287,3 +290,11 @@ def test_twap_dense_series_is_time_weighted_mean() -> None:
     # Sparse fixture used elsewhere must also stay a mid of 1, not 1 * window.
     flat = (PricePoint(-3_600, 1.0), PricePoint(0, 1.0), PricePoint(86_399, 1.0))
     assert _twap(flat, 0, 86_400, 9) == pytest.approx(1.0)
+
+
+def test_total_supply_is_required_and_positive() -> None:
+    inp = _inputs([_buy("a", W("a"), 10, T0, ix=0)])
+    with pytest.raises(ValueError, match="total_supply"):
+        replace(inp, total_supply=0)
+    with pytest.raises(TypeError, match="total_supply"):
+        replace(inp, total_supply=True)

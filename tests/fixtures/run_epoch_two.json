@@ -1,6 +1,7 @@
 {
  "params": "../../config/coin.json",
  "decimals": 9,
+ "total_supply": 1000000000000000000,
  "sol_usd": 150.0,
  "events": [
   {"slot": 2800, "ts": -7200, "sig": "f2ff215c2829c2c9c464f710d3501f000ec2401cd71f56048db74484310fba97", "ix": 0, "kind": "buy", "dst": "GMgwzAVzwGr7tEWDxpsnovDHsADbcAkdR98BqDLRwZYd", "amount": 10000000000000, "lamports": 100000000000, "fee_payer": "GMgwzAVzwGr7tEWDxpsnovDHsADbcAkdR98BqDLRwZYd"},

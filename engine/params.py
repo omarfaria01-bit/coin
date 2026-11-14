@@ -7,6 +7,7 @@ Unknown keys are rejected everywhere (extra="forbid").
 from __future__ import annotations
 
 import math
+from fractions import Fraction
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -37,8 +38,54 @@ class EligibilityParams(_Strict):
         return self
 
 
+# v0.3.3 §3 knot table: [age_seconds, h as an exact rational string]. Strings, not
+# floats, so the payout path stays exact (§0). Mirrors engine.scoring.DEFAULT_HOLD_KNOTS.
+_DEFAULT_KNOTS: tuple[tuple[int, str], ...] = (
+    (7_200, "1"),
+    (21_600, "23/20"),
+    (43_200, "13/10"),
+    (86_400, "3/2"),
+    (172_800, "7/4"),
+    (259_200, "19/10"),
+    (604_800, "21/10"),
+    (1_209_600, "23/10"),
+    (2_592_000, "5/2"),
+    (5_184_000, "27/10"),
+    (7_776_000, "14/5"),
+)
+
+
+def parse_rational(text: str) -> Fraction:
+    """'23/20', '1.15' or '2' → exact Fraction (never via float)."""
+    if not isinstance(text, str):
+        raise TypeError("rational must be a string")
+    return Fraction(text.strip())
+
+
 class HoldParams(_Strict):
-    horizon_days: float = Field(30.0, gt=0, description="h(a)=1+min(1, ln(1+a)/ln(1+H)) (§3)")
+    horizon_days: float = Field(
+        30.0, gt=0, description="v0.2 h(a); removed when #82 wires score_lots"
+    )
+    knots: tuple[tuple[int, str], ...] = Field(
+        _DEFAULT_KNOTS, description="v0.3.3 h(a) knots [age_s, 'num/den'], linear between (§3)"
+    )
+    t_start_seconds: int = Field(7_200, ge=0, description="T_START: lot-time below scores 0 (§4)")
+    boost_age_seconds: int = Field(172_800, ge=0, description="E1/E2 split, boost start (§3, §5)")
+
+    @model_validator(mode="after")
+    def _knots_ok(self) -> HoldParams:
+        if not self.knots:
+            raise ValueError("hold.knots must be non-empty")
+        prev_a, prev_h = -1, Fraction(-1)
+        for age, h_text in self.knots:
+            h = parse_rational(h_text)
+            if age <= prev_a or h < prev_h or h < 0:
+                raise ValueError("hold.knots: ages strictly increasing, h nondecreasing, h ≥ 0")
+            prev_a, prev_h = age, h
+        return self
+
+    def knot_fractions(self) -> tuple[tuple[int, Fraction], ...]:
+        return tuple((age, parse_rational(h)) for age, h in self.knots)
 
 
 class ChurnParams(_Strict):
