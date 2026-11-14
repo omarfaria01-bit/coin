@@ -159,3 +159,30 @@ def test_split_conservation_parametrized(pot: int) -> None:
     prizes, rem = split_prizes(pot, winners, SPLIT)
     assert sum(prizes.values()) + rem == pot
     assert rem >= 0
+
+
+def test_split_prizes_rejects_duplicate_winners() -> None:
+    with pytest.raises(ValueError, match="duplicate"):
+        split_prizes(100, ["a", "a"], (0.4, 0.1))
+
+
+def test_split_prizes_rejects_negative_pot() -> None:
+    with pytest.raises(ValueError, match="pot"):
+        split_prizes(-1, ["a"], (0.4,))
+
+
+def test_split_prizes_rejects_negative_share() -> None:
+    with pytest.raises(ValueError, match="prize_split"):
+        split_prizes(100, ["a"], (0.4, -0.1))
+
+
+def test_split_prizes_rejects_shares_sum_over_one() -> None:
+    with pytest.raises(ValueError, match="prize_split"):
+        split_prizes(100, ["a", "b"], (0.6, 0.5))
+
+
+def test_draw_winners_rejects_non_finite_score() -> None:
+    with pytest.raises(ValueError, match="non-finite"):
+        draw_winners({"a": 1.0, "b": float("nan")}, b"seed", 1)
+    with pytest.raises(ValueError, match="non-finite"):
+        draw_winners({"a": float("inf")}, b"seed", 1)

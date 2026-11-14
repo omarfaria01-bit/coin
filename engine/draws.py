@@ -29,6 +29,8 @@ def draw_winners(scores: Mapping[ClusterId, float], randomness: bytes, k: int) -
         return []
     keyed: list[tuple[float, ClusterId]] = []
     for cid, score in scores.items():
+        if not math.isfinite(score):
+            raise ValueError(f"non-finite score for {cid}")
         if score <= 0:
             continue
         t_c = math.sqrt(score)
@@ -42,10 +44,20 @@ def split_prizes(
     pot: int, winners: Sequence[ClusterId], prize_split: Sequence[float]
 ) -> tuple[dict[ClusterId, int], int]:
     """Rank i gets floor(pot·split[i]); unused ranks and dust stay in the pot (returned)."""
+    if pot < 0:
+        raise ValueError("pot must be >= 0")
+    if any(share < 0 for share in prize_split):
+        raise ValueError("prize_split entries must be >= 0")
+    if sum(prize_split) > 1 + 1e-9:
+        raise ValueError("prize_split must sum to <= 1")
+    if len(winners) != len(set(winners)):
+        raise ValueError("duplicate winners")
     prizes: dict[ClusterId, int] = {}
     paid = 0
     for share, cid in zip(prize_split, winners, strict=False):
         amount = math.floor(pot * share)
         prizes[cid] = amount
         paid += amount
-    return prizes, pot - paid
+    remainder = pot - paid
+    assert remainder >= 0
+    return prizes, remainder
