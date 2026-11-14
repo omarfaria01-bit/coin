@@ -9,7 +9,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from engine.params import VestingParams
-from engine.vesting import harmonic_mean, u_price_linear, unlocked_fraction, unlocked_fraction_v033
+from engine.vesting import harmonic_mean, u_price_linear, unlocked_fraction_v033
 
 P = VestingParams()
 DAY = 86_400
@@ -67,13 +67,6 @@ def test_price_gate_and_dump_do_not_unlock() -> None:
     # Time alone still unlocks fully at T_v, even if price dumped.
     t_end = t0 + 7 * DAY
     assert unlocked_fraction_v033(0, t_end, t0, ENTRY // 10, ENTRY, P) == 1
-
-
-def test_v02_unlocked_fraction_is_unchanged() -> None:
-    # The log path stays until epoch is rewired; 2× is still ln(2)/ln(5), not 25%.
-    got = unlocked_fraction(0.0, 0, 0, 2 * 100.0, 100.0, P)
-    assert got != 0.25
-    assert got == pytest.approx(0.430676558, abs=1e-9)
 
 
 @given(

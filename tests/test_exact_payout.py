@@ -10,7 +10,6 @@ from hypothesis import strategies as st
 
 from engine.rewards import (
     capped_shares_v033,
-    epoch_budget,
     epoch_budget_v033,
     exact_payout,
     split_cluster_payout,
@@ -107,12 +106,6 @@ def test_epoch_budget_v033_is_floor_alpha_pot(pot: int, a: int, b: int) -> None:
     r = epoch_budget_v033(pot, alpha)
     assert 0 <= r <= pot
     assert r <= alpha * pot < r + 1
-
-
-@given(st.integers(0, 10**24))
-@settings(max_examples=100, deadline=None)
-def test_epoch_budget_v033_matches_v02_for_one_day_alpha_tenth(pot: int) -> None:
-    assert epoch_budget_v033(pot, Fraction(1, 10)) == epoch_budget(pot, 0.10, 24) == pot // 10
 
 
 @pytest.mark.parametrize(

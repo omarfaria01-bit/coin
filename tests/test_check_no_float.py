@@ -8,6 +8,7 @@ from tools.check_no_float import BASELINE, check, violations
 
 
 def test_repo_passes_the_ratchet() -> None:
+    assert not BASELINE
     assert check() == []
 
 
@@ -27,4 +28,3 @@ def test_new_violation_and_stale_baseline_both_fail(tmp_path: Path) -> None:
     assert any("new_payout" in e and "1.5" in e for e in errs)
     assert any("stale BASELINE entry ('rewards', 'old_gone')" in e for e in errs)
     assert check(tmp_path, frozenset({("rewards", "new_payout")})) == []
-    assert ("rewards", "allocate") in BASELINE  # v0.2; removed by #82 wiring

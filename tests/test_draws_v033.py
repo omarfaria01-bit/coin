@@ -16,7 +16,6 @@ from engine.draws import (
     accept_draw_uniform,
     draw_stream_int,
     draw_weight,
-    draw_winners,
     is_draw_eligible,
     isqrt,
     min_eligible_epochs,
@@ -109,5 +108,3 @@ def test_sampler_is_deterministic_without_replacement() -> None:
     # k larger than the eligible set just returns everyone once.
     assert set(sample_draw_winners(weights, **{**kwargs, "k": 10})) == {"A", "B", "C"}
     assert sample_draw_winners({"A": 0, "B": 0}, **kwargs) == []
-    # v0.2 E–S entry point is still present and unchanged in kind (returns ids).
-    assert isinstance(draw_winners({"A": 4.0, "B": 1.0}, b"seed", 1), list)

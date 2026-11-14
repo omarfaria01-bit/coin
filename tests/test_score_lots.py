@@ -13,7 +13,6 @@ from engine.scoring import (
     HOUR,
     lot_epoch_parts,
     lot_score,
-    score,
     score_lot,
     score_lots,
 )
@@ -70,10 +69,6 @@ def test_score_lots_sums_and_forces_transfer_u_to_one() -> None:
     assert 0 <= tainted < full
     with pytest.raises(ValueError, match="u_lots"):
         score_lots([young], t0, t1, u_lots=(1, 1))
-
-
-def test_v02_product_score_is_unchanged() -> None:
-    assert score(2.0, 1.5, 0.5, 1.2) == pytest.approx(2.0 * 1.5 * 0.5 * 1.2)
 
 
 @given(st.integers(1, 10**6), st.integers(1, 10**6))
