@@ -131,3 +131,25 @@ def test_property_conservation_and_lot_invariants(ops, merge_all: bool) -> None:
             assert (lot.cost_q is None) == (lot.source is LotSource.TRANSFER_IN)
             if merge_all:  # one cluster: every lot is still an original pool buy
                 assert lot.source is LotSource.POOL_BUY and lot.t_acquired == lot.origin.ts
+
+
+def test_segments_step_function_of_the_second() -> None:
+    from engine.ledger import ledger_segments
+
+    events = [
+        ev(B, 1, dst="A", amount=10),  # ts 10, before the window
+        ev(S, 3, src="A", amount=4),  # ts 30
+        ev(T, 5, src="A", dst="B", amount=6),  # ts 50: A empties
+        ev(B, 7, dst="C", amount=1),  # ts 70 = t1: outside [20, 70)
+    ]
+    segs = ledger_segments(events, frozenset(), 20, 70)
+    assert [(a, b, [lot.amount for lot in lots]) for a, b, lots in segs["A"]] == [
+        (20, 30, [10]),
+        (30, 50, [6]),
+    ]
+    assert [(a, b) for a, b, _ in segs["B"]] == [(50, 70)] and "C" not in segs
+    # Bought and sold in the same second: zero duration, no segment.
+    flash = [ev(B, 3, dst="F", amount=5, ix=0), ev(S, 3, src="F", amount=5, ix=1)]
+    assert ledger_segments(flash, frozenset(), 0, 100) == {}
+    with pytest.raises(ValueError, match="t1"):
+        ledger_segments([], frozenset(), 5, 4)

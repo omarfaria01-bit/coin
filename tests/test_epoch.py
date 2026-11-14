@@ -132,7 +132,7 @@ def _inputs(events: list[TokenEvent], inflow: int = 10**12, fundings=None) -> Ep
 
 
 def test_golden_three_equal_holders() -> None:
-    """Hand-computed: 3 equal buyers, cap not binding (cap=1), R=10**11, each floor(R/3)."""
+    """Hand-computed: 3 equal buyers, cap not binding (cap=1), R=10**11, exact §6 payout."""
     amount = 1_000_000_000
     wallets = [W("a"), W("b"), W("c")]
     events = [
@@ -141,15 +141,17 @@ def test_golden_three_equal_holders() -> None:
     result, nxt = run_epoch(_inputs(events), _params(), empty_state())
     budget = epoch_budget(10**12, 0.10, 24)
     assert budget == 100_000_000_000
-    # cap=1, equal scores → π=1/3; floor(10**11 / 3) = 33_333_333_333; rollover = 1.
+    # cap=1, equal scores → π=1/3, Σπ = 1 so T = R. Floors 33_333_333_333 each; the one
+    # leftover unit goes by largest remainder, ties by smallest id (v0.3.3 §6, was rollover).
     expected = 33_333_333_333
-    assert budget == expected * 3 + 1
-    assert dict(result.payouts) == {w: expected for w in wallets}
-    assert result.rollover == 1
+    first = min(wallets)
+    want = {w: expected + (1 if w == first else 0) for w in wallets}
+    assert dict(result.payouts) == want
+    assert result.rollover == 0
     assert result.dust == 0
-    assert result.pot == 10**12 - expected * 3
+    assert result.pot == 10**12 - budget
     assert result.rail == "push"
-    assert result.push == tuple(sorted((w, expected) for w in wallets))
+    assert result.push == tuple(sorted(want.items()))
     lhs = 0 + 10**12 + 0
     rhs = result.pot + sum(a for _, a in result.push) + sum(nxt.carry.values())
     assert lhs == rhs == 10**12
@@ -167,16 +169,15 @@ def test_rewards_disabled_zero_payouts_pot_gains_inflow() -> None:
     assert result.push == ()
 
 
-def test_sniper_weight_at_most_half_percent() -> None:
+def test_sniper_lot_under_t_start_scores_zero() -> None:
     holder, sniper = W("hold"), W("snipe")
     amt = 1_000_000_000
     events = [_buy("h", holder, amt, T0), _buy("s", sniper, amt, T1 - 300)]
     result, _nxt = run_epoch(_inputs(events), _params(), empty_state())
     rows = {row.cluster: row for row in result.scores}
     # Cluster id is the only wallet in each singleton cluster.
-    w_hold = rows[holder].twab * rows[holder].hold * rows[holder].churn * rows[holder].boost
-    w_snipe = rows[sniper].twab * rows[sniper].hold * rows[sniper].churn * rows[sniper].boost
-    assert w_snipe <= 0.005 * w_hold
+    # v0.3.3 §4: a lot younger than T_START = 2h scores exactly 0.
+    assert rows[sniper].score == 0.0 and rows[holder].score > 0.0
 
 
 def test_soft_vesting_transfer_then_sell_forfeits_cluster() -> None:
@@ -298,3 +299,19 @@ def test_total_supply_is_required_and_positive() -> None:
         replace(inp, total_supply=0)
     with pytest.raises(TypeError, match="total_supply"):
         replace(inp, total_supply=True)
+
+
+def test_lot_sold_mid_epoch_scores_for_the_time_held_and_payout_is_exact() -> None:
+    keeper, seller = W("keep"), W("sell")
+    amt = 1_000_000_000
+    events = [
+        _buy("k", keeper, amt, T0 - 100 * 86_400, ix=0),
+        _buy("s", seller, amt, T0 - 100 * 86_400, ix=1),
+        TokenEvent(T1 // 2, T1 // 2, _sig("sold"), 0, EventKind.SELL, seller, None, amt, 1, seller),
+    ]
+    result, _nxt = run_epoch(_inputs(events), _params(), empty_state())
+    rows = {row.cluster: row for row in result.scores}
+    # Flat h (lots > 90d old), held half the epoch → exactly half the score.
+    assert rows[seller].score * 2 == pytest.approx(rows[keeper].score, rel=1e-12)
+    budget = epoch_budget(10**12, 0.10, 24)
+    assert sum(result.payouts.values()) + result.rollover == budget

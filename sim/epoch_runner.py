@@ -10,6 +10,7 @@ from pathlib import Path
 
 from engine.epoch import EpochInputs, EpochResult, EpochState, VestingEntry, empty_state, run_epoch
 from engine.params import CoinParams
+from engine.scoring import h_of_age
 from sim.acceptance import BuyThenSell
 from sim.agents import (
     Flipper,
@@ -187,15 +188,18 @@ def scenario_flipper(seed: int) -> Row:
     _r1, mid = run_slice(world, 0, DAY, params)
     result, _nxt = run_slice(world, DAY, 2 * DAY, params, prev=mid)
     h_row, f_row = _row_for_wallet(result, holder.wallet), _row_for_wallet(result, flipper.wallet)
-    h_s = 0.0 if h_row is None else h_row.score
-    f_s = 0.0 if f_row is None else f_row.score
-    ratio = 0.0 if h_s == 0 else f_s / h_s
-    # Compare scores, not payouts: with N=2 the 5% cap binds both shares to CAP.
-    ok = ratio <= 0.10
-    ev = f"holder_score={h_s:.4f} flipper_score={f_s:.4f} score_ratio={ratio:.6f}"
+    # v0.3.3 §14 "trader in 4h cycles vs a 7-day holder: reward per token-hour ≤ 30%".
+    # Reward per token-hour held = s_c / B̄_c (the row's effective multiplier `hold`).
+    # The 7-day benchmark is h(7d) from the published knot table (no 7-day agent here).
+    f_h = 0.0 if f_row is None else f_row.hold
+    h_h = 0.0 if h_row is None else h_row.hold
+    bench = float(h_of_age(7 * DAY, params.hold.knot_fractions(), params.hold.t_start_seconds))
+    ratio = f_h / bench
+    ok = f_row is not None and ratio <= 0.30
+    ev = f"flipper_per_token_hour={f_h:.4f} holder_1d={h_h:.4f} h7d={bench:.2f} ratio={ratio:.4f}"
     return Row(
         "flipper",
-        "5×/day flipper, epoch 2: score ≤ 10% of a holder (cap binds payouts at N=2)",
+        "5×/day flipper: reward per token-hour ≤ 30% of a 7-day holder's (v0.3.3 §14)",
         ok,
         ev,
     )
@@ -291,11 +295,13 @@ def scenario_underwater(seed: int) -> Row:
     mid = world.pool.mid_price()
     mtm = farmer.tokens * mid - farmer.buy_lamports
     boost = 1.0 if row is None else row.boost
-    ok = row is not None and 1.0 < boost <= 1.5 + 1e-12 and mtm < 0
+    # v0.3.3 §16: the underwater boost is off at launch, so a farmer who buys the top gets
+    # no extra score (U = 1) and keeps the loss. The ROI row with the boost on is #84.
+    ok = row is not None and boost == 1.0 and mtm < 0
     ev = f"U={boost:.4f} mtm={mtm:.1f} mid={mid:.4f} farmer_pay={_payout(result, farmer.wallet)}"
     return Row(
         "underwater",
-        "Farmer buys near the top, 48h+ later: 1 < U ≤ 1.5 and mark-to-market loss",
+        "Farmer buys near the top, 48h+ later: boost off at launch (U = 1), loss kept",
         ok,
         ev,
     )
