@@ -5,11 +5,18 @@ BUY/SELL/TRANSFER come from pre/post balances (native SOL + WSOL vs the
 target mint) plus which side signed, not from a launchpad program id.
 
 Token-2022 transfer fees: the destination is credited the received amount;
-the withheld fee is a second TRANSFER. The fee sink is chosen by a documented
-heuristic (see `_fee_sink`): if several non-src/dst owners gained exactly the
-fee, the lexicographically smallest owner wins; if none did, the mint is the
-withheld sink. The fee event uses ix = transfer_ix + 1_000_000 so it cannot
-collide with another instruction index. Amounts are always ints.
+the withheld fee is a second TRANSFER, but only on TRANSFER events. On BUY
+the event amount is already `received` (gross minus fee); on SELL it is the
+gross `amount`. The withheld fee is not emitted as its own event for a swap
+— the taxed side is the pool/curve, not a second user credit. A transaction
+with more than one BUY/SELL is rejected (`ParseError`): `_sol_like` uses the
+whole-tx SOL delta, so a second swap would inherit the first's lamports.
+
+The fee sink is chosen by a documented heuristic (see `_fee_sink`): if
+several non-src/dst owners gained exactly the fee, the lexicographically
+smallest owner wins; if none did, the mint is the withheld sink. The fee
+event uses ix = transfer_ix + 1_000_000 so it cannot collide with another
+instruction index. Amounts are always ints.
 """
 
 from __future__ import annotations
@@ -327,6 +334,9 @@ def parse_tx(
 
     if n_parsed == 0 and any(rec["post"] != rec["pre"] for rec in rows.values()):
         raise ParseError("mint balances changed but no parsed token transfer was found")
+    n_swaps = sum(1 for e in events if e.kind in (EventKind.BUY, EventKind.SELL))
+    if n_swaps > 1:
+        raise ParseError("multiple swaps in one transaction; record each swap separately")
 
     events.sort(key=lambda e: (e.slot, e.sig, e.ix))
     sols.sort(key=lambda s: (s.slot, s.sig, s.src, s.dst))

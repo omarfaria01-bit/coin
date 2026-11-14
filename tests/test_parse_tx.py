@@ -219,3 +219,21 @@ def test_module_has_no_network_imports() -> None:
         elif isinstance(node, ast.ImportFrom) and node.module:
             names.add(node.module.split(".")[0])
     assert not (names & banned), names & banned
+
+
+def test_buy_with_transfer_fee_does_not_emit_withheld_event() -> None:
+    """Withheld Token-2022 fees are only split off on TRANSFER, not on BUY/SELL."""
+    raw = json.loads((FIX / "buy.json").read_text(encoding="utf-8"))
+    ix = raw["transaction"]["message"]["instructions"][1]
+    ix["parsed"]["info"]["feeAmount"] = {"amount": "10000", "decimals": 9}
+    events, _sols = parse_tx(raw, MINT)
+    assert [e.kind for e in events] == [EventKind.BUY]
+    assert events[0].amount == 1_000_000_000 - 10_000
+
+
+def test_two_swaps_in_one_tx_raises() -> None:
+    raw = json.loads((FIX / "buy.json").read_text(encoding="utf-8"))
+    ixs = raw["transaction"]["message"]["instructions"]
+    ixs.append(ixs[1])  # second mint transfer; whole-tx SOL delta would apply twice
+    with pytest.raises(ParseError, match="multiple swaps"):
+        parse_tx(raw, MINT)
