@@ -96,3 +96,12 @@ period. Slices merged so far: #63 #68 #69 #75 #76 #77 #78 #80 (+ #57 #59 tooling
 snapshot_hash[32] ‖ ρ[32] ‖ i[u64 BE])`, as implemented in `engine/draws.py` (#78). Fixed-width
 fields make the concatenation unambiguous. The independent implementation (issue Q) must use the same
 layout; if kiwi wants another, change both and log it here.
+
+## D18 · 2026-11-14 · Cluster id and forfeit window in `run_epoch` (#82 PR3, #103)
+**Cluster id** = the cluster's smallest *holder* wallet (smallest member only if it has no holder, e.g. a
+lone funder), so ids are always holder addresses. Ids are not stable across epochs (a merge with a smaller
+holder renames the cluster), so state keyed by cluster id is never carried: `forfeit_until` is recomputed
+each epoch by replaying the full log under the current map (`soft_vesting_breaches`), and
+`prev.forfeit_until` is ignored. **Forfeit window:** a cluster is forfeited in every epoch with
+`t0 < forfeit_until` (was: eligible iff `forfeit_until <= t1`). With 24h epochs and `forfeit_days = 30`
+that is the breach epoch plus the next 30, as COIN_MATH §11 B says; the old test gave only the next 29.

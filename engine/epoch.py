@@ -74,6 +74,10 @@ class EpochInputs:
     events: tuple[TokenEvent, ...]
     sol_transfers: tuple[SolTransfer, ...]
     fundings: tuple[FirstFunding, ...]
+    # prices/decimals are unread since #82 PR3 (price unlock paused); kept for PR4's
+    # pool-reserve harmonic mean.
+    # Not read by v0.3.3 run_epoch (no price in eligibility/score); kept for the
+    # price unlock once pool reserves are wired (#82 PR4).
     prices: tuple[PricePoint, ...]
     decimals: int
     sol_usd: float  # display-only leftover; not used for eligibility (v0.3.3 §2)
@@ -223,6 +227,9 @@ def run_epoch(
     # §8 step 7 (moved before scoring, §1 order: clusters → ledger → score) — v0.3.3 §11 B.
     # Replayed over the full history under this cluster map. Price unlock is paused
     # (p_harmonic → None) until pool reserves are wired in: only the time unlock runs.
+    kept = [e for e in prev.vesting if e.vested_amount > 0 and e.p_entry > 0]
+    # TODO(#82 PR4): p_entry is a float; Fraction(str(.)) is exact on its repr, but
+    # VestingEntry.p_entry should become a Fraction/int ratio.
     vested = [
         VestedLot(
             clustered.cluster_of.get(e.wallet, e.wallet),
@@ -230,8 +237,7 @@ def run_epoch(
             e.t0,
             Fraction(str(e.p_entry)),
         )
-        for e in prev.vesting
-        if e.vested_amount > 0 and e.p_entry > 0
+        for e in kept
     ]
     breaches = soft_vesting_breaches(
         events,
@@ -242,17 +248,14 @@ def run_epoch(
         excluded=inp.excluded,
         t_end=inp.t1,
     )
-    forfeit_until = dict(prev.forfeit_until)
-    for cid, until in breaches.forfeit_until.items():
-        forfeit_until[cid] = max(forfeit_until.get(cid, 0), until)
-    # Score 0 for the epoch of the breach and every epoch that starts before it ends.
+    # Cluster ids can change between epochs (merges), so prev.forfeit_until is not carried:
+    # the replay of the full log under this epoch's map is the truth (DECISIONS D18).
+    forfeit_until: dict[ClusterId, int] = dict(breaches.forfeit_until)
+    # §11: score 0 "for the current epoch and the next 30": until = breach + 30 d, so
+    # every epoch that starts before `until` is forfeited (31 daily epochs).
     forfeited = {cid for cid, until in forfeit_until.items() if until > inp.t0}
     unlocked = dict(prev.unlocked)
-    for entry, value in zip(
-        [e for e in prev.vesting if e.vested_amount > 0 and e.p_entry > 0],
-        breaches.unlocked,
-        strict=True,
-    ):
+    for entry, value in zip(kept, breaches.unlocked, strict=True):
         unlocked[entry.wallet] = float(value)
     # §8 step 4
     twab_w = {w: twab(0, paths.get(w, ()), inp.t0, inp.t1) for w in holder_list}
