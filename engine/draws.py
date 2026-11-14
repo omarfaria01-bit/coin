@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping, Sequence
+from fractions import Fraction
 from hashlib import sha256
 
 from engine.types import ClusterId
@@ -55,9 +56,8 @@ def split_prizes(
     prizes: dict[ClusterId, int] = {}
     paid = 0
     for share, cid in zip(prize_split, winners, strict=False):
-        amount = math.floor(pot * share)
+        amount = min(int(Fraction(share) * pot), pot - paid)
         prizes[cid] = amount
         paid += amount
     remainder = pot - paid
-    assert remainder >= 0
     return prizes, remainder

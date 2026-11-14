@@ -186,3 +186,21 @@ def test_draw_winners_rejects_non_finite_score() -> None:
         draw_winners({"a": 1.0, "b": float("nan")}, b"seed", 1)
     with pytest.raises(ValueError, match="non-finite"):
         draw_winners({"a": float("inf")}, b"seed", 1)
+
+
+def test_split_prizes_exact_floor_on_large_pot() -> None:
+    pot = 10**18 + 7
+    prizes, rem = split_prizes(pot, ["a", "b", "c"], (0.5, 0.3, 0.2))
+    assert sum(prizes.values()) + rem == pot
+    assert rem >= 0
+
+
+def test_split_prizes_ten_tenths_conserves() -> None:
+    pot = 10**18 + 7
+    winners = [f"w{i}" for i in range(10)]
+    prizes, rem = split_prizes(pot, winners, tuple([0.1] * 10))
+    assert sum(prizes.values()) + rem == pot
+    assert rem >= 0
+    prizes, rem = split_prizes(100, winners, tuple([0.1] * 10))
+    assert sum(prizes.values()) + rem == 100
+    assert rem >= 0
