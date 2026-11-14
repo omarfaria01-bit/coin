@@ -5,6 +5,8 @@
 # data and runtime
 data/*
 !data/MANIFEST.json
+!data/hubs/
+!data/hubs/solana_hubs.csv
 epochs/
 state.json
 *.log
