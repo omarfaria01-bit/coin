@@ -4,7 +4,8 @@ Nodes are holders plus the wallets that fund them. Evidence between two wallets 
 **strong** (merges alone: S1 co-signed tx, S2 funded buy, S3 manual override) or a
 **link** (L1–L6, merges only when the pair's links sum to ≥ 1 and include a two-sided
 L1/L2). A shared fee payer is informational only. Hubs' edges are ignored. Clusters are
-the connected components (union-find); the cluster id is the smallest wallet id.
+the connected components (union-find); the cluster id is its smallest holder wallet
+(the smallest wallet only if it has no holder), so ids stay holder addresses.
 v0.2 ``engine/sybil.py`` stays until #82 wiring switches to this module.
 """
 
@@ -180,7 +181,8 @@ def cluster(
     Nodes are the holders plus every non-hub wallet on a strong edge (e.g. an S2
     funder). ``events`` only feed the informational shared-fee-payer review list.
     """
-    nodes = set(holders) - hubs
+    holder_set = set(holders) - hubs
+    nodes = set(holder_set)
     for e in edges:
         if e.kind in STRONG and e.a not in hubs and e.b not in hubs:
             nodes.update((e.a, e.b))
@@ -208,8 +210,10 @@ def cluster(
     cluster_of: dict[WalletId, ClusterId] = {}
     members: dict[ClusterId, tuple[WalletId, ...]] = {}
     for mems in sorted((tuple(m) for m in groups.values()), key=lambda m: m[0]):
-        members[mems[0]] = mems
-        cluster_of.update({w: mems[0] for w in mems})
+        cid = min((w for w in mems if w in holder_set), default=mems[0])
+        members[cid] = mems
+        cluster_of.update({w: cid for w in mems})
+    members = dict(sorted(members.items()))
     review = tuple(c for c, m in members.items() if len(m) > REVIEW_CLUSTER_SIZE)
     payer_count: dict[WalletId, set[WalletId]] = defaultdict(set)
     for e in events:

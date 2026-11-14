@@ -155,6 +155,7 @@ class VestedLot:
 class SoftVestingResult:
     forfeit_until: dict[ClusterId, int]  # score 0 (and no draws) while t < value
     taint_until: dict[tuple[str, int], int]  # (sig, ix) → lots moved by it tainted until
+    unlocked: tuple[Fraction, ...] = ()  # per vested lot (input order) at ``t_end``, if given
 
 
 class _Unlock:
@@ -191,6 +192,7 @@ def soft_vesting_breaches(
     *,
     cluster_of: Mapping[WalletId, ClusterId] | None = None,
     excluded: frozenset[WalletId] = frozenset(),
+    t_end: int | None = None,
 ) -> SoftVestingResult:
     """Replay the log; flag outflows that leave a cluster below ``locked_c`` (§11 B).
 
@@ -203,10 +205,13 @@ def soft_vesting_breaches(
     clusters = cluster_of or {}
     forfeit_s = int(Fraction(str(p.forfeit_days)) * _DAY)
     unlocks: dict[ClusterId, list[_Unlock]] = {}
+    in_order: list[_Unlock] = []
     for lot in vested:
         if lot.amount <= 0 or lot.p_entry <= 0:
             raise ValueError("vested lot needs amount > 0 and p_entry > 0")
-        unlocks.setdefault(lot.cluster, []).append(_Unlock(lot, p, p_harmonic))
+        unlock = _Unlock(lot, p, p_harmonic)
+        in_order.append(unlock)
+        unlocks.setdefault(lot.cluster, []).append(unlock)
     balance: dict[ClusterId, int] = {}
     forfeit: dict[ClusterId, int] = {}
     taint: dict[tuple[str, int], int] = {}
@@ -230,4 +235,5 @@ def soft_vesting_breaches(
             forfeit[src] = max(forfeit.get(src, 0), until)
             if ev.kind is EventKind.TRANSFER:
                 taint[(ev.sig, ev.ix)] = until
-    return SoftVestingResult(dict(sorted(forfeit.items())), dict(sorted(taint.items())))
+    at_end = () if t_end is None else tuple(u.at(t_end) for u in in_order)
+    return SoftVestingResult(dict(sorted(forfeit.items())), dict(sorted(taint.items())), at_end)

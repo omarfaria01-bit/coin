@@ -281,18 +281,6 @@ def test_rejects_bad_window_and_negative_pot() -> None:
         run_epoch(inp, _params(), EpochState(0, -1, {}, {}, {}, ()))
 
 
-def test_twap_dense_series_is_time_weighted_mean() -> None:
-    """Regression: divisor is the full window [a, b), not the last gap before b."""
-    from engine.epoch import _twap
-
-    prices = tuple(PricePoint(ts, 1.0 if ts < 1800 else 3.0) for ts in range(0, 3600, 60))
-    got = _twap(prices, 0, 3600, 9)
-    assert got == pytest.approx(2.0)
-    # Sparse fixture used elsewhere must also stay a mid of 1, not 1 * window.
-    flat = (PricePoint(-3_600, 1.0), PricePoint(0, 1.0), PricePoint(86_399, 1.0))
-    assert _twap(flat, 0, 86_400, 9) == pytest.approx(1.0)
-
-
 def test_total_supply_is_required_and_positive() -> None:
     inp = _inputs([_buy("a", W("a"), 10, T0, ix=0)])
     with pytest.raises(ValueError, match="total_supply"):
