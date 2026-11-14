@@ -7,8 +7,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 RUNBOOK = ROOT / "docs" / "RUNBOOK.md"
-# tests/foo.py::test_bar or tests/foo.py::test_bar[param] — no line numbers
+# Nodeids of the form tests/foo.py::test_bar. Parametrized suffixes ([param])
+# are not parsed; a commented-out or nested `def test_bar(` would also match.
+# Good enough as a docs guard, not a collection-accurate inventory.
 CITE = re.compile(r"tests/[A-Za-z0-9_./]+\.py::[A-Za-z0-9_]+")
+ALLOWED_LONG_BASE58 = frozenset(
+    {
+        "DiS3nNjFVMieMgmiQFm6wgJL7nevk4NrhXKLbtEH1Z2R",  # D7 jup-ag/distributor
+    }
+)
+# Base58 pubkey-shaped tokens (32+ chars, no lowercase L / 0 / I / O ambiguity set
+# is not enforced; this is a length+alphabet scan only).
+LONG_B58 = re.compile(r"\b[1-9A-HJ-NP-Za-km-z]{32,}\b")
 
 
 def test_runbook_exists_and_covers_required_topics() -> None:
@@ -19,9 +29,10 @@ def test_runbook_exists_and_covers_required_topics() -> None:
     assert "bad price feed" in text.lower() or "price feed" in text.lower()
     assert "missing events" in text.lower()
     assert "go / no-go" in text.lower() or "go/no-go" in text.lower()
-    # No 32+ char base58 that isn't a documented program id.
-    # The D7 distributor program id is public and expected.
-    assert "DiS3nNjFVMieMgmiQFm6wgJL7nevk4NrhXKLbtEH1Z2R" in text
+    found = set(LONG_B58.findall(text))
+    unexpected = found - ALLOWED_LONG_BASE58
+    assert "DiS3nNjFVMieMgmiQFm6wgJL7nevk4NrhXKLbtEH1Z2R" in found
+    assert unexpected == set(), unexpected
 
 
 def test_cited_tests_exist() -> None:

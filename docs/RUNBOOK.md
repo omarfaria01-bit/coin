@@ -28,12 +28,10 @@ No real wallet or key addresses appear in this document.
 ## 2. Kill switch
 
 Holder rewards are gated by `rewards.enabled` in `config/coin.json`
-(COIN_MATH §16). To halt payouts without touching the pot math:
+(COIN_MATH §16). To halt payouts without touching the pot math: set `rewards.enabled` to
+`false` in `config/coin.json`, then re-run the epoch from the last good
+`state.json`. Payouts are zero; the pot grows by `pot_inflow` only.
 
-```bash
-# set rewards.enabled to false in config/coin.json, then re-run the epoch
-# from the last good state.json. Payouts are zero; pot += pot_inflow only.
-```
 
 The flag is `engine.params.RewardParams.enabled` (default `true`).
 `draws.enabled` is the matching switch for the prize draw.
@@ -84,13 +82,9 @@ Assemble, offline, an `EpochInputs` (ENGINE_DESIGN §8):
 Prices and events come from **recorded** fixtures or a prior read-only pull
 committed as `data/MANIFEST.json`. Do not invent a feed at run time.
 
-On current `main` the orchestrator is called in process:
-
-```bash
-uv run python -c "from engine.epoch import run_epoch, empty_state  # plus your EpochInputs"
-```
-
-Once PR #57 (`tools/run_epoch.py`) is merged:
+On current `main` there is no epoch CLI yet. Build `EpochInputs` in process
+and call `engine.epoch.run_epoch` / `adapters.epoch_files.write_epoch`
+(see `epochs/README.md`). Once PR #57 (`tools/run_epoch.py`) is merged:
 
 ```bash
 uv run python tools/run_epoch.py tests/fixtures/run_epoch_two.json --out epochs --dry-run
@@ -133,11 +127,15 @@ Publishing a merkle root, funding a vault, or pushing payouts
 
 ```bash
 uv run python -m sim.epoch_runner --seeds 10 --out reports/sim_epoch_e2e.md
-uv run python -m sim.run --e2e --seeds 10 --strict
 uv run python -m sim.sweep --out reports/vesting_twap_sweep.md
 ```
 
-`--strict` exits non-zero if a seed is skipped or failed.
+`sim.epoch_runner` is the e2e gate: it exits non-zero if any row fails or
+the run takes more than 60s. `--strict` on `sim.run` applies only to
+`--scenario` runs, not to `--e2e` (the e2e path calls `epoch_runner` and
+does not read `--strict`). Use `sim.epoch_runner` directly, or
+`uv run python -m sim.run --e2e --seeds 10` without expecting `--strict`
+to change the exit code.
 **Tests:** `tests/test_epoch_runner.py`, `tests/test_sim_run.py`,
 `tests/test_sim_acceptance.py`, `tests/test_vesting.py`.
 Committed e2e report: `reports/sim_epoch_e2e.md`.
@@ -169,26 +167,26 @@ rules. Each item is either covered by a test cited here or marked **gap**.
 
 | # | Check | Go if | Test / gap |
 |---|---|---|---|
-| 1 | CI quality gate | `ruff`, schema check, `pytest --cov-fail-under=90` green | `.github/workflows/ci.yml`; coverage gate on `engine/` |
+| 1 | CI quality gate | `ruff`, schema check, `pytest --cov-fail-under=90` green | `.github/workflows/ci.yml`; `tests/test_config.py::test_schema_files_up_to_date` |
 | 2 | Unknown config keys rejected | `coin.json` / `pad.json` use `extra=forbid` | `tests/test_config.py::test_unknown_keys_rejected` |
 | 3 | Live treasury mode cannot be committed | `treasury_bot.mode` is not `live` in the committed file | `tests/test_config.py::test_live_mode_cannot_be_committed` |
-| 4 | Conservation | `run_epoch` cannot return a result that breaks the §8 identity | tests in §4 |
+| 4 | Conservation | `run_epoch` cannot return a result that breaks the §8 identity | `tests/test_epoch.py::test_conservation_random_small_worlds` (see also §4) |
 | 5 | Determinism | shuffled event order → same payouts and `inputs_hash` | `tests/test_epoch.py::test_determinism_shuffled_events`; merkle: `tests/test_merkle.py::test_claims_document_order_independent`. **Gap on main:** a committed 3-epoch golden replay is PR #58 (#52), not yet on `main`. |
 | 6 | §14 e2e on `run_epoch` | `uv run python -m sim.epoch_runner --seeds 10` exits 0; committed report still matches | `tests/test_epoch_runner.py::test_e2e_ten_seeds_under_60s_and_committed_report`; `reports/sim_epoch_e2e.md` |
 | 7 | §14 row: same-funder split | 50 wallets → one cluster; e2e `sybil_cluster` passes | `tests/test_sybil.py::test_fifty_wallets_same_funder_one_cluster`; e2e row `sybil_cluster` |
 | 8 | §14 row: flipper 5×/day | score ≤ 10% of an equal holder | `tests/test_scoring.py::test_flipper_5x_per_day_for_48h_churn_at_most_tenth`; e2e row `flipper` |
 | 9 | §14 row: 5-min sniper | ≤ 0.5% of a full-day weight (or ineligible) | `tests/test_twab.py::test_sniper_5min_weight_at_most_half_percent`; `tests/test_epoch.py::test_sniper_weight_at_most_half_percent`; e2e row `sniper` |
-| 10 | §14 row: underwater farmer | boost ≤ 1.5× and a net loss | `tests/test_scoring.py` underwater tests; e2e row `underwater` |
+| 10 | §14 row: underwater farmer | boost ≤ 1.5× and a net loss | `tests/test_scoring.py::test_underwater_min_age_transfer_and_price_above_cost`; e2e row `underwater` |
 | 11 | §14 row: 1h pump vs vesting TWAP | unlock change < 5% at default 24h (D14) | `tests/test_vesting.py::test_one_hour_3x_pump_on_6h_twap`, `tests/test_sim_run.py::test_sweep_k3_1h_24h_is_just_under_five_percent`; `reports/vesting_twap_sweep.md`. Margin is thin (4.97% vs 5%); D14 already notes 36h as the next lever. |
-| 12 | §14 row: whale cap | every `π ≤ CAP`, conservation holds | `tests/test_rewards.py` cap tests; e2e row `whale_cap` |
+| 12 | §14 row: whale cap | every `π ≤ CAP`, conservation holds | `tests/test_rewards.py::test_whale_cap_water_filling_for_n_clusters`; e2e row `whale_cap` |
 | 13 | §14 row: vested transfer-then-sell | forfeit on the cluster (D10 soft) | `tests/test_epoch.py::test_soft_vesting_transfer_then_sell_forfeits_cluster`; e2e row `vest_pump` |
 | 14 | §14 row: volume −90% | seventh payout ≥ 45% of the first after zero inflow | `tests/test_rewards.py::test_zero_inflow_seventh_payout_at_least_45_percent_of_first` |
 | 15 | §14 row: 6h sustained 2× pump cost ≥ unlock value | — | **Gap:** no dedicated e2e row yet (not in `reports/sim_epoch_e2e.md`). |
 | 16 | §14 row: treasury bot quiet windows / 20 historical paths | — | **Gap:** `engine/treasury_bot.py` is present but has 0% coverage; no historical-path report. |
 | 17 | Payout rail choice | N_eligible < `push_max_eligible` → push + carry; else merkle claims | `tests/test_epoch.py::test_push_carry_below_min_transfer_paid_next_epoch`, `tests/test_epoch.py::test_merkle_rail_when_eligible_reaches_push_max` |
 | 18 | D7 leaf only for legacy SPL | merkle program is `Program<Token>` | Documented (#18, D7). **Gap:** no runtime guard tied to `pad.token_program`. |
-| 19 | Kill switch works | `rewards.enabled=false` pays nothing | §2 |
-| 20 | Failure modes in §4 have an operator action | conservation / overwrite / hash / window | tests cited in §4; gaps for incomplete history and broken feed file also cited there |
+| 19 | Kill switch works | `rewards.enabled=false` pays nothing | `tests/test_epoch.py::test_rewards_disabled_zero_payouts_pot_gains_inflow` (§2) |
+| 20 | Failure modes in §4 have an operator action | conservation / overwrite / hash / window | `tests/test_epoch.py::test_conservation_random_small_worlds`; `tests/test_epoch_files.py::test_refuses_overwrite_with_different_content`; `tests/test_epoch_files.py::test_incomplete_dir_and_hash_mismatch`; `tests/test_epoch.py::test_rejects_bad_window_and_negative_pot`. Gaps for incomplete history and a broken-feed fixture are cited in §4. |
 | 21 | Legal gate (COIN_MATH §16) | written opinion from kiwi's lawyers before `docs/PUBLIC_RULES.md` and before P7 | **needs kiwi** (issue #8). Not an engineering checkbox we can tick. |
 | 22 | Mainnet / money | no payouts, vault funding, token creation, or public posts | **needs kiwi APPROVED** on a `needs:kiwi` issue. This runbook does not authorize those steps. |
 
