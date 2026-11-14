@@ -37,14 +37,22 @@ def build_lots(
     lots: dict[WalletId, list[Lot]] = defaultdict(list)
     ordered = sorted(events, key=lambda e: (e.slot, e.sig, e.ix))
     for ev in ordered:
+        if ev.amount <= 0:
+            raise ValueError(f"bad event sig={ev.sig}")
         if ev.kind is EventKind.BUY:
-            if ev.dst is not None and ev.dst not in excluded:
+            if ev.lamports is None or ev.dst is None:
+                raise ValueError(f"bad event sig={ev.sig}")
+            if ev.dst not in excluded:
                 lots[ev.dst].append(
                     Lot(ev.amount, ev.lamports / ev.amount, ev.ts, LotSource.POOL_BUY)
                 )
         elif ev.kind is EventKind.SELL:
-            if ev.src is not None and ev.src not in excluded:
+            if ev.lamports is None or ev.src is None:
+                raise ValueError(f"bad event sig={ev.sig}")
+            if ev.src not in excluded:
                 _remove_lifo(lots[ev.src], ev.amount, ev.src, ev.sig)
+        elif ev.src is not None and ev.src == ev.dst:
+            continue  # self-transfer is a no-op (keep age and cost basis)
         else:
             if ev.src is not None and ev.src not in excluded:
                 _remove_lifo(lots[ev.src], ev.amount, ev.src, ev.sig)

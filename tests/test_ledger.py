@@ -26,6 +26,8 @@ def ev(
 ) -> TokenEvent:
     if kind is EventKind.BUY and lamports is None:
         lamports = amount
+    elif kind is EventKind.SELL and lamports is None:
+        lamports = 0
     return TokenEvent(slot, ts, sig, ix, kind, src, dst, amount, lamports, "P")
 
 
@@ -105,13 +107,33 @@ def test_replay_sorts_by_slot_sig_ix_not_input_order() -> None:
     assert "A" not in lots
 
 
-def test_self_transfer_resets_age_to_twap() -> None:
+def test_self_transfer_is_noop_keeps_age_and_cost() -> None:
     events = [
         ev(EventKind.BUY, ts=1, sig="b", dst="A", amount=4, lamports=8),
         ev(EventKind.TRANSFER, slot=2, ts=9, sig="t", src="A", dst="A", amount=4),
     ]
-    lots = build_lots(events, frozenset(), twap)
-    assert lots["A"] == (Lot(4, 9.0, 9, LotSource.TRANSFER_IN),)
+
+    def boom(_ts: int) -> float:
+        raise AssertionError("twap must not be called for a self-transfer")
+
+    lots = build_lots(events, frozenset(), boom)
+    assert lots["A"] == (Lot(4, 2.0, 1, LotSource.POOL_BUY),)
+
+
+@pytest.mark.parametrize(
+    "event",
+    [
+        TokenEvent(1, 1, "no-lamports", 0, EventKind.BUY, None, "A", 4, None, "P"),
+        TokenEvent(1, 1, "sell-no-lamports", 0, EventKind.SELL, "A", None, 4, None, "P"),
+        ev(EventKind.BUY, sig="zero-amt", dst="A", amount=0, lamports=8),
+        ev(EventKind.TRANSFER, sig="neg-amt", src="A", dst="B", amount=-1),
+        ev(EventKind.BUY, sig="no-dst", dst=None, amount=4, lamports=8),
+        ev(EventKind.SELL, sig="no-src", src=None, amount=4, lamports=8),
+    ],
+)
+def test_bad_event_raises_value_error_naming_sig(event: TokenEvent) -> None:
+    with pytest.raises(ValueError, match=rf"bad event sig={event.sig}"):
+        build_lots([event], frozenset(), twap)
 
 
 def _net_flow(events: list[TokenEvent], excluded: frozenset[WalletId]) -> dict[str, int]:
