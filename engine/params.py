@@ -11,6 +11,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from engine.eligibility import parse_share
+
 
 class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -24,8 +26,15 @@ class EpochParams(_Strict):
 
 
 class EligibilityParams(_Strict):
-    min_eligible_usd: float = Field(10.0, ge=0, description="B̄_c · TWAP_epoch threshold (§2)")
-    min_hold_hours: float = Field(1.0, ge=0, description="Cluster must have held this long (§2)")
+    min_eligible_share: str = Field(
+        "1/1000000",
+        description="B̄_c ≥ share · total supply (§2); exact rational as 'num/den'",
+    )
+
+    @model_validator(mode="after")
+    def _share_ok(self) -> EligibilityParams:
+        parse_share(self.min_eligible_share)
+        return self
 
 
 class HoldParams(_Strict):

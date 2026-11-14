@@ -76,19 +76,11 @@
     "EligibilityParams": {
       "additionalProperties": false,
       "properties": {
-        "min_eligible_usd": {
-          "default": 10.0,
-          "description": "B̄_c · TWAP_epoch threshold (§2)",
-          "minimum": 0,
-          "title": "Min Eligible Usd",
-          "type": "number"
-        },
-        "min_hold_hours": {
-          "default": 1.0,
-          "description": "Cluster must have held this long (§2)",
-          "minimum": 0,
-          "title": "Min Hold Hours",
-          "type": "number"
+        "min_eligible_share": {
+          "default": "1/1000000",
+          "description": "B̄_c ≥ share · total supply (§2); exact rational as 'num/den'",
+          "title": "Min Eligible Share",
+          "type": "string"
         }
       },
       "title": "EligibilityParams",
@@ -583,8 +575,7 @@
     "eligibility": {
       "$ref": "#/$defs/EligibilityParams",
       "default": {
-        "min_eligible_usd": 10.0,
-        "min_hold_hours": 1.0
+        "min_eligible_share": "1/1000000"
       }
     },
     "hold": {
