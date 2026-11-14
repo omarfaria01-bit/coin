@@ -70,8 +70,14 @@ class Trades:
 
 
 def _run(tr: Trades, t0: int = T0, inflow: int = 10**12, prev: EpochState | None = None,
-         params: CoinParams = PARAMS) -> tuple[EpochResult, EpochState]:  # fmt: skip
-    return run_epoch(tr.inputs(t0, inflow), params, prev or empty_state())
+         params: CoinParams | None = None) -> tuple[EpochResult, EpochState]:  # fmt: skip
+    # PARAMS is read at call time so sim.variants_v033 can run every row under a variant.
+    return run_epoch(tr.inputs(t0, inflow), params or PARAMS, prev or empty_state())
+
+
+def _h(age: int) -> Fraction:
+    """h(a) under the current PARAMS (the default curve unless a #85 variant is set)."""
+    return h_of_age(age, PARAMS.hold.knot_fractions(), PARAMS.hold.t_start_seconds)
 
 
 def _score(result: EpochResult, w: str) -> Fraction:
@@ -164,7 +170,7 @@ def row_transfer_age_reset(rng: random.Random) -> Outcome:
     t = T0 + rng.randint(0, DAY - 1)
     tr.send(a, b, amt, t)
     held = T1 - t
-    s, cap = _score(_run(tr)[0], b), h_of_age(held) * amt * held / DAY
+    s, cap = _score(_run(tr)[0], b), _h(held) * amt * held / DAY
     return Outcome(
         s <= cap and (held >= 2 * HOUR or s == 0), f"recv={float(s):.0f} bound={float(cap):.0f}"
     )
@@ -214,7 +220,7 @@ def row_exact_payout(rng: random.Random) -> Outcome:
 def row_multiplier_bounds(rng: random.Random) -> Outcome:
     """Under 2h scores 0; never above 2.8× without boost."""
     ages = [rng.randint(0, 2 * HOUR - 1), *(rng.randint(0, 400 * DAY) for _ in range(20))]
-    hs = [h_of_age(a) for a in ages]
+    hs = [_h(a) for a in ages]
     ok = hs[0] == 0 and all(Fraction(0) <= h <= Fraction(14, 5) for h in hs)
     return Outcome(ok, f"h(<2h)={hs[0]} max_h={float(max(hs)):.3f}")
 
