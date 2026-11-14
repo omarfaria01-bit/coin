@@ -45,11 +45,26 @@ def run_scenario(name: str, seeds: int, out_dir: Path | None = None) -> dict:
     return payload
 
 
+def exit_code(payload: dict, *, strict: bool) -> int:
+    """Non-strict: skipped counts as success. Strict: every seed must pass."""
+    runs = payload.get("runs") or []
+    if strict:
+        if not runs:
+            return 1
+        return 0 if all(run.get("pass") is True for run in runs) else 1
+    return 0 if payload["pass"] in (True, "skipped") else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="sim.run")
     parser.add_argument("--scenario", required=True, choices=sorted(REGISTRY))
     parser.add_argument("--seeds", type=int, default=1)
     parser.add_argument("--out", default="reports/sim/")
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="exit non-zero if any seed is skipped or failed, or if no run happened",
+    )
     args = parser.parse_args(argv)
     if args.seeds <= 0:
         raise SystemExit("--seeds must be > 0")
@@ -65,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
             indent=2,
         )
     )
-    return 0 if payload["pass"] in (True, "skipped") else 1
+    return exit_code(payload, strict=args.strict)
 
 
 if __name__ == "__main__":
