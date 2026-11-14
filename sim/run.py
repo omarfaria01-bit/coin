@@ -66,6 +66,11 @@ def main(argv: list[str] | None = None) -> int:
         help="run full-epoch §14 scenarios via sim.epoch_runner (requires engine.epoch)",
     )
     parser.add_argument(
+        "--acceptance",
+        action="store_true",
+        help="run the v0.3.3 §14 rows (sim.acceptance_v033); exit 1 if any row fails",
+    )
+    parser.add_argument(
         "--strict",
         action="store_true",
         help="exit non-zero if any seed is skipped or failed, or if no run happened",
@@ -73,6 +78,18 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.seeds <= 0:
         raise SystemExit("--seeds must be > 0")
+    if args.acceptance:
+        from sim.acceptance_v033 import render, run_rows
+
+        rows = run_rows(args.seeds)
+        report = (
+            Path("reports/sim_v033_acceptance.md") if args.out == "reports/sim/" else Path(args.out)
+        )
+        report.parent.mkdir(parents=True, exist_ok=True)
+        head = f"# COIN_MATH v0.3.3 §14 rows (#84 step 1)\n\nSeeds: {args.seeds} per row.\n\n"
+        report.write_text(head + render(rows), encoding="utf-8")
+        print(render(rows), end="")
+        return 0 if all(r.passed == r.seeds for r in rows) else 1
     if args.e2e:
         from sim.epoch_runner import main as e2e_main
 
