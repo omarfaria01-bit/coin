@@ -233,3 +233,90 @@ def lot_epoch_parts(
     e1_hi = min(t1, t_acquired + boost_age_seconds)
     e2_lo = max(start_t, t_acquired + boost_age_seconds)
     return part(e1_lo, e1_hi), part(e2_lo, t1)
+
+
+# ---------------------------------------------------------------------------
+# COIN_MATH v0.3.3 §6. s = Σ_lots (E1_lot + u_lot · E2_lot). No cluster factor.
+# Default u_lot = 1 (boost off at launch). Keep score() (v0.2 product) unchanged.
+# ---------------------------------------------------------------------------
+
+
+def _as_frac(value: int | Fraction) -> Fraction:
+    if isinstance(value, bool) or not isinstance(value, int | Fraction):
+        raise TypeError("value must be an int or Fraction")
+    return value if isinstance(value, Fraction) else Fraction(value)
+
+
+def lot_score(e1: int | Fraction, e2: int | Fraction, u_lot: int | Fraction = 1) -> Fraction:
+    """E1_lot + u_lot · E2_lot. ``u_lot`` applies only to the 48h+ part."""
+    boost = _as_frac(u_lot)
+    if boost < 0:
+        raise ValueError(f"u_lot must be >= 0, got {boost}")
+    return _as_frac(e1) + boost * _as_frac(e2)
+
+
+def score_lot(
+    amount: int,
+    t_acquired: int,
+    t0: int,
+    t1: int,
+    *,
+    u_lot: int | Fraction = 1,
+    tainted_until: int = 0,
+    knots: Sequence[tuple[int, Fraction]] | None = None,
+    t_start_seconds: int | None = None,
+    boost_age_seconds: int = DEFAULT_BOOST_AGE_SECONDS,
+) -> Fraction:
+    """One lot's contribution: E1 + u·E2 over the epoch ``[t0, t1)``."""
+    e1, e2 = lot_epoch_parts(
+        amount,
+        t_acquired,
+        t0,
+        t1,
+        tainted_until=tainted_until,
+        knots=knots,
+        t_start_seconds=t_start_seconds,
+        boost_age_seconds=boost_age_seconds,
+    )
+    return lot_score(e1, e2, u_lot)
+
+
+def score_lots(
+    lots: Sequence[Lot],
+    t0: int,
+    t1: int,
+    *,
+    u_lots: Sequence[int | Fraction] | None = None,
+    tainted_until: Sequence[int] | None = None,
+    knots: Sequence[tuple[int, Fraction]] | None = None,
+    t_start_seconds: int | None = None,
+    boost_age_seconds: int = DEFAULT_BOOST_AGE_SECONDS,
+) -> Fraction:
+    """Cluster (or wallet) score: Σ (E1_lot + u_lot · E2_lot).
+
+    No cluster-level factor. Default ``u_lot`` is 1 (boost off at launch).
+    Transfer lots always use ``u_lot = 1``, even if a boost is passed.
+    An empty list or every lot younger than ``T_START`` returns 0; no division.
+    """
+    if u_lots is not None and len(u_lots) != len(lots):
+        raise ValueError("u_lots must match lots")
+    if tainted_until is not None and len(tainted_until) != len(lots):
+        raise ValueError("tainted_until must match lots")
+    total = Fraction(0)
+    for i, lot in enumerate(lots):
+        u: int | Fraction = 1 if u_lots is None else u_lots[i]
+        if lot.source is LotSource.TRANSFER_IN:
+            u = 1
+        taint = 0 if tainted_until is None else tainted_until[i]
+        total += score_lot(
+            lot.amount,
+            lot.t_acquired,
+            t0,
+            t1,
+            u_lot=u,
+            tainted_until=taint,
+            knots=knots,
+            t_start_seconds=t_start_seconds,
+            boost_age_seconds=boost_age_seconds,
+        )
+    return total
