@@ -20,7 +20,7 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run python tools/gen_schema.py --check
-      - run: uv run pytest --cov=engine --cov-report=term
+      - run: uv run pytest --cov=engine --cov-report=term --cov-fail-under=90
 
   gitleaks:
     runs-on: ubuntu-latest
