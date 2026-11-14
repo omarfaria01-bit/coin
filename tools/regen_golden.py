@@ -61,11 +61,15 @@ def main(argv: list[str] | None = None) -> int:
             for name in stale:
                 print(f"stale: tests/golden/v033/{name}", file=sys.stderr)
             return 1 if stale else 0
-        shutil.rmtree(GOLDEN, ignore_errors=True)
+        # Write a sibling dir first and swap it in, so a crash never leaves half a golden set.
+        staged = GOLDEN.with_name(GOLDEN.name + ".new")
+        shutil.rmtree(staged, ignore_errors=True)
         for name, blob in fresh.items():
-            dest = GOLDEN / name
+            dest = staged / name
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_bytes(blob)
+        shutil.rmtree(GOLDEN, ignore_errors=True)
+        staged.rename(GOLDEN)
     print(f"wrote {len(fresh)} files under {GOLDEN.relative_to(ROOT)}")
     return 0
 
