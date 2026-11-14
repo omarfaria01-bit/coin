@@ -1,0 +1,41 @@
+{
+  "_comment": "Routing Claude Code to these models is off unless DECISIONS.md has kiwi's approval entry (see PROMPT_CLAUDE_CODE §4). TEMPLATE ONLY. Do not copy to config.json or start `ccr` until (1) kiwi has set OPENROUTER_API_KEY and/or GEMINI_API_KEY in the environment, and (2) kiwi has approved routing in coord/DECISIONS.md. CCR 3.1.3 is usually configured in the UI (`ccr ui`); this file is the classic JSON shape plus a reference for those providers. Keys MUST come from env vars. Never paste a key into this file. Routing must stay off for secrets, security reviews, and final merges.",
+  "LOG": true,
+  "HOST": "127.0.0.1",
+  "PORT": 3456,
+  "APIKEY": "$CCR_API_KEY",
+  "Providers": [
+    {
+      "name": "openrouter",
+      "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
+      "api_key": "$OPENROUTER_API_KEY",
+      "models": [
+        "openrouter/free",
+        "cohere/north-mini-code:free",
+        "recursive/flint-v1.0:free",
+        "thinkingmachines/inkling-2-small:free",
+        "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "nvidia/nemotron-3.5-lightning:free"
+      ],
+      "transformer": { "use": ["openrouter"] }
+    },
+    {
+      "name": "gemini",
+      "api_base_url": "https://generativelanguage.googleapis.com/v1beta/models/",
+      "api_key": "$GEMINI_API_KEY",
+      "models": [
+        "gemini-3.5-flash",
+        "gemini-3.1-flash-lite",
+        "gemini-2.5-pro"
+      ],
+      "transformer": { "use": ["gemini"] }
+    }
+  ],
+  "Router": {
+    "default": "openrouter,cohere/north-mini-code:free",
+    "background": "gemini,gemini-3.5-flash",
+    "think": "openrouter,thinkingmachines/inkling-2-small:free",
+    "longContext": "openrouter,nvidia/nemotron-3-ultra-550b-a55b:free",
+    "webSearch": "openrouter,openrouter/free"
+  }
+}
