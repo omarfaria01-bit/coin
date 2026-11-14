@@ -1,16 +1,13 @@
 """No-float ratchet for the payout path (COIN_MATH v0.3.3 §0 "Numbers").
 
 The payout path may use only ints and ``fractions.Fraction``: no ``math`` import, no
-float literal, no ``float`` name. v0.2 code that still uses floats is listed in
-BASELINE by (module, top-level name). The list may only shrink:
+float literal, no ``float`` name. BASELINE is empty and must stay empty: #84 deleted
+the v0.2 float code, so there is no grandfathered code left.
 
-- a violation not in BASELINE fails (new float code);
-- a BASELINE entry that is now clean fails too (delete it, so it cannot come back).
+- any violation fails (new float code);
+- a stale BASELINE entry fails too (it may only ever be empty).
 
-Since #82, run_epoch calls none of the BASELINE names (budget, TWAB, scores, cap and
-payout are exact). The entries left are v0.2 code that only sim/acceptance.py and the
-v0.2 tests still import; they are deleted with that table's rebuild in #84, which must
-leave BASELINE empty. Usage: uv run python tools/check_no_float.py
+Usage: uv run python tools/check_no_float.py
 """
 
 from __future__ import annotations
@@ -24,39 +21,8 @@ MODULES = (
     "rewards", "draws", "vesting", "merkle", "balances", "sybil_v033",
 )  # fmt: skip
 
-# (module, top-level def/class or "<module>") → still allowed until removed.
-BASELINE: frozenset[tuple[str, str]] = frozenset(
-    {
-        ("ledger", "build_lots"),
-        ("twab", "twab"),
-        ("sybil", "<module>"),
-        ("sybil", "Evidence"),
-        ("sybil", "ClusterResult"),
-        ("sybil", "_rel_close"),
-        ("sybil", "build_evidence"),
-        ("sybil", "cluster"),
-        ("sybil", "build_evidence_v033"),
-        ("sybil", "cluster_v033"),
-        ("scoring", "<module>"),
-        ("scoring", "hold_multiplier"),
-        ("scoring", "amount_weighted_hold"),
-        ("scoring", "churn_factor"),
-        ("scoring", "underwater_boost"),
-        ("scoring", "score"),
-        ("rewards", "epoch_budget"),
-        ("rewards", "capped_shares"),
-        ("rewards", "allocate"),
-        ("rewards", "split_to_wallets"),
-        ("draws", "<module>"),
-        ("draws", "uniform_from"),
-        ("draws", "draw_winners"),
-        ("draws", "split_prizes"),
-        ("vesting", "<module>"),
-        ("vesting", "_clamp"),
-        ("vesting", "unlocked_fraction"),
-        ("vesting", "locked_amount"),
-    }
-)
+# (module, top-level def/class or "<module>") → still allowed; must stay empty.
+BASELINE: frozenset[tuple[str, str]] = frozenset()
 
 
 def violations(source: str) -> dict[str, list[str]]:

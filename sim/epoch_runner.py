@@ -11,7 +11,6 @@ from pathlib import Path
 from engine.epoch import EpochInputs, EpochResult, EpochState, VestingEntry, empty_state, run_epoch
 from engine.params import CoinParams
 from engine.scoring import h_of_age
-from sim.acceptance import BuyThenSell
 from sim.agents import (
     Flipper,
     Holder,
@@ -251,7 +250,7 @@ def scenario_vest_pump(seed: int) -> Row:
     params = CoinParams()
     # Hold-only: 1h ~3× pump must not lift unlocked above u_time = 1/7.
     dev = Holder("dev", "fd", 10**9, 0)
-    pumper = BuyThenSell("pumper", "fp", PUMP_3X, buy_ts=23 * 3600, sell_ts=-1)
+    pumper = _HolderThenSell("pumper", "fp", PUMP_3X, buy_ts=23 * 3600, sell_ts=-1)
     hold_w = run_world(seed, 24 * 60, [dev, pumper], token_reserve=SHALLOW, sol_reserve=SHALLOW)
     prev = EpochState(0, 0, {}, {}, {}, (VestingEntry(dev.wallet, dev.tokens, 1.0, 0),))
     _rh, nh = run_slice(hold_w, 0, DAY, params, prev=prev)
@@ -261,7 +260,7 @@ def scenario_vest_pump(seed: int) -> Row:
 
     # Sell the whole bag after the pump: soft-lock breach → forfeit, score 0.
     seller = _HolderThenSell("dev", "fd", 10**9, 0, sell_ts=23 * 3600 + 1800)
-    pumper2 = BuyThenSell("pumper", "fp", PUMP_3X, buy_ts=23 * 3600, sell_ts=-1)
+    pumper2 = _HolderThenSell("pumper", "fp", PUMP_3X, buy_ts=23 * 3600, sell_ts=-1)
     sell_w = run_world(
         seed + 10_000, 24 * 60, [seller, pumper2], token_reserve=SHALLOW, sol_reserve=SHALLOW
     )
@@ -287,7 +286,7 @@ def scenario_vest_pump(seed: int) -> Row:
 def scenario_underwater(seed: int) -> Row:
     params = CoinParams()
     farmer = Holder("farmer", "ff", 5_000_000_000, buy_ts=60)
-    pumper = BuyThenSell("pumper", "fp", 80_000_000_000, buy_ts=0, sell_ts=120)
+    pumper = _HolderThenSell("pumper", "fp", 80_000_000_000, buy_ts=0, sell_ts=120)
     # Last 24h of a 50h world so the farmer lot is ≥ 48h old (min_age_hours).
     world = run_world(seed, 50 * 60, [pumper, farmer], token_reserve=SHALLOW, sol_reserve=SHALLOW)
     result, _nxt = run_slice(world, 26 * 3600, 50 * 3600, params)

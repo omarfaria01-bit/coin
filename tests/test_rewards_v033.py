@@ -7,7 +7,7 @@ from fractions import Fraction
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from engine.rewards import DEFAULT_CAP, DEFAULT_G, capped_shares, capped_shares_v033
+from engine.rewards import DEFAULT_CAP, DEFAULT_G, capped_shares_v033
 
 CAP = DEFAULT_CAP
 G = DEFAULT_G
@@ -38,14 +38,11 @@ def test_s_zero_does_not_divide() -> None:
     assert capped_shares_v033({"a": 0, "b": -3}) == {"a": 0, "b": 0}
 
 
-def test_many_equal_clusters_fill_the_unit_and_v02_path_unchanged() -> None:
+def test_many_equal_clusters_fill_the_unit() -> None:
     scores = {f"C{i:02d}": 1 for i in range(25)}
     shares = capped_shares_v033(scores)
     assert all(s == Fraction(1, 25) for s in shares.values())
     assert sum(shares.values()) == 1
-    # v0.2 water-filling still caps everyone when N < 1/cap, no G bound.
-    old = capped_shares({"a": 1.0, "b": 1.0}, 0.05)
-    assert old == {"a": 0.05, "b": 0.05}
 
 
 @given(
