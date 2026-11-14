@@ -2,6 +2,13 @@
   "name": null,
   "program_ids": [],
   "token_program": null,
+  "quote_asset": "SOL",
+  "price_source": {
+    "before_graduation": null,
+    "after_graduation": null,
+    "pool_type": null,
+    "reserve_accounts": []
+  },
   "curve": {
     "type": null,
     "graduation_mc": null,
@@ -18,6 +25,7 @@
     "max_pct": null,
     "lockable": null
   },
+  "burn_allowed": null,
   "anti_snipe": null,
   "transfer_hook_allowed": null,
   "docs_url": null,
