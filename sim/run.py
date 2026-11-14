@@ -47,12 +47,24 @@ def run_scenario(name: str, seeds: int, out_dir: Path | None = None) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="sim.run")
-    parser.add_argument("--scenario", required=True, choices=sorted(REGISTRY))
+    parser.add_argument("--scenario", required=False, choices=sorted(REGISTRY))
     parser.add_argument("--seeds", type=int, default=1)
     parser.add_argument("--out", default="reports/sim/")
+    parser.add_argument(
+        "--e2e",
+        action="store_true",
+        help="run full-epoch §14 scenarios via sim.epoch_runner (requires engine.epoch)",
+    )
     args = parser.parse_args(argv)
     if args.seeds <= 0:
         raise SystemExit("--seeds must be > 0")
+    if args.e2e:
+        from sim.epoch_runner import main as e2e_main
+
+        e2e_out = Path("reports/sim_epoch_e2e.md") if args.out == "reports/sim/" else Path(args.out)
+        return e2e_main(["--seeds", str(args.seeds), "--out", str(e2e_out)])
+    if not args.scenario:
+        raise SystemExit("need --scenario or --e2e")
     payload = run_scenario(args.scenario, args.seeds, Path(args.out))
     print(
         json.dumps(
