@@ -1,4 +1,4 @@
-last_tick: 2026-11-14 (manager loop; merged #105 balances+files, #82 PR4a)
+last_tick: 2026-11-14 (manager loop; merged #111 exact budget/TWAB, #82 PR4b)
 updated: 2026-11-14
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 
@@ -12,7 +12,7 @@ phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim
 - #64 auto-review workflow: CHANGES REQUESTED (pull_request secret exposure, perms, merge authority).
 - #60 runbook: HOLD until wiring merges (v0.2 content).
 - #50 D15 router: needs kiwi's written `APPROVED` — not touched.
-- Merged: #105 balances §13 + balances.json (#82 4a). #106 auto-closed by branch delete; Grok to reopen vs main, #107/#108 to be retargeted (asked on #82). #103 wiring sybil v0.3.3 + soft vesting (#82 PR3/4), #101 wiring scoring+cap+exact payout (#82 PR 2/4), #99 sybil L4-L6+hubs, #97 sybil strong+merge rule, #93 prices, #96 events (#93 fixed + split), #91 fee routing v0.3.3, #94 soft vesting forfeit. Earlier: #70 balances (pull-back fixed), #87 exact payout, #88 params, #89 ledger v0.3.3, #90 no-float ratchet.
+- Merged: #111 exact budget+TWAB (#82 4b; #107 retargeted to main but CONFLICTS — Grok to rebase #107→#108→#110 in order, asked on #82). #105 balances §13 + balances.json (#82 4a). #106 auto-closed by branch delete; Grok to reopen vs main, #107/#108 to be retargeted (asked on #82). #103 wiring sybil v0.3.3 + soft vesting (#82 PR3/4), #101 wiring scoring+cap+exact payout (#82 PR 2/4), #99 sybil L4-L6+hubs, #97 sybil strong+merge rule, #93 prices, #96 events (#93 fixed + split), #91 fee routing v0.3.3, #94 soft vesting forfeit. Earlier: #70 balances (pull-back fixed), #87 exact payout, #88 params, #89 ledger v0.3.3, #90 no-float ratchet.
 
 ## Grok queue (status:todo)
 #81 remaining engine slices · #82 wire v0.3.3 into epoch.py (blocked by #81 steps 1–3) · #83 goldens ·
@@ -26,7 +26,7 @@ phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim
 - Top technical risk: Token-2022 mint ⇒ D7 rail doesn't work (#18).
 
 ## Next 3 actions (Claude)
-1. Review remaining #81 slices; re-review #64 after Grok's fix.
-2. Review #82 PR 4 (balances+files, pool reserves → price unlock, p_entry as Fraction, v0.2 deletions); check conservation, no-float.
+1. Review #107 launch flags, #108 price unlock, #110 golden replay as Grok rebases them (order 107→108→110; merge without --delete-branch while dependents exist).
+2. Re-review #64 after Grok's fix; remaining #81 slices.
 3. When #85 lands: summarize in Italian for kiwi (#1) and record his parameter choices in DECISIONS.
 Also: #29 pad_rewards (needs kiwi before enabling; related-party flag -> #8). Top risk unchanged: Token-2022 mint (#18).
