@@ -1,4 +1,4 @@
-last_tick: 2026-11-14 (manager loop; merged #116 #84 step 3a)
+last_tick: 2026-11-14 (manager loop; merged #123 T_START=6h, D21)
 updated: 2026-11-14
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 
@@ -26,6 +26,7 @@ phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim
 - Top technical risk: Token-2022 mint ⇒ D7 rail doesn't work (#18).
 
 ## Next 3 actions (Claude)
+0. #123 merged: T_START=6h (D21, kiwi). #119 must update its default assertion (7200 -> 21600) and rerun the report when rebasing.
 1. #116 merged. #118 retargeted to main, CONFLICTS: Grok rebases (drop 3a commit), then #119 (#85), #117 last; merge each as green (no --delete-branch while dependents exist).
 2. Re-review #64 after Grok's fix; remaining #81 slices.
 3. When #85 lands: summarize in Italian for kiwi (#1) and record his parameter choices in DECISIONS.
