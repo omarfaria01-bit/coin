@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import replace
+from fractions import Fraction
 from hashlib import sha256
 
 import pytest
@@ -23,7 +24,7 @@ from engine.params import (
     RewardParams,
     ScoringParams,
 )
-from engine.rewards import epoch_budget
+from engine.rewards import epoch_budget_v033
 from engine.types import EventKind, FirstFunding, PricePoint, SolTransfer, TokenEvent
 from sim.agents import wallet_id
 
@@ -139,7 +140,7 @@ def test_golden_three_equal_holders() -> None:
         _buy(n, w, amount, T0, ix=i) for i, (n, w) in enumerate(zip("abc", wallets, strict=True))
     ]
     result, nxt = run_epoch(_inputs(events), _params(), empty_state())
-    budget = epoch_budget(10**12, 0.10, 24)
+    budget = epoch_budget_v033(10**12, Fraction(1, 10))
     assert budget == 100_000_000_000
     # cap=1, equal scores → π=1/3, Σπ = 1 so T = R. Floors 33_333_333_333 each; the one
     # leftover unit goes by largest remainder, ties by smallest id (v0.3.3 §6, was rollover).
@@ -322,7 +323,7 @@ def test_lot_sold_mid_epoch_scores_for_the_time_held_and_payout_is_exact() -> No
     rows = {row.cluster: row for row in result.scores}
     # Flat h (lots > 90d old), held half the epoch → exactly half the score.
     assert rows[seller].score * 2 == pytest.approx(rows[keeper].score, rel=1e-12)
-    budget = epoch_budget(10**12, 0.10, 24)
+    budget = epoch_budget_v033(10**12, Fraction(1, 10))
     assert sum(result.payouts.values()) + result.rollover == budget
 
 
@@ -385,7 +386,9 @@ def test_run_epoch_signers_and_overrides_merge_clusters() -> None:
     )
     result, _ = run_epoch(inp, _params(), empty_state())
     assert [r.cluster for r in result.scores] == [a, b]  # id = smallest holder of the cluster
-    assert sum(result.payouts.values()) + result.rollover == epoch_budget(10**12, 0.10, 24)
+    assert sum(result.payouts.values()) + result.rollover == epoch_budget_v033(
+        10**12, Fraction(1, 10)
+    )
 
 
 def test_forfeit_follows_cluster_whose_id_changes_between_epochs() -> None:
@@ -416,3 +419,11 @@ def test_forfeit_follows_cluster_whose_id_changes_between_epochs() -> None:
     assert v not in rows and rows[a].score == 0.0
     assert rows[honest].score > 0.0 and result.payouts[honest] > 0
     assert nxt.forfeit_until == {a: until}
+
+
+def test_epoch_length_other_than_one_day_is_rejected() -> None:
+    p = _params()
+    p = p.model_copy(update={"epoch": p.epoch.model_copy(update={"hours": 12})})
+    inp = replace(_inputs([_buy("h12", W("h12"), 10, T0)]), t1=T0 + 12 * 3600)
+    with pytest.raises(ValueError, match="86,400"):
+        run_epoch(inp, p, empty_state())
