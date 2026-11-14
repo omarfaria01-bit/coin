@@ -20,3 +20,6 @@ htmlcov/
 .hypothesis/
 # local agent settings
 .claude/settings.local.json
+
+# simulator outputs
+reports/sim/
