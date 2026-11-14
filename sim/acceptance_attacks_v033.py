@@ -9,9 +9,10 @@ import random
 from dataclasses import replace
 from fractions import Fraction
 
+import sim.acceptance_v033 as acc
 from engine.epoch import EpochResult, EpochState, VestingEntry, empty_state, run_epoch
 from engine.prices import HarmonicOracle, ReservePoint, harmonic_mean
-from sim.acceptance_v033 import DAY, HOUR, PARAMS, T0, TOK, Outcome, Trades, _same, _score, _w
+from sim.acceptance_v033 import DAY, HOUR, T0, TOK, Outcome, Trades, _same, _score, _w
 
 SOL = 10**9
 
@@ -26,7 +27,7 @@ def _alone(res: EpochResult, *ws: str) -> bool:
 
 
 def _run(tr: Trades, prev: EpochState | None = None, **kw) -> tuple[EpochResult, EpochState]:
-    return run_epoch(replace(tr.inputs(), **kw), PARAMS, prev or empty_state())
+    return run_epoch(replace(tr.inputs(), **kw), acc.PARAMS, prev or empty_state())
 
 
 def row_whale_split_funded(rng: random.Random) -> Outcome:
@@ -128,7 +129,7 @@ def row_vest_sell(rng: random.Random) -> Outcome:
     tr.buy(v, amt, T0 - HOUR)
     tr.sell(v, amt // 2, T0 + rng.randint(0, DAY - 1))
     prev = EpochState(0, 0, {}, {}, {}, (VestingEntry(v, amt, "1/1000000", T0 - HOUR),))
-    _, nxt = run_epoch(tr.inputs(), PARAMS, prev)
+    _, nxt = run_epoch(tr.inputs(), acc.PARAMS, prev)
     return Outcome(v in nxt.forfeit_until, f"forfeit_until={nxt.forfeit_until.get(v)}")
 
 
@@ -150,7 +151,7 @@ def row_vest_three_hops(rng: random.Random) -> Outcome:
         hop.send(src, dst, amt, t)
         t += 600
     prev = EpochState(0, 0, {}, {}, {}, (VestingEntry(v, amt, "1/1000000", T0 - 3 * DAY),))
-    (r0, _), (r1, n1) = (run_epoch(x.inputs(), PARAMS, prev) for x in (hold, hop))
+    (r0, _), (r1, n1) = (run_epoch(x.inputs(), acc.PARAMS, prev) for x in (hold, hop))
     group = (v, h1, h2, h3)
     s0, s1 = sum(_score(r0, w) for w in group), sum(_score(r1, w) for w in group)
     own_only = all(_same(_score(r1, h), _score(r0, h)) for h in (h1, h2, h3))  # tainted: 0 extra
