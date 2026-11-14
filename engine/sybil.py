@@ -28,6 +28,9 @@ class EvidenceKind(StrEnum):
     SAME_FIRST_FUNDER = "same_first_funder"
     CO_BUY = "co_buy"
     IDENTICAL_BALANCES = "identical_balances"
+    TWO_SIDED_TOKEN = "two_sided_token"  # L1
+    TWO_SIDED_SOL = "two_sided_sol"  # L2
+    ONE_WAY_TOKEN = "one_way_token"  # L3, ≥ 2 distinct days
 
 
 @dataclass(frozen=True, slots=True)
@@ -281,6 +284,175 @@ def cluster(
             _union(ev.a, ev.b)
     for a, b in sorted(pair_sum):
         if pair_sum[(a, b)] >= p.merge_threshold:
+            _union(a, b)
+
+    groups: dict[WalletId, list[WalletId]] = defaultdict(list)
+    for w in holder_list:
+        groups[uf[w]].append(w)
+    cluster_of: dict[WalletId, ClusterId] = {}
+    members: dict[ClusterId, tuple[WalletId, ...]] = {}
+    confidence: dict[ClusterId, float] = {}
+    for mems in sorted((tuple(sorted(m)) for m in groups.values()), key=lambda t: t[0]):
+        cid: ClusterId = mems[0]
+        members[cid] = mems
+        for w in mems:
+            cluster_of[w] = cid
+        confidence[cid] = 1.0 if len(mems) == 1 else comp_conf[uf[cid]]
+    review = tuple(sorted(c for c, m in members.items() if len(m) >= p.review_cluster_size))
+    return ClusterResult(cluster_of, members, confidence, review)
+
+
+# ---------------------------------------------------------------------------
+# COIN_MATH v0.3.3 §7, first slice: fee payer is informational, one-way
+# transfers do not merge, link-only merges need an L1 or L2 signal.
+# Keep build_evidence / cluster (v0.2) above unchanged until epoch is rewired.
+# ---------------------------------------------------------------------------
+
+_DAY = 86_400
+L1_WEIGHT = 0.6
+L2_WEIGHT = 0.5
+L3_WEIGHT = 0.3
+TWO_SIDED_KINDS = frozenset({EvidenceKind.TWO_SIDED_TOKEN, EvidenceKind.TWO_SIDED_SOL})
+INFORMATIONAL_KINDS = frozenset({EvidenceKind.SAME_FEE_PAYER})
+
+
+def _transfer_links_v033(
+    events: Sequence[TokenEvent],
+    sols: Sequence[SolTransfer],
+    ok: set[WalletId],
+    dst: dict[tuple[WalletId, WalletId, EvidenceKind], Evidence],
+) -> None:
+    token_days: dict[tuple[WalletId, WalletId], set[int]] = defaultdict(set)
+    token_sig: dict[tuple[WalletId, WalletId], str] = {}
+    token_rows: list[tuple[int, str, int, WalletId, WalletId, int]] = []
+    for e in events:
+        if e.kind is EventKind.TRANSFER and e.src in ok and e.dst in ok and e.src != e.dst:
+            token_rows.append((e.slot, e.sig, e.ix, e.src, e.dst, e.ts))
+    for _slot, sig, _ix, src, dst_w, ts in sorted(token_rows):
+        key = (src, dst_w)
+        token_days[key].add(ts // _DAY)
+        if key not in token_sig:
+            token_sig[key] = sig
+    token_pairs = {_pair(src, dst_w) for src, dst_w in token_days}
+    for a, b in token_pairs:
+        ab, ba = (a, b) in token_days, (b, a) in token_days
+        if ab and ba:
+            ref = min(token_sig[(a, b)], token_sig[(b, a)])
+            _keep_first(dst, Evidence(a, b, EvidenceKind.TWO_SIDED_TOKEN, L1_WEIGHT, ref))
+            continue
+        src, dst_w = (a, b) if ab else (b, a)
+        if len(token_days[(src, dst_w)]) >= 2:
+            _keep_first(
+                dst, Evidence(a, b, EvidenceKind.ONE_WAY_TOKEN, L3_WEIGHT, token_sig[(src, dst_w)])
+            )
+
+    sol_sig: dict[tuple[WalletId, WalletId], str] = {}
+    sol_rows = [
+        (s.slot, s.sig, s.src, s.dst)
+        for s in sols
+        if s.src in ok and s.dst in ok and s.src != s.dst
+    ]
+    for _slot, sig, src, dst_w in sorted(sol_rows):
+        key = (src, dst_w)
+        if key not in sol_sig:
+            sol_sig[key] = sig
+    sol_pairs = {_pair(src, dst_w) for src, dst_w in sol_sig}
+    for a, b in sol_pairs:
+        if (a, b) in sol_sig and (b, a) in sol_sig:
+            ref = min(sol_sig[(a, b)], sol_sig[(b, a)])
+            _keep_first(dst, Evidence(a, b, EvidenceKind.TWO_SIDED_SOL, L2_WEIGHT, ref))
+
+
+def build_evidence_v033(
+    holders: Iterable[WalletId],
+    events: Sequence[TokenEvent],
+    sol_transfers: Sequence[SolTransfer],
+    fundings: Sequence[FirstFunding],
+    balances_at_epoch_end: Mapping[WalletId, int],
+    hubs: frozenset[WalletId],
+    p: SybilParams,
+) -> list[Evidence]:
+    """v0.3.3 evidence. Fee payer is recorded; transfers use L1/L2/L3."""
+    ok = {w for w in holders if w not in hubs}
+    dst: dict[tuple[WalletId, WalletId, EvidenceKind], Evidence] = {}
+    w = p.weights
+    _same_fee_payer(events, ok, hubs, w.same_fee_payer, dst)
+    _transfer_links_v033(events, sol_transfers, ok, dst)
+    _same_first_funder(
+        fundings,
+        _first_buy_ts(events, ok),
+        ok,
+        hubs,
+        p.funder_window_hours * 3600.0,
+        w.same_first_funder,
+        dst,
+    )
+    _co_buys(
+        events,
+        ok,
+        p.co_buy_slot_tolerance,
+        p.co_buy_size_tolerance,
+        p.co_buy_min_occurrences,
+        w.co_buy,
+        dst,
+    )
+    ib = _identical_balances(
+        balances_at_epoch_end,
+        fundings,
+        ok,
+        p.identical_balance_min_wallets,
+        p.identical_balance_tolerance,
+        p.identical_balance_created_within_hours * 3600.0,
+        w.identical_balances,
+    )
+    for ev in ib:
+        _keep_first(dst, ev)
+    return sorted(dst.values(), key=attrgetter("a", "b", "kind", "ref"))
+
+
+def cluster_v033(
+    holders: Iterable[WalletId], evidence: Sequence[Evidence], p: SybilParams
+) -> ClusterResult:
+    """Strong edges merge immediately. Link-only merges need Σ ≥ 1 and an L1/L2 signal.
+
+    SAME_FEE_PAYER is informational: it never contributes to a merge.
+    """
+    holder_list = sorted(set(holders))
+    uf = UnionFind(holder_list)
+    link_sum: dict[tuple[WalletId, WalletId], float] = defaultdict(float)
+    two_sided: set[tuple[WalletId, WalletId]] = set()
+    pair_score: dict[tuple[WalletId, WalletId], float] = defaultdict(float)
+    for ev in evidence:
+        if ev.kind in INFORMATIONAL_KINDS:
+            continue
+        pair = (ev.a, ev.b)
+        pair_score[pair] += ev.weight
+        if ev.kind in TWO_SIDED_KINDS:
+            two_sided.add(pair)
+            link_sum[pair] += ev.weight
+        elif ev.weight < p.strong_edge:
+            link_sum[pair] += ev.weight
+
+    comp_conf: dict[WalletId, float] = {}
+
+    def _union(a: WalletId, b: WalletId) -> None:
+        if a not in uf.parents or b not in uf.parents or uf[a] == uf[b]:
+            return
+        ra, rb = uf[a], uf[b]
+        score = min(1.0, pair_score[_pair(a, b)])
+        new_min = min(comp_conf.get(ra, 1.0), comp_conf.get(rb, 1.0), score)
+        uf.union(a, b)
+        comp_conf[uf[a]] = new_min
+
+    for ev in sorted(evidence, key=lambda e: (e.a, e.b, e.kind, e.ref)):
+        if ev.kind in INFORMATIONAL_KINDS or ev.kind in TWO_SIDED_KINDS:
+            continue
+        if ev.kind is EvidenceKind.ONE_WAY_TOKEN:
+            continue
+        if ev.weight >= p.strong_edge:
+            _union(ev.a, ev.b)
+    for a, b in sorted(link_sum):
+        if link_sum[(a, b)] >= p.merge_threshold and (a, b) in two_sided:
             _union(a, b)
 
     groups: dict[WalletId, list[WalletId]] = defaultdict(list)
