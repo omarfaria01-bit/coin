@@ -4,14 +4,21 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
-from dataclasses import dataclass, fields, is_dataclass
+from dataclasses import dataclass, field, fields, is_dataclass
 from pathlib import Path
 from typing import Any, Literal
 
 from engine.merkle import MerkleTree
 from engine.types import ClusterId, WalletId
 
-_FILES = ("result.json", "payouts.csv", "tree.json", "state.json", "inputs_hash.txt")
+_FILES = (
+    "result.json",
+    "payouts.csv",
+    "tree.json",
+    "state.json",
+    "balances.json",
+    "inputs_hash.txt",
+)
 
 
 def _types():
@@ -39,6 +46,7 @@ class _EpochState:
     forfeit_until: Mapping[ClusterId, int]
     unlocked: Mapping[WalletId, float]
     vesting: tuple[_VestingEntry, ...]
+    paid_total: Mapping[WalletId, int] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
@@ -146,6 +154,7 @@ def _state_payload(state: Any) -> dict[str, Any]:
     data["epoch"] = _require_int("state.epoch", data["epoch"])
     data["pot"] = _require_int("state.pot", data["pot"])
     data["carry"] = _sorted_int_map("carry", data.get("carry") or {})
+    data["paid_total"] = _sorted_int_map("paid_total", data.get("paid_total") or {})
     data["forfeit_until"] = _sorted_int_map("forfeit_until", data.get("forfeit_until") or {})
     unlocked = data.get("unlocked") or {}
     data["unlocked"] = {
@@ -159,20 +168,32 @@ def _state_payload(state: Any) -> dict[str, Any]:
     return data
 
 
+def _balances_payload(state_d: Mapping[str, Any]) -> dict[str, dict[str, int]]:
+    """COIN_MATH §13 running balance per wallet, in Q base units."""
+    pending, paid = state_d["carry"], state_d["paid_total"]
+    out: dict[str, dict[str, int]] = {}
+    for wallet in sorted(set(pending) | set(paid)):
+        p, q = pending.get(wallet, 0), paid.get(wallet, 0)
+        out[wallet] = {"earned_total": p + q, "paid_total": q, "pending": p}
+    return out
+
+
 def _contents(result: Any, state: Any, tree: MerkleTree | None) -> dict[str, bytes]:
     result_d = _result_payload(result)
+    state_d = _state_payload(state)
     files = {
         "result.json": _canonical(result_d),
         "payouts.csv": _payouts_csv(result_d["payouts"]),
         "tree.json": _canonical(_tree_payload(tree)),
-        "state.json": _canonical(_state_payload(state)),
+        "state.json": _canonical(state_d),
+        "balances.json": _canonical(_balances_payload(state_d)),
         "inputs_hash.txt": str(result_d["inputs_hash"]) + chr(10),
     }
     return {name: text.encode("utf-8") for name, text in files.items()}
 
 
 def write_epoch(dir: Path, result: Any, state: Any, tree: MerkleTree | None) -> Path:
-    """Write `dir/<result.epoch>/{result,payouts,tree,state,inputs_hash}`.
+    """Write `dir/<result.epoch>/{result,payouts,tree,state,balances,inputs_hash}`.
 
     Refuses to overwrite an existing epoch directory whose bytes would change.
     A second write of identical content is a no-op.
@@ -258,6 +279,7 @@ def _build_state(data: dict[str, Any]):
         forfeit_until=dict(data.get("forfeit_until") or {}),
         unlocked={k: float(v) for k, v in (data.get("unlocked") or {}).items()},
         vesting=vesting,
+        paid_total=dict(data.get("paid_total") or {}),
     )
 
 

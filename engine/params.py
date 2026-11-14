@@ -136,7 +136,10 @@ class RewardParams(_Strict):
         500, ge=0, description="Below this, push instead of claims (§13)"
     )
     push_min_transfer_lamports: int = Field(
-        1_000_000, ge=0, description="PROVISIONAL (0.001 SOL): smaller amounts carry forward (§13)"
+        1_000_000,
+        ge=0,
+        le=5_000_000,
+        description="MIN_PAYOUT_Q (§13): pending below it stays pending; published max 0.005 SOL",
     )
     lst_fraction: float = Field(
         0.0, ge=0, le=1, description="Share of idle pot held in an LST; 0 until decided (§8)"

@@ -156,16 +156,24 @@ def _event_lists(draw: st.DrawFn) -> list[TokenEvent]:
     n = draw(st.integers(0, 10))
     evs: list[TokenEvent] = []
     wallets = ("A", "B", "C")
+    bal = dict.fromkeys(("A", "B", "C", "P"), 0)
+    # Only valid sequences (no oversell): the test used to reject most draws via assume().
     for i in range(n):
         kind = draw(st.sampled_from(list(EventKind)))
         w = draw(st.sampled_from(wallets))
         amt = draw(st.integers(1, 15))
+        if kind is not EventKind.BUY and bal[w] < amt:
+            kind = EventKind.BUY
         if kind is EventKind.BUY:
+            bal[w] += amt
             evs.append(ev(kind, slot=i, ts=i, sig=f"s{i}", dst=w, amount=amt, lamports=amt * 3))
         elif kind is EventKind.SELL:
+            bal[w] -= amt
             evs.append(ev(kind, slot=i, ts=i, sig=f"s{i}", src=w, amount=amt))
         else:
             other = draw(st.sampled_from(("A", "B", "C", "P")))
+            bal[w] -= amt
+            bal[other] += amt
             evs.append(ev(kind, slot=i, ts=i, sig=f"s{i}", src=w, dst=other, amount=amt))
     return evs
 
