@@ -113,8 +113,8 @@ that first-pick frequency ∝ sqrt(score) (tolerance documented in the test).
 
 `ledger`, `twab`, `scoring`, `rewards`, `vesting`, `fees`, `treasury_bot`: signatures and
 docstrings in the stubs are the contract; exact edge-case rules are in the issues
-(#13 ledger/twab, #14 scoring, #15 rewards, #16 fees/vesting). `merkle`: jup-ag/distributor leaf
-(D7), golden vectors from upstream Rust (#17). Price unit everywhere: lamports per token base
+(#13 ledger/twab, #14 scoring, #15 rewards, #16 fees/vesting). `merkle`: implemented per D7 (jup-ag/distributor leaf and tree, golden
+vectors from upstream Rust). Price unit everywhere: lamports per token base
 unit (D13).
 
 ## 7. Property tests that must hold (CI)

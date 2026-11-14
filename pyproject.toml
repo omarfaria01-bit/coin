@@ -7,6 +7,7 @@ dependencies = [
   "pydantic>=2.7",
   "networkx>=3.2",
   "numpy>=1.26",
+  "base58>=2.1.1",
 ]
 
 [dependency-groups]

@@ -1,0 +1,128 @@
+{
+  "upstream": "https://github.com/jup-ag/distributor",
+  "commit": "304c28a4e1",
+  "command": "git clone https://github.com/jup-ag/distributor.git /tmp/jup-distributor && git -C /tmp/jup-distributor checkout 304c28a4e1 && cargo run --example vectors -p jito-merkle-tree",
+  "notes": "The example (kept only in /tmp, not vendored) calls TreeNode::hash, MerkleTree::new(&hashed_nodes, true), and get_proof from jito-merkle-tree. sorted_hashes=true; odd levels duplicate the last node; intermediate hash is sha256(0x01 || min(a,b) || max(a,b)). leaf = sha256(0x00 || inner), inner = sha256(claimant[32] || amount_unlocked_le || amount_locked_le). claimant fields are hex of the 32-byte pubkey.",
+  "sets": [
+    {
+      "name": "one",
+      "root": "5687b066c7d614f0fd3db2b67e1090c7afda066eecae32de4eb7fcf53f90441f",
+      "claims": [
+        {
+          "claimant": "1111111111111111111111111111111111111111111111111111111111111111",
+          "amount_unlocked": 1000000,
+          "amount_locked": 0,
+          "inner": "bac76933c0cf83b3ae8a2bcb3a8e7f71e5ca447272b090a3f2f8f5ee8e016660",
+          "proof": []
+        }
+      ]
+    },
+    {
+      "name": "two",
+      "root": "3fbca31e19f5d94a3ced56839a2e935cbdfdb12437babd162432a8fa60380217",
+      "claims": [
+        {
+          "claimant": "1111111111111111111111111111111111111111111111111111111111111111",
+          "amount_unlocked": 1000000,
+          "amount_locked": 0,
+          "inner": "bac76933c0cf83b3ae8a2bcb3a8e7f71e5ca447272b090a3f2f8f5ee8e016660",
+          "proof": [
+            "902acf6c99c5970fbc7ac34f7aeb6acb5ee8899a9d21e052d319a1e719f9f9b3"
+          ]
+        },
+        {
+          "claimant": "2222222222222222222222222222222222222222222222222222222222222222",
+          "amount_unlocked": 2000000,
+          "amount_locked": 3,
+          "inner": "495f2ba2ffa3045a47c64daaf63396fdb6cc4a1f999149fb6bb07a43214b6d96",
+          "proof": [
+            "5687b066c7d614f0fd3db2b67e1090c7afda066eecae32de4eb7fcf53f90441f"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "seven",
+      "root": "9cac4e62807216ce6647c10e53526f99e5c6848d2cbe610699064ce48afd3a68",
+      "claims": [
+        {
+          "claimant": "0101010101010101010101010101010101010101010101010101010101010101",
+          "amount_unlocked": 1000,
+          "amount_locked": 1,
+          "inner": "ffaa06d4439f0b9a1e245e5e33587878f2ec1dc68af1eea6738ee51e9ec5f72f",
+          "proof": [
+            "b00be0cd8d71c7409de1166075169ffecfb5dc8261f6dd3719926768605edbdd",
+            "f2a55940c98347bbff60f10450444e49a75b17a95071a65c8cac7a1fa533e547",
+            "61057c47ed7b3448140dbf04692e8229251f83dd383af43eac945b1c46943630"
+          ]
+        },
+        {
+          "claimant": "0202020202020202020202020202020202020202020202020202020202020202",
+          "amount_unlocked": 2000,
+          "amount_locked": 0,
+          "inner": "2c152ad3c2dc4b1bde6952bd4d8580ce8bfb5ea06f55e8e1c406d6f914eb475d",
+          "proof": [
+            "ff1b7c83444389da31da5ca14b3171c45c19a6158959b9050fff616e60ad785a",
+            "f2a55940c98347bbff60f10450444e49a75b17a95071a65c8cac7a1fa533e547",
+            "61057c47ed7b3448140dbf04692e8229251f83dd383af43eac945b1c46943630"
+          ]
+        },
+        {
+          "claimant": "0303030303030303030303030303030303030303030303030303030303030303",
+          "amount_unlocked": 3000,
+          "amount_locked": 1,
+          "inner": "a535cbd1794ff2cf25c77b357537dcae035a41b77d0a63dcc0ff3a0c3cfc3f4a",
+          "proof": [
+            "7b13fba3295a2e9bc83ad1a7c755dc6dba3cd48f1c36599fcf9d2374eb521613",
+            "30aeaa7d9f76c402d336d8201e05d58cbf0a0262c97b7f095b9e7e40a87dcc99",
+            "61057c47ed7b3448140dbf04692e8229251f83dd383af43eac945b1c46943630"
+          ]
+        },
+        {
+          "claimant": "0404040404040404040404040404040404040404040404040404040404040404",
+          "amount_unlocked": 4000,
+          "amount_locked": 0,
+          "inner": "1d5bce4baa9956284a4c1487f472a3198f52c85a9e338879ecdc923d87d1fa76",
+          "proof": [
+            "2c0fd989417cd48623d33ec02783b2807fbcac9b584f797779f05d1fedc444b9",
+            "30aeaa7d9f76c402d336d8201e05d58cbf0a0262c97b7f095b9e7e40a87dcc99",
+            "61057c47ed7b3448140dbf04692e8229251f83dd383af43eac945b1c46943630"
+          ]
+        },
+        {
+          "claimant": "0505050505050505050505050505050505050505050505050505050505050505",
+          "amount_unlocked": 5000,
+          "amount_locked": 1,
+          "inner": "d05ca899ec89fb5890717a5c5c670b920a6bcd7bfc5afdd90d6cd5c73f52e4a9",
+          "proof": [
+            "b33bd880fb75b5e107bfda55aaf1235538664d770f975aaa53ed3b1124a225d4",
+            "3ebdcba98c27c6dc74d12e55ad2c7c9fcd3d8d68f27ec8dc18c82803a7f459b5",
+            "02314b4cfcdd8ef1107c976638cae57f51149eb7ffbac960dfa044f0d4dfe1af"
+          ]
+        },
+        {
+          "claimant": "0606060606060606060606060606060606060606060606060606060606060606",
+          "amount_unlocked": 6000,
+          "amount_locked": 0,
+          "inner": "a3a6fe9d7976d2723a02c0fb2eb8449edc1ffe4e42c1655b79dac88ff13c338f",
+          "proof": [
+            "337e9100c1b9acab5cd644eff3bbac11575f1e89853b5196e29981cb9d23d87e",
+            "3ebdcba98c27c6dc74d12e55ad2c7c9fcd3d8d68f27ec8dc18c82803a7f459b5",
+            "02314b4cfcdd8ef1107c976638cae57f51149eb7ffbac960dfa044f0d4dfe1af"
+          ]
+        },
+        {
+          "claimant": "0707070707070707070707070707070707070707070707070707070707070707",
+          "amount_unlocked": 7000,
+          "amount_locked": 1,
+          "inner": "f63ad49cfebe093e1910fbe6fadb80341ccb45d302331c909568618e575d1f64",
+          "proof": [
+            "a4c0b045611081ad0f6415dbb00b4dc29ef9bc44337e47a57e787f6d1c70befb",
+            "cab17dc3b4cbb983feb334c47f98d3adc6c791487324b05f212bea0004776892",
+            "02314b4cfcdd8ef1107c976638cae57f51149eb7ffbac960dfa044f0d4dfe1af"
+          ]
+        }
+      ]
+    }
+  ]
+}
