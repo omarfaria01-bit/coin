@@ -175,8 +175,9 @@ class HarmonicOracle:
     reserve (tens of thousands of 11-digit integers). Each constant-reserve piece of the window
     therefore contributes ``ceil(len · reserve_base · 2^K / reserve_quote)`` (K = 128), an
     integer, and P̃_h = window · 2^K / Σ — an exact rational of bounded size. Rounding every
-    piece up can only *lower* P̃_h (by < pieces / 2^128 relative), so the unlock is never
-    larger than the exact one. Full pieces are prefix sums: each query is two bisects.
+    piece up can only *lower* P̃_h (relative gap < n · P̃_h / (window · 2^K) for n pieces), so
+    the unlock is never larger than the exact one. Full pieces are prefix sums: each query is
+    two bisects.
     """
 
     def __init__(

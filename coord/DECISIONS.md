@@ -122,7 +122,7 @@ legacy JSON floats still load by their repr. u_price is skipped for any minute w
 before the first known reserve point or holds an untrusted second (§11). **Fixed-point P̃_h:** exact
 Σ dt/p needs the lcm of every quote reserve (a 50k-point history exhausts memory), so each
 constant-reserve piece of the window adds `ceil(len · reserve_base · 2^128 / reserve_quote)` and
-P̃_h = window · 2^128 / Σ. Rounding up only lowers P̃_h (relative error < pieces / 2^128), so the unlock
+P̃_h = window · 2^128 / Σ. Rounding up only lowers P̃_h (relative error < n · P̃_h / (window · 2^128) for n pieces; < (n+2)/2^128
+when P̃_h ≲ window), so the unlock
 is never above the exact one; the independent implementation (§14) must use the same rule. This is the
-one place in the payout path that rounds before the final payout step (§0): Claude/kiwi to confirm, or
-COIN_MATH §0/§11 gets a line saying so.
+one place in the payout path that rounds before the final payout step; COIN_MATH §0 and §11 say so.
