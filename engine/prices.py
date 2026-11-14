@@ -162,13 +162,21 @@ def untrusted_fraction(
     return Fraction(untrusted, t_end - t_start)
 
 
+HARMONIC_SCALE_BITS = 128  # fixed-point scale of the oracle's Σ dt/p (DECISIONS D20)
+
+
 class HarmonicOracle:
     """P̃_h(t) over the `window` seconds before t, or None when it must not be used (§0, §11).
 
-    None when the window starts before the first reserve point or holds any untrusted
-    second ("u_price ... only if every second of the 24h window is trusted"). Points are
-    sorted once and Σ dt/p and untrusted seconds are kept as prefix sums, so each query is
-    two bisects instead of a pass over the history (vesting asks once per minute per lot).
+    None when the window starts before the first reserve point or holds any untrusted second
+    ("u_price ... only if every second of the 24h window is trusted").
+
+    Exact Σ dt/p over a real history is unusable: its denominator is the lcm of every quote
+    reserve (tens of thousands of 11-digit integers). Each constant-reserve piece of the window
+    therefore contributes ``ceil(len · reserve_base · 2^K / reserve_quote)`` (K = 128), an
+    integer, and P̃_h = window · 2^K / Σ — an exact rational of bounded size. Rounding every
+    piece up can only *lower* P̃_h (by < pieces / 2^128 relative), so the unlock is never
+    larger than the exact one. Full pieces are prefix sums: each query is two bisects.
     """
 
     def __init__(
@@ -183,33 +191,35 @@ class HarmonicOracle:
         self._window = window
         self._pts = _sorted_points(points) if points else []
         self._ts = [p.ts for p in self._pts]
-        self._recip = [Fraction(0)]  # Σ over whole segments [ts_i, ts_{i+1}) of dt/p_i
-        self._bad = [0]  # untrusted seconds over the same segments
         self._trusted = [
             is_trusted_second(p.reserve_quote, p.reserve_base, d_trust, pool_math)
             for p in self._pts
         ]
+        self._sum = [0]  # Σ over full pieces [ts_0, ts_i) of the rounded-up terms
+        self._bad = [0]  # untrusted seconds over the same pieces
         for i, (a, b) in enumerate(zip(self._pts, self._pts[1:], strict=False)):
             dt = b.ts - a.ts
-            self._recip.append(self._recip[-1] + Fraction(dt) / a.price)
+            self._sum.append(self._sum[-1] + self._term(i, dt))
             self._bad.append(self._bad[-1] + (0 if self._trusted[i] else dt))
 
-    def _prefix(self, t: int) -> tuple[Fraction, int]:
-        """(Σ dt/p, untrusted seconds) over [ts_0, t)."""
-        i = bisect_right(self._ts, t - 1) - 1  # state active in second t - 1
-        tail = t - self._ts[i]
+    def _term(self, i: int, dt: int) -> int:
         point = self._pts[i]
-        return (
-            self._recip[i] + Fraction(tail) / point.price,
-            self._bad[i] + (0 if self._trusted[i] else tail),
-        )
+        return -(-(dt * point.reserve_base << HARMONIC_SCALE_BITS) // point.reserve_quote)
 
     def __call__(self, t: int) -> Fraction | None:
         start = t - self._window
         if not self._pts or start < self._ts[0]:
             return None
-        recip_end, bad_end = self._prefix(t)
-        recip_start, bad_start = self._prefix(start) if start > self._ts[0] else (Fraction(0), 0)
-        if bad_end - bad_start:
+        i = bisect_right(self._ts, start) - 1  # piece active at `start`
+        j = bisect_right(self._ts, t - 1) - 1  # piece active in second t - 1
+        if i == j:
+            total, bad = self._term(i, t - start), 0 if self._trusted[i] else t - start
+        else:
+            head = self._ts[i + 1] - start
+            tail = t - self._ts[j]
+            total = self._term(i, head) + (self._sum[j] - self._sum[i + 1]) + self._term(j, tail)
+            bad = (0 if self._trusted[i] else head) + (self._bad[j] - self._bad[i + 1])
+            bad += 0 if self._trusted[j] else tail
+        if bad:
             return None
-        return Fraction(self._window) / (recip_end - recip_start)
+        return Fraction(self._window << HARMONIC_SCALE_BITS, total)

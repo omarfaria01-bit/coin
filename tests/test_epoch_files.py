@@ -164,3 +164,15 @@ def test_p_entry_round_trips_exactly(tmp_path: Path) -> None:
     assert raw["vesting"][0]["p_entry"] == "1/3"
     _, state, _ = read_epoch(dest)
     assert state.vesting[0].p_entry == Fraction(1, 3)
+
+
+def test_legacy_float_p_entry_still_loads(tmp_path: Path) -> None:
+    """state.json written before #108 stored p_entry as a JSON float; it reads back by repr."""
+    from fractions import Fraction
+
+    dest = write_epoch(tmp_path, _result(), _state(), TREE)
+    raw = json.loads((dest / "state.json").read_text(encoding="utf-8"))
+    raw["vesting"][0]["p_entry"] = 0.1
+    (dest / "state.json").write_text(json.dumps(raw), encoding="utf-8")
+    _, state, _ = read_epoch(dest)
+    assert state.vesting[0].p_entry == Fraction(1, 10)

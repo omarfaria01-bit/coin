@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 from fractions import Fraction
 
 import pytest
@@ -9,6 +10,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from engine.prices import (
+    HARMONIC_SCALE_BITS,
     HarmonicOracle,
     ReservePoint,
     arithmetic_mean,
@@ -186,11 +188,29 @@ def test_harmonic_oracle_matches_direct_computation(
     if t - window < points[0].ts:
         assert got is None
         return
-    trusted = untrusted_fraction(points, t - window, t, 2 * SOL) == 0
-    assert got == (harmonic_mean(points, t - window, t) if trusted else None)
+    if untrusted_fraction(points, t - window, t, 2 * SOL):
+        assert got is None
+        return
+    exact = harmonic_mean(points, t - window, t)
+    assert got is not None and got <= exact  # rounding only ever lowers P̃_h (D20)
+    assert (exact - got) / exact < Fraction(len(points) + 2, 2**HARMONIC_SCALE_BITS)
 
 
 def test_harmonic_oracle_empty_and_bad_window() -> None:
     assert HarmonicOracle([], 86_400, 2 * SOL)(10**6) is None
     with pytest.raises(ValueError):
         HarmonicOracle([], 0, 2 * SOL)
+
+
+def test_harmonic_oracle_stays_small_on_a_long_history() -> None:
+    """50k reserve points: exact Σ dt/p would need the lcm of every quote reserve (D20)."""
+    rng = random.Random(7)
+    pts, t, q, b = [], 0, 300 * SOL, 300 * 10**15
+    for _ in range(50_000):
+        t += rng.randint(1, 60)
+        q = max(100 * SOL, q + rng.randint(-SOL, SOL))
+        b = max(10**17, b + rng.randint(-(10**15), 10**15))
+        pts.append(ReservePoint(t, q, b))
+    oracle = HarmonicOracle(pts, 86_400, 2 * SOL)
+    got = oracle(t)
+    assert got is not None and got.denominator.bit_length() < 400

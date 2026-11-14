@@ -114,6 +114,7 @@ class EpochInputs:
     signers: Mapping[str, frozenset[WalletId]] = field(default_factory=dict)
     overrides: tuple[tuple[WalletId, WalletId, str], ...] = ()
     # §0 pool reserves (price + trusted seconds) for the §11 price unlock; () = none known.
+    # Points after t1 are harmless: unlock queries stop at t1 (the CLI drops them anyway).
     reserves: tuple[ReservePoint, ...] = ()
 
     def __post_init__(self) -> None:
