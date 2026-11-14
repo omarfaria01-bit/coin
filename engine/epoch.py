@@ -110,6 +110,7 @@ def _twap(prices: Sequence[PricePoint], a: int, b: int, decimals: int) -> float:
     price = ordered[0].price
     has = False
     cursor = a
+    start = a
     numer = 0.0
     for pt in ordered:
         if pt.ts <= a:
@@ -121,6 +122,7 @@ def _twap(prices: Sequence[PricePoint], a: int, b: int, decimals: int) -> float:
         if not has:
             price = pt.price
             cursor = pt.ts
+            start = pt.ts
             has = True
             continue
         if pt.ts > cursor:
@@ -131,7 +133,9 @@ def _twap(prices: Sequence[PricePoint], a: int, b: int, decimals: int) -> float:
     if not has:
         raise ValueError("twap: window has no price")
     numer += price * (b - cursor)
-    return _d13(numer / (b - cursor), decimals)
+    if b <= start:
+        raise ValueError(f"twap: empty span, start={start} b={b}")
+    return _d13(numer / (b - start), decimals)
 
 
 def _changes(events: Sequence[TokenEvent], wallet: WalletId) -> list[tuple[int, int]]:
