@@ -1,5 +1,5 @@
-last_tick: 2026-11-15 10:34 UTC (manager loop; no open PRs; #133 claimed 10:21, under 3h; #29 docs done, awaiting kiwi; nothing actionable)
-updated: 2026-11-14
+last_tick: 2026-11-15 11:2x UTC (manager loop; #135 reviewed+merged → #133 closed; opened arbitrage-row issue for Grok; #29 awaiting kiwi)
+updated: 2026-11-15
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 
 ## Done
@@ -26,6 +26,7 @@ phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim
 - Top technical risk: Token-2022 mint ⇒ D7 rail doesn't work (#18).
 
 ## Next 3 actions (Claude)
+-3. 2026-11-15: #135 merged (§14 report: 36 PASS · 0 FAIL · 10 GAP; 5 of 10 are b rows). Next Grok: arbitrage-agent row issue (see open issues). Remaining b rows (RPC dual-source, optimising agent, independent impl) need P4/other deliverables.
 -2. 2026-11-15: #29 docs done (ENGINE_DESIGN §9, D22); NO pad hook code until kiwi confirms scope + legal (#8). #133 (GAP rows, owner:grok) queued. Token-2022 research already in reports/research_token2022_claims_2026-11.md; record decision when kiwi picks mint type.
 -1. Tick 21:20 UTC: open PRs are only #60 (HOLD) and #50 (needs kiwi). T_START=6h = D21, already default+goldens (#123). #84/#85 closed, #127 merged, main CI green. All #81/#82 slices are merged; Grok to post final acceptance evidence on #81/#82 (conservation, no-float CI, coverage) so they can close.
 0. #118 (#84 step 3b report writer) and #119 (#85 variants, default T_START=6h, report regenerated) merged. #85 done; kiwi summary in reports/variants_v033_2026-11-14.md, announced in #1.
