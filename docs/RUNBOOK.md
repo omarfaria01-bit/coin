@@ -163,14 +163,15 @@ uv run python -m sim.run --report --seeds 3
 uv run python -m sim.run --report --seeds 3 --strict   # also fails on any GAP
 ```
 
-- `sim.run --acceptance` runs the 27 implemented §14 rows on the real engine.
+- `sim.run --acceptance` runs the 31 implemented §14 rows on the real engine
+  (score/payout, attack and the #133 offline rows).
 - `sim.epoch_runner` is the e2e gate on `run_epoch`; it exits non-zero on a
   failed row or a run over 60 s. `--strict` on `sim.run` applies to `--report` and
   `--scenario` only: `--e2e` and `--acceptance` return before `strict` is read.
 - `sim.run --report` writes `reports/sim_<date>.md` with PASS/FAIL/GAP and the
   §14 outputs (slow, ~3–4 min for 3 seeds). `--strict` exits 1 while any GAP
   remains; that is expected and must be accepted in `coord/DECISIONS.md`.
-- Committed report: `reports/sim_2026-11-14.md` — **27 PASS · 0 FAIL · 19 GAP**.
+- Committed report: `reports/sim_2026-11-15.md` — **36 PASS · 0 FAIL · 10 GAP**.
 
 Do not change `config/coin.json` defaults because a sweep looked nicer. A
 default change needs a DECISIONS.md entry with the failing §14 evidence.
@@ -233,7 +234,7 @@ rules. Each item maps to a test or an explicit **gap**.
 
 ### 5.2 COIN_MATH §14 acceptance rows
 
-Status from `reports/sim_2026-11-14.md` (3 seeds per row unless noted).
+Status from `reports/sim_2026-11-15.md` (3 seeds per row unless noted).
 Targeted tests may cover a row more than once.
 
 | §14 rows (all PASS) | Condition | Covered by |
@@ -245,32 +246,28 @@ Targeted tests may cover a row more than once.
 | Small balance below MIN_PAYOUT_Q; Any split, 2–10 wallets, boost off; €100 holder at $50k..$50M | pending monotone; split never gains; always eligible | `tests/test_acceptance_v033.py::test_every_row_passes_on_three_seeds` |
 | Whale splits into 50 funded wallets; Dust attack (tokens + SOL); Forced merge, free actions; Forced merge, funding; Chain A–B co-signed, B–C, C–D | one cluster, no gain; victim not merged; only A–B merged | `tests/test_acceptance_attacks_v033.py::test_every_attack_row_passes_on_three_seeds` |
 | Soft vesting: selling locked tokens; Soft vesting: out via 3 wallets; Circular transfers A→B→C→A; Whole bag to a new funded wallet; Pump ≤ 1h, random histories | forfeit/taint applied; no gain; age/cost kept; P̃_h ≤ (24/23)·H_rest | `tests/test_acceptance_attacks_v033.py::test_every_attack_row_passes_on_three_seeds` |
-| Trader in 4h cycles vs a 7-day holder; Reward concentration; Reward stability (first target); Volume −90% overnight | ≤ 30% reward rate; top-10% not rising; ±10% moves ≤ 15%; ≥ 45% after 7 days | `tests/test_report_v033.py::test_every_row_and_gap_is_listed` |
+| Buy and sell in the same second; Pool depth below the trust threshold; Missing / decreasing block time, skipped slots | intra-second states weight 0 and p(t) is the end-of-second price; thin pool reads no untrusted price and changes no payout; the clamped clock equals the clean log | `tests/test_gap_rows_v033.py::test_every_gap_row_passes_on_three_seeds` |
+| Same fee-paying app + one-sided signals; Single commercial transfer; False merge of two independent clusters | no merge, payer in the review list; one transfer is not an edge; a forced merge leaves the tokens' score unchanged and cap damage 0 | `tests/test_gap_rows_v033.py::test_every_gap_row_passes_on_three_seeds` |
+| Sybil recall (self-funded / CEX-funded); Retroactive merge | self-funded farms ≥ 95% grouped, CEX-funded residual reported; past epochs unchanged, current epoch equals a from-genesis rebuild | `tests/test_gap_rows_v033.py::test_every_gap_row_passes_on_three_seeds` |
+| Trader in 4h cycles vs a 7-day holder; Reward concentration; Reward stability (first target); Volume −90% overnight; Higher multiplier vs. concentration | ≤ 30% reward rate; top-10% not rising; ±10% moves ≤ 15%; ≥ 45% after 7 days; 2.8× curve ≤ 2.0× + 5 points | `tests/test_report_v033.py::test_every_row_and_gap_is_listed` |
 
-**GAP rows (19).** They are explicit, not silently skipped. A gap may be
-accepted only by a DECISIONS.md entry or closed by a later issue.
+**GAP rows (10).** They are explicit, not silently skipped. A gap may be
+accepted only by a DECISIONS.md entry or closed by a later issue. Category
+**a** = off at launch by a D19/§16 flag; **b** = offline-able but not written, or
+it needs a component that does not exist yet.
 
-| §14 row | Why it is still a gap |
-|---|---|
-| Same split, boost on | underwater boost off at launch (D19); `run_epoch` rejects it |
-| Underwater farmer | boost off (D19) |
-| Holding the pool lower for ≤ 1h (P̄_e) | P̄_e feeds only the boost, off (D19) |
-| Buy and sell in the same second | needs a reserve-log fixture; prices tests cover `p(t)` |
-| Dump / pump then no trades, arbitrage agents | no arbitrage agent on the v0.3.3 log yet |
-| Pool depth below the trust threshold | unit-tested in `tests/test_epoch.py::test_price_unlock_paused_on_untrusted_window`; no sim row |
-| Missing / decreasing block time, skipped slots | ingest clamping, outside `run_epoch` |
-| Two RPC sources disagree | ingest layer, outside `run_epoch` |
-| Same fee-paying app + one-sided signals | review list exists; row not written |
-| Single commercial transfer | close to the dust row; not written separately |
-| False merge of two independent clusters | needs a forced-merge hook in the sim |
-| Sybil recall (self-funded / CEX-funded) | whale-split row = one self-funded farm only |
-| Retroactive merge | needs a from-genesis rebuild harness |
-| Draw payout / draw fairness (χ²) | draws off at launch (D19); sampler unit-tested |
-| Multiplier ≤ 4.2× with boost | boost off (D19) |
-| Higher multiplier vs. concentration | needs the 2.0× curve variant: #85 |
-| Informed agent vs. simple holder | no optimising agent; split rows bound it |
-| Independent implementation | separate Rust/TS work, not this repo's sim |
-| Treasury bot backtest | bot off at launch (D19); needs real price paths |
+| §14 row | Category | Why it is still a gap |
+|---|---|---|
+| Same split, boost on | a | underwater boost off at launch (D19); `run_epoch` rejects it |
+| Underwater farmer | a | boost off (D19) |
+| Holding the pool lower for ≤ 1h (P̄_e) | a | P̄_e feeds only the boost, off (D19) |
+| Dump / pump then no trades, arbitrage agents | b | needs an arbitrage agent on the reserve log; `sim.market` has a pool but no agent loop |
+| Two RPC sources disagree | b | needs the P4 adapter's dual-source client; the engine has no single-source finalize path |
+| Draw payout / draw fairness (χ²) | a | draws off at launch (D19); sampler unit-tested |
+| Multiplier ≤ 4.2× with boost | a | boost off (D19) |
+| Informed agent vs. simple holder | b | needs an optimising agent; a strategy search over the curve is not an offline fixture |
+| Independent implementation | b | separate Rust/TS deliverable outside this repo (COIN_MATH §14), not a sim row |
+| Treasury bot backtest | a | bot off at launch (D19); needs real price paths |
 
 ### 5.3 Verdict
 

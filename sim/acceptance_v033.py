@@ -299,10 +299,12 @@ class RowResult:
 
 
 def all_rows() -> tuple[tuple[str, str, Callable[[random.Random], Outcome]], ...]:
-    """Score/payout rows here, then the attack rows (sim.acceptance_attacks_v033, #84 step 2)."""
+    """Score/payout rows here, then the attack rows (#84 step 2) and the offline rows that
+    close ingest-layer GAPs (#133)."""
     from sim.acceptance_attacks_v033 import ROWS as ATTACK_ROWS  # imports this module
+    from sim.gap_rows_v033 import ROWS as GAP_ROWS  # imports this module
 
-    return (*ROWS, *ATTACK_ROWS)
+    return (*ROWS, *ATTACK_ROWS, *GAP_ROWS)
 
 
 def run_rows(seeds: int) -> list[RowResult]:

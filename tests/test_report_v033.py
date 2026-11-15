@@ -20,8 +20,8 @@ def test_every_row_and_gap_is_listed(short_report) -> None:
     text, rows = short_report
     for name, _, _ in all_rows():
         assert f"| {name} |" in text
-    for name, why in rep.GAPS:
-        assert f"| {name} | GAP | {why} |" in text
+    for name, kind, why in rep.GAPS:
+        assert f"| {name} | {rep.CATEGORY[kind]} | GAP | {why} |" in text
     names = {r.name for r in rows}
     assert {"Trader in 4h cycles vs a 7-day holder", "Volume −90% overnight"} <= names
     assert "| rewards gini_rewards" in text and "€100 holder: days_to_first_payout" in text
