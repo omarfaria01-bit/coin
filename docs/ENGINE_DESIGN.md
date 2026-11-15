@@ -187,3 +187,18 @@ Steps (all deterministic, every int split checked for conservation):
 
 Conservation, asserted inside `run_epoch`:
 `prev.pot + pot_inflow + Σ prev.carry == pot_next + Σ transferred_or_claimable_now + Σ next.carry`.
+
+## 9. `pad_rewards` extension point (design only; D22)
+
+Optional, disabled by default, **no code exists yet**. Full draft: `docs/design/PAD_REWARDS.md`.
+- Shape: one pure function `pad_rewards(snapshot, config) -> annotations`, called *after* the epoch
+  result is computed. Output is informational only (notes / suggestions for off-engine systems).
+- Never changes `payouts`, `shares`, `rollover`, `dust`, `carry`, claims or `inputs_hash`; the
+  conservation identity in §8 is asserted by `run_epoch` independently of the hook's return value.
+- No per-wallet special treatment, no I/O, no clock. Pad-side data would enter only as committed
+  epoch input, never fetched inside `engine/`.
+- Config: `pad_rewards.enabled` (default `false`, absent == false; unknown keys rejected).
+- Pad fee-share is never mixed into the holder pot `R_e`.
+- Enabling is gated: real pad spec + ADR + sim re-run (disabled output byte-identical) + kiwi
+  `APPROVED` + legal/disclosure review (COIN_MATH §16, #8). A pad owned by a connection of kiwi can
+  look like a related-party arrangement: kiwi's call, flagged here.

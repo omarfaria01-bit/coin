@@ -152,3 +152,11 @@ draws off at launch, draw period later). The knot table is unchanged: `h` is 0 b
 6h knot (1.15) at T_START, exactly the "T_START 6h" variant in the #119 report. Effect measured there:
 the 4-hour-cycle trader earns 0; €100 holder first paid in 1.7 days. Changed: `hold.t_start_seconds`
 21600, `DEFAULT_T_START_SECONDS`, config/coin.json + schema, COIN_MATH §3–4, goldens regenerated.
+
+## D22 · 2026-11-15 · `pad_rewards` extension point: design accepted, code NOT started (#29)
+Accepted as design only (ENGINE_DESIGN §9, docs/design/PAD_REWARDS.md): a disabled-by-default,
+pure, informational hook after the epoch result; cannot touch payouts/conservation; pad fee-share
+never enters `R_e`. Open question resolved by recommendation: config lives under `pad.json`
+(pad-specific, still empty). **No code issue is opened**: the pad's features are unknown and
+#29 step 4 requires kiwi to confirm scope first. Enabling (or even building) needs: real pad spec,
+sim re-run, kiwi `APPROVED`, and legal/disclosure review (#8; related-party risk, hard rule 6).
