@@ -63,7 +63,7 @@ def _table_rows(section: str) -> list[list[str]]:
 def test_runbook_exists_and_covers_required_topics() -> None:
     text = _text()
     assert [topic for topic in REQUIRED if topic not in text] == []
-    assert "36 PASS" in text and "10 GAP" in text
+    assert "38 PASS" in text and "9 GAP" in text
 
 
 def test_runbook_has_no_wallet_addresses() -> None:

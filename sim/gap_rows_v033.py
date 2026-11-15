@@ -3,6 +3,7 @@
 Every row drives the same public functions ``run_epoch`` calls (events clock, pool reserves,
 sybil clustering, overrides), so none of them needs RPC, a wallet or a wall clock. Rows that
 still need the network or a new model are listed with a reason in ``sim.report_v033.GAPS``.
+The market-level arbitrage rows (#136) live in ``sim.arbitrage_v033`` and are appended here.
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ from engine.prices import (
 from engine.sybil_v033 import cluster, l4_co_trades, s2_funded_buys, transfer_links
 from engine.types import EventKind, TokenEvent
 from sim.acceptance_v033 import DAY, T0, T1, TOK, Outcome, Trades, _same, _score, _w
+from sim.arbitrage_v033 import ROWS as ARB_ROWS
 
 SOL = 10**9
 
@@ -258,4 +260,5 @@ ROWS = (
      row_sybil_recall),
     ("Retroactive merge", "past epochs unchanged; equals a from-genesis rebuild",
      row_retroactive_merge),
+    *ARB_ROWS,
 )  # fmt: skip

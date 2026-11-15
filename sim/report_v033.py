@@ -26,8 +26,6 @@ GAPS: tuple[tuple[str, str, str], ...] = (
     ("Same split, boost on", "a", "underwater boost off at launch (D19); run_epoch rejects it"),
     ("Underwater farmer", "a", "boost off (D19)"),
     ("Holding the pool lower for ≤ 1h (P̄_e)", "a", "P̄_e feeds only the boost, off (D19)"),
-    ("Dump / pump then no trades, arbitrage agents", "b",
-     "needs an arbitrage agent on the reserve log; sim.market has a pool but no agent loop"),
     ("Two RPC sources disagree", "b",
      "needs the P4 adapter's dual-source client; the engine has no single-source finalize path"),
     ("Draw payout / draw fairness (χ²)", "a", "draws off at launch (D19); sampler unit-tested"),
