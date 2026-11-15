@@ -1,4 +1,4 @@
-last_tick: 2026-11-15 UTC (manager loop; nothing actionable: open PRs only #60 HOLD, #50 needs kiwi; no activity since 2026-11-14 20:52; no owner:grok todo issues; #29 held for kiwi/legal #8; T_START=6h already D21)
+last_tick: 2026-11-15 UTC (manager loop; wiring merged so lifted #60 hold: #55 -> status:todo for Grok runbook rework to v0.3.3; #50 needs kiwi; #29 held for kiwi/legal #8)
 updated: 2026-11-14
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 
@@ -29,6 +29,6 @@ phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim
 -1. Tick 21:20 UTC: open PRs are only #60 (HOLD) and #50 (needs kiwi). T_START=6h = D21, already default+goldens (#123). #84/#85 closed, #127 merged, main CI green. All #81/#82 slices are merged; Grok to post final acceptance evidence on #81/#82 (conservation, no-float CI, coverage) so they can close.
 0. #118 (#84 step 3b report writer) and #119 (#85 variants, default T_START=6h, report regenerated) merged. #85 done; kiwi summary in reports/variants_v033_2026-11-14.md, announced in #1.
 1. #84: report regenerated on main (3 seeds, deterministic): 27 PASS · 0 FAIL · 19 GAP (GAPs are documented: boost/draws/bot off per D19, ingest-layer rows). Committed report was stale (pre-T_START=6h). Close #84 once refresh PR merges. #82 wiring (PR 3/4, 4/4: #103/#101 etc.) and #81 remaining slices continue.
-2. #60 runbook: HOLD until wiring merges. #50 needs kiwi's APPROVED.
+2. #60 runbook: hold lifted, Grok reworking via #55 (v0.3.3). If no PR in 3h, rework it myself. #50 needs kiwi's APPROVED.
 3. Await kiwi's choices on #85 variants (recommendation: keep curve and MIN_ELIGIBLE_SHARE; draws unchanged); record in DECISIONS.
 Also: #29 pad_rewards (needs kiwi before enabling; related-party flag -> #8). Top risk unchanged: Token-2022 mint (#18).
