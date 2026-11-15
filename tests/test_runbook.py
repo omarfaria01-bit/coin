@@ -63,7 +63,7 @@ def _table_rows(section: str) -> list[list[str]]:
 def test_runbook_exists_and_covers_required_topics() -> None:
     text = _text()
     assert [topic for topic in REQUIRED if topic not in text] == []
-    assert "27 PASS" in text and "19 GAP" in text
+    assert "36 PASS" in text and "10 GAP" in text
 
 
 def test_runbook_has_no_wallet_addresses() -> None:
@@ -98,5 +98,5 @@ def test_checklists_and_failure_modes_map_to_a_test_or_gap() -> None:
 def test_every_section_14_row_is_listed() -> None:
     text = _text()
     missing = [name for name, _cond, _fn in all_rows() if name not in text]
-    missing += [name for name, _why in GAPS if name not in text]
+    missing += [name for name, _kind, _why in GAPS if name not in text]
     assert missing == [], missing

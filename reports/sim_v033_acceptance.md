@@ -9,7 +9,7 @@ Seeds: 20 per row.
 | Snapshot sniper | score = 0 for 2h | PASS | seed 0: score=0.0 |
 | Partial sale | loses exactly the sold lots' score (newest first) | PASS | seed 0: after_sale=142481154944811 expected=142481154944811 |
 | New buy on an old bag | old lots' score unchanged | PASS | seed 0: before=118050378227855 after=118050378227855 |
-| Transfer to another owner | receiver starts at age 0 | PASS | seed 0: recv=16202627763495 bound=20772641005492 |
+| Transfer to another owner | receiver starts at age 0 | PASS | seed 0: recv=12354863072522 bound=20772641005492 |
 | Whale cap, 10 clusters | π ≤ 5%, ≤ 2× proportional, rest in pot | PASS | seed 0: max_pi=0.0500 paid/R=0.105 |
 | S = 0 | nothing paid, pot unchanged | PASS | seed 0: pot=745416409846 paid={} |
 | Exact payout | Σ payouts + rollover == R_e | PASS | seed 0: sum+rollover=511494146497 R_e=511494146497 |
@@ -27,3 +27,11 @@ Seeds: 20 per row.
 | Circular transfers A→B→C→A | no gain in score or age | PASS | seed 0: score 445560893311343→419222862955917 |
 | Whole bag to a new funded wallet | age and cost preserved | PASS | seed 0: score 74401197802103→74403369227202 merged=True |
 | Pump ≤ 1h, random histories | P̃_h ≤ (24/23)·H_rest | PASS | seed 0: tau=3175s P̃h/base=1.0147 bound/base=1.0147 |
+| Buy and sell in the same second | intra-second states zero; p(t) end-of-second | PASS | seed 0: round trips 0; p(t)=end-of-second=2.0e+00; score same=True |
+| Pool depth below the trust threshold | boost off, unlock paused, base rewards unchanged | PASS | seed 0: thin untrusted=1.0 unlock=None; payouts/score equal=True |
+| Missing / decreasing block time, skipped slots | same output as the clean log | PASS | seed 0: 6 slots → 3 seconds; same epoch=True |
+| Same fee-paying app + one-sided signals | no merge; payer in the review list | PASS | seed 0: clusters=6 merged=False review=('APP',) |
+| Single commercial transfer | no merge | PASS | seed 0: clusters=2 (want 2) |
+| False merge of two independent clusters | tokens' score same; cap damage reported | PASS | seed 0: score same=True damage=0.0% ≤ 20% |
+| Sybil recall (self-funded / CEX-funded) | self ≥ 95%; CEX reported as residual | PASS | seed 0: self=100% (12/12); cex=0/12 (hub residual) |
+| Retroactive merge | past epochs unchanged; equals a from-genesis rebuild | PASS | seed 0: past hash unchanged; 2→1 cluster; scores == fresh rebuild=True |

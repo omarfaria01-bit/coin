@@ -18,28 +18,28 @@ from sim import outputs_v033 as out
 from sim.acceptance_v033 import RowResult, render, run_rows
 from sim.population_v033 import INFLOW, Run, simulate
 
-# §14 rows not implemented yet, with the reason. The list may only shrink.
-GAPS: tuple[tuple[str, str], ...] = (
-    ("Same split, boost on", "underwater boost off at launch (D19); run_epoch rejects it"),
-    ("Underwater farmer", "boost off (D19)"),
-    ("Holding the pool lower for ≤ 1h (P̄_e)", "P̄_e feeds only the boost, off (D19)"),
-    ("Buy and sell in the same second", "needs a reserve-log fixture; prices tests cover p(t)"),
-    ("Dump / pump then no trades, arbitrage agents", "no arbitrage agent on the v0.3.3 log yet"),
-    ("Pool depth below the trust threshold", "unit-tested in test_epoch (#108); no sim row"),
-    ("Missing / decreasing block time, skipped slots", "ingest clamping, outside run_epoch"),
-    ("Two RPC sources disagree", "ingest layer, outside run_epoch"),
-    ("Same fee-paying app + one-sided signals", "review list exists; row not written"),
-    ("Single commercial transfer", "close to the dust row; not written separately"),
-    ("False merge of two independent clusters", "needs a forced-merge hook in the sim"),
-    ("Sybil recall (self-funded / CEX-funded)", "whale-split row = 1 self-funded farm only"),
-    ("Retroactive merge", "needs a from-genesis rebuild harness"),
-    ("Draw payout / draw fairness (χ²)", "draws off at launch (D19); sampler unit-tested"),
-    ("Multiplier ≤ 4.2× with boost", "boost off (D19)"),
-    ("Higher multiplier vs. concentration", "needs the 2.0× curve variant: #85"),
-    ("Informed agent vs. simple holder", "no optimising agent; split rows bound it"),
-    ("Independent implementation", "separate Rust/TS work, not this repo's sim"),
-    ("Treasury bot backtest", "bot off at launch (D19); needs real price paths"),
-)
+# §14 rows not implemented yet, with their category and reason (#133). A row is closed by
+# adding it to sim.acceptance_v033.all_rows / population_rows; the list may only shrink.
+# a = off at launch by a D19/§16 flag (boost, draws, bot); b = offline-able but not written
+# or needs a component that does not exist yet.
+GAPS: tuple[tuple[str, str, str], ...] = (
+    ("Same split, boost on", "a", "underwater boost off at launch (D19); run_epoch rejects it"),
+    ("Underwater farmer", "a", "boost off (D19)"),
+    ("Holding the pool lower for ≤ 1h (P̄_e)", "a", "P̄_e feeds only the boost, off (D19)"),
+    ("Dump / pump then no trades, arbitrage agents", "b",
+     "needs an arbitrage agent on the reserve log; sim.market has a pool but no agent loop"),
+    ("Two RPC sources disagree", "b",
+     "needs the P4 adapter's dual-source client; the engine has no single-source finalize path"),
+    ("Draw payout / draw fairness (χ²)", "a", "draws off at launch (D19); sampler unit-tested"),
+    ("Multiplier ≤ 4.2× with boost", "a", "boost off (D19)"),
+    ("Informed agent vs. simple holder", "b",
+     "needs an optimising agent; a strategy search over the curve is not an offline fixture"),
+    ("Independent implementation", "b",
+     "separate Rust/TS deliverable outside this repo (COIN_MATH §14), not a sim row"),
+    ("Treasury bot backtest", "a", "bot off at launch (D19); needs real price paths"),
+)  # fmt: skip
+CATEGORY = {"a": "a · D19 flag", "b": "b · offline"}
+
 
 STABILITY: tuple[tuple[str, Callable[[CoinParams, Fraction], CoinParams]], ...] = (
     ("cap", lambda p, f: _with(p, scoring={"cap": float(Fraction(str(p.scoring.cap)) * f)})),
@@ -104,7 +104,24 @@ def population_rows(runs: list[Run], params: CoinParams) -> list[RowResult]:
         [_stability(s, runs[s], params) for s in seeds])  # fmt: skip
     add("Volume −90% overnight", "payouts ≥ 45% of the prior level after 7 days",
         [_volume_drop(s, params) for s in seeds])  # fmt: skip
+    add("Higher multiplier vs. concentration", "2.8× top-10% ≤ 2.0× + 5 points (first target)",
+        [_multiplier_conc(s, runs[s], params) for s in seeds])  # fmt: skip
     return rows
+
+
+# v0.2 shape: start 48h, 2.0× at 30d, flat after (the "2.0× curve" in §14).
+OLD_CURVE = ((48 * 3_600, "1"), (30 * 86_400, "2"))
+
+
+def _multiplier_conc(seed: int, base: Run, params: CoinParams) -> tuple[bool, str]:
+    """§14: with the 2.8× curve, the top-10% reward share is not more than 5 points above
+    the 2.0× curve's, on the same population and the last 30-day window."""
+    if base.days < 60:
+        return True, f"n/a: {base.days}-day run (needs a full 60–90 window)"
+    two = _with(params, hold={"knots": OLD_CURVE, "t_start_seconds": 48 * 3_600})
+    hi = out.concentration(base)[-1]
+    lo = out.concentration(simulate(seed, two, days=base.days))[-1]
+    return hi <= lo + 0.05, f"top-10% 2.8×={hi:.3f} 2.0×={lo:.3f} Δ={hi - lo:+.3f}"
 
 
 def _stability(seed: int, base: Run, params: CoinParams) -> tuple[bool, str]:
@@ -165,13 +182,14 @@ def build(seeds: int, days: int = 93) -> tuple[str, list[RowResult]]:
     runs = [simulate(s, params, days=days) for s in range(seeds)]
     rows += population_rows(runs, params)
     n_fail = sum(r.passed < r.seeds for r in rows)
-    gap_md = "\n".join(f"| {n} | GAP | {why} |" for n, why in GAPS)
+    gap_md = "\n".join(f"| {n} | {CATEGORY[k]} | GAP | {why} |" for n, k, why in GAPS)
     text = (
         f"# COIN_MATH v0.3.3 §14 simulator report\n\nSeeds: {seeds} per row; population: {days} "
         f"epochs, modelled agents (comparisons, not forecasts), default params.\n\n"
         f"**{len(rows) - n_fail} PASS · {n_fail} FAIL · {len(GAPS)} GAP**\n\n## Rows\n\n"
-        f"{render(rows)}\n## Gaps (not implemented yet)\n\n| §14 row | status | reason |\n"
-        f"|---|---|---|\n{gap_md}\n\n## Outputs\n\n{outputs_md(runs)}"
+        f"{render(rows)}\n## Gaps (not implemented yet)\n\n"
+        f"| §14 row | category | status | reason |\n|---|---|---|---|\n{gap_md}\n\n"
+        f"## Outputs\n\n{outputs_md(runs)}"
     )
     return text, rows
 
