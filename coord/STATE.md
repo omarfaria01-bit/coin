@@ -1,4 +1,4 @@
-last_tick: 2026-11-15 UTC (nothing actionable; open: #50 needs kiwi, #29 held for kiwi/legal #8, #7 needs kiwi; no open PRs besides #50; main CI green)
+last_tick: 2026-11-15 UTC (merged #50 D15 after kiwi APPROVED #50 from his own login; no open PRs; open: #29 held for kiwi/legal #8, #7 needs kiwi; main CI green)
 updated: 2026-11-14
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 
@@ -11,7 +11,7 @@ phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim
 ## Open PRs
 - #64 auto-review workflow: merged (pull_request_target, review-only perms). #117 v0.2 float deletion merged.
 - #60 runbook: HOLD until wiring merges (v0.2 content).
-- #50 D15 router: needs kiwi's written `APPROVED` — not touched.
+- #50 D15 router: kiwi APPROVED 2026-11-14 20:28Z; merged (conflict with D16+ resolved).
 - Merged: #110 golden (#83), #112 §14 rows (#84 step 1), #108 §11 price unlock (D20), #107 launch flags off (D19). #114 (#84 attack rows) and #116 (#84 step 3a population) merged. #111 exact budget+TWAB (#82 4b; #107 retargeted to main but CONFLICTS — Grok to rebase #107→#108→#110 in order, asked on #82). #105 balances §13 + balances.json (#82 4a). #106 auto-closed by branch delete; Grok to reopen vs main, #107/#108 to be retargeted (asked on #82). #103 wiring sybil v0.3.3 + soft vesting (#82 PR3/4), #101 wiring scoring+cap+exact payout (#82 PR 2/4), #99 sybil L4-L6+hubs, #97 sybil strong+merge rule, #93 prices, #96 events (#93 fixed + split), #91 fee routing v0.3.3, #94 soft vesting forfeit. Earlier: #70 balances (pull-back fixed), #87 exact payout, #88 params, #89 ledger v0.3.3, #90 no-float ratchet.
 
 ## Grok queue (status:todo)
