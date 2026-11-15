@@ -163,15 +163,15 @@ uv run python -m sim.run --report --seeds 3
 uv run python -m sim.run --report --seeds 3 --strict   # also fails on any GAP
 ```
 
-- `sim.run --acceptance` runs the 31 implemented §14 rows on the real engine
-  (score/payout, attack and the #133 offline rows).
+- `sim.run --acceptance` runs the 33 implemented §14 rows on the real engine
+  (score/payout, attack, the #133 offline rows and the #136 arbitrage rows).
 - `sim.epoch_runner` is the e2e gate on `run_epoch`; it exits non-zero on a
   failed row or a run over 60 s. `--strict` on `sim.run` applies to `--report` and
   `--scenario` only: `--e2e` and `--acceptance` return before `strict` is read.
 - `sim.run --report` writes `reports/sim_<date>.md` with PASS/FAIL/GAP and the
   §14 outputs (slow, ~3–4 min for 3 seeds). `--strict` exits 1 while any GAP
   remains; that is expected and must be accepted in `coord/DECISIONS.md`.
-- Committed report: `reports/sim_2026-11-15.md` — **36 PASS · 0 FAIL · 10 GAP**.
+- Committed report: `reports/sim_2026-11-15.md` — **38 PASS · 0 FAIL · 9 GAP**.
 
 Do not change `config/coin.json` defaults because a sweep looked nicer. A
 default change needs a DECISIONS.md entry with the failing §14 evidence.
@@ -249,9 +249,10 @@ Targeted tests may cover a row more than once.
 | Buy and sell in the same second; Pool depth below the trust threshold; Missing / decreasing block time, skipped slots | intra-second states weight 0 and p(t) is the end-of-second price; thin pool reads no untrusted price and changes no payout; the clamped clock equals the clean log | `tests/test_gap_rows_v033.py::test_every_gap_row_passes_on_three_seeds` |
 | Same fee-paying app + one-sided signals; Single commercial transfer; False merge of two independent clusters | no merge, payer in the review list; one transfer is not an edge; a forced merge leaves the tokens' score unchanged and cap damage 0 | `tests/test_gap_rows_v033.py::test_every_gap_row_passes_on_three_seeds` |
 | Sybil recall (self-funded / CEX-funded); Retroactive merge | self-funded farms ≥ 95% grouped, CEX-funded residual reported; past epochs unchanged, current epoch equals a from-genesis rebuild | `tests/test_gap_rows_v033.py::test_every_gap_row_passes_on_three_seeds` |
+| Dump, then 6h with no trades (arbitrage agents present); Pump, then 24h with no trades (arbitrage agents present) | arbitrage agents restore the pool mid to the external reference; attacker's net PnL < 0 on 20 seeds (price-fixed round trip, dump and pump) | `tests/test_arbitrage_v033.py::test_arbitrage_rows_pass_on_twenty_seeds` |
 | Trader in 4h cycles vs a 7-day holder; Reward concentration; Reward stability (first target); Volume −90% overnight; Higher multiplier vs. concentration | ≤ 30% reward rate; top-10% not rising; ±10% moves ≤ 15%; ≥ 45% after 7 days; 2.8× curve ≤ 2.0× + 5 points | `tests/test_report_v033.py::test_every_row_and_gap_is_listed` |
 
-**GAP rows (10).** They are explicit, not silently skipped. A gap may be
+**GAP rows (9).** They are explicit, not silently skipped. A gap may be
 accepted only by a DECISIONS.md entry or closed by a later issue. Category
 **a** = off at launch by a D19/§16 flag; **b** = offline-able but not written, or
 it needs a component that does not exist yet.
@@ -261,7 +262,6 @@ it needs a component that does not exist yet.
 | Same split, boost on | a | underwater boost off at launch (D19); `run_epoch` rejects it |
 | Underwater farmer | a | boost off (D19) |
 | Holding the pool lower for ≤ 1h (P̄_e) | a | P̄_e feeds only the boost, off (D19) |
-| Dump / pump then no trades, arbitrage agents | b | needs an arbitrage agent on the reserve log; `sim.market` has a pool but no agent loop |
 | Two RPC sources disagree | b | needs the P4 adapter's dual-source client; the engine has no single-source finalize path |
 | Draw payout / draw fairness (χ²) | a | draws off at launch (D19); sampler unit-tested |
 | Multiplier ≤ 4.2× with boost | a | boost off (D19) |

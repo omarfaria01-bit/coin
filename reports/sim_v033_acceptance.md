@@ -35,3 +35,5 @@ Seeds: 20 per row.
 | False merge of two independent clusters | tokens' score same; cap damage reported | PASS | seed 0: score same=True damage=0.0% ≤ 20% |
 | Sybil recall (self-funded / CEX-funded) | self ≥ 95%; CEX reported as residual | PASS | seed 0: self=100% (12/12); cex=0/12 (hub residual) |
 | Retroactive merge | past epochs unchanged; equals a from-genesis rebuild | PASS | seed 0: past hash unchanged; 2→1 cluster; scores == fresh rebuild=True |
+| Dump, then 6h with no trades (arbitrage agents present) | attacker's net PnL < 0; pool mid restored to the reference | PASS | seed 0: pnl=-4390380 (-12.99% of notional) in 6h; mid/ref=1.0000; arbs=1 profit=2155168; no-arb pnl=-0.56% |
+| Pump, then 24h with no trades (arbitrage agents present) | attacker's net PnL < 0; pool mid restored to the reference | PASS | seed 0: pnl=-1297026 (-5.42% of notional) in 24h; mid/ref=1.0000; arbs=1 profit=525606; no-arb pnl=-0.58% |
