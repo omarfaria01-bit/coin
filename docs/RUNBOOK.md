@@ -147,6 +147,11 @@ pull-back rules are specified and unit-tested but not yet carried in
 SPL mint**. A Token-2022 mint must not use it; v1 fallback is push (research
 report §5). Choosing the mint program **needs kiwi APPROVED**.
 
+**Token-2022 push plans (`adapters/token2022.py`).** `plan_payouts(payouts, mint,
+epoch=...)` returns `gross`/`fee`/`received` and the ATA per wallet. Record
+`received` (what the chain credits) and fund the gross; fee =
+`ceil(gross · bps / 10 000)` capped at `maximum_fee`. Tests: `tests/test_token2022_payout.py`.
+
 **Tests:** `tests/test_epoch_files.py::test_round_trip`,
 `tests/test_epoch_files.py::test_balances_json_is_the_running_book`,
 `tests/test_epoch_files.py::test_byte_identical_on_repeat_and_shuffled_order`,
