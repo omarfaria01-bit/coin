@@ -183,7 +183,12 @@ def _balances_payload(state_d: Mapping[str, Any]) -> dict[str, dict[str, int]]:
     return out
 
 
-def _contents(result: Any, state: Any, tree: MerkleTree | None) -> dict[str, bytes]:
+def _contents(
+    result: Any,
+    state: Any,
+    tree: MerkleTree | None,
+    push_plan: Any | None = None,
+) -> dict[str, bytes]:
     result_d = _result_payload(result)
     state_d = _state_payload(state)
     files = {
@@ -194,10 +199,18 @@ def _contents(result: Any, state: Any, tree: MerkleTree | None) -> dict[str, byt
         "balances.json": _canonical(_balances_payload(state_d)),
         "inputs_hash.txt": str(result_d["inputs_hash"]) + chr(10),
     }
+    if push_plan is not None:
+        files["push.json"] = _canonical(_jsonable(push_plan))
     return {name: text.encode("utf-8") for name, text in files.items()}
 
 
-def write_epoch(dir: Path, result: Any, state: Any, tree: MerkleTree | None) -> Path:
+def write_epoch(
+    dir: Path,
+    result: Any,
+    state: Any,
+    tree: MerkleTree | None,
+    push_plan: Any | None = None,
+) -> Path:
     """Write `dir/<result.epoch>/{result,payouts,tree,state,balances,inputs_hash}`.
 
     Refuses to overwrite an existing epoch directory whose bytes would change.
@@ -206,12 +219,15 @@ def write_epoch(dir: Path, result: Any, state: Any, tree: MerkleTree | None) -> 
     base = Path(dir)
     result_d = _result_payload(result)
     dest = base / str(result_d["epoch"])
-    encoded = _contents(result, state, tree)
+    encoded = _contents(result, state, tree, push_plan=push_plan)
     if dest.exists():
         if not dest.is_dir():
             raise FileExistsError(f"refusing to overwrite {dest} (not a directory)")
         current: dict[str, bytes] = {}
-        for name in _FILES:
+        files_to_check = list(_FILES)
+        if (dest / "push.json").is_file() or "push.json" in encoded:
+            files_to_check.append("push.json")
+        for name in files_to_check:
             path = dest / name
             if path.is_file():
                 current[name] = path.read_bytes()
