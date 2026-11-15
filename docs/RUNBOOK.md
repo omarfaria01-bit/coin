@@ -6,7 +6,7 @@ transactions, create tokens, fund vaults or touch wallets. Any step that would
 touch mainnet or money is marked **needs kiwi APPROVED** and is not done here.
 
 Sources: `COIN_MATH.md` §0, §2–§9, §11, §13, §14, §16; `docs/ENGINE_DESIGN.md`
-§8; `coord/DECISIONS.md` (D7, D10, D16–D21). `reports/sim_2026-11-14.md` is the
+§8; `coord/DECISIONS.md` (D7, D10, D16–D21). `reports/sim_2026-11-15.md` is the
 committed v0.3.3 §14 report.
 
 No real wallet, key or seed addresses appear in this document. Public program
