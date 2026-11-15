@@ -196,3 +196,51 @@ def test_fixture_reserves_and_rational_p_entry_reach_the_engine() -> None:
     assert fx.vesting[0].p_entry == "1/3"
     with pytest.raises(ValueError, match="positive rational"):
         fx.model_validate({**fx.model_dump(), "vesting": [{**raw["vesting"][0], "p_entry": "0"}]})
+
+
+T22 = Path(__file__).resolve().parent / "fixtures" / "token2022"
+
+
+def _plan_run(tmp_path: Path, mint_file: str, decimals: int) -> tuple[list[dict], Path]:
+    data = _fx()
+    data["decimals"] = decimals
+    fx = _write(tmp_path, data)
+    out = tmp_path / "out"
+    rows = run(fx, out, mint_account=T22 / mint_file, chain_epoch=500)
+    return rows, out
+
+
+def test_plan_gross_is_net_plus_fee_and_ledger_credits_net(tmp_path: Path) -> None:
+    rows, out = _plan_run(tmp_path, "mint_t22_transfer_fee.json", 6)
+    plain = tmp_path / "plain"
+    run(_write(tmp_path, {**_fx(), "decimals": 6}), plain)
+    for n, row in enumerate(rows):
+        plan = json.loads((out / str(n) / "push_plan.json").read_text(encoding="utf-8"))
+        assert plan["legs"] and all(
+            isinstance(v, int) for leg in plan["legs"] for v in (leg["net"], leg["fee"])
+        )
+        assert all(leg["gross"] == leg["net"] + leg["fee"] for leg in plan["legs"])
+        assert plan["total_gross"] == plan["total_net"] + plan["total_fee"] > plan["total_net"]
+        assert plan["total_net"] == row["paid"]  # ledger credits net
+        assert (out / str(n) / "result.json").read_bytes() == (
+            plain / str(n) / "result.json"
+        ).read_bytes()
+
+
+def test_plan_legacy_mint_has_zero_fee(tmp_path: Path) -> None:
+    data = json.loads((T22 / "mint_legacy.json").read_text(encoding="utf-8"))
+    value = data.get("result", data).get("value", data)
+    assert value["owner"] == "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+    fx = _fx() | {"mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", "decimals": 9}
+    out = tmp_path / "out"
+    rows = run(_write(tmp_path, fx), out, mint_account=T22 / "mint_legacy.json", chain_epoch=1)
+    for n, row in enumerate(rows):
+        plan = json.loads((out / str(n) / "push_plan.json").read_text(encoding="utf-8"))
+        assert plan["total_fee"] == 0 and plan["total_gross"] == plan["total_net"] == row["paid"]
+
+
+def test_mint_account_needs_chain_epoch_and_default_is_unchanged(tmp_path: Path) -> None:
+    with pytest.raises(InputError, match="chain-epoch"):
+        run(FIXTURE, tmp_path, mint_account=T22 / "mint_legacy.json")
+    run(FIXTURE, tmp_path)
+    assert not list(tmp_path.glob("*/push_plan.json"))

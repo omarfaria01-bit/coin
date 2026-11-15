@@ -42,6 +42,7 @@ from adapters.ingest import (  # noqa: E402
     format_validation_error,
     solana_id,
 )
+from adapters.token2022 import PayoutPlan, parse_mint_account, plan_payouts  # noqa: E402
 from engine.epoch import EpochInputs, EpochResult, EpochState, VestingEntry, run_epoch  # noqa: E402
 from engine.merkle import MerkleTree, build, leaf  # noqa: E402
 from engine.params import CoinParams  # noqa: E402
@@ -291,6 +292,41 @@ def summary(
     }
 
 
+def push_plan(
+    fx: Fixture, res: EpochResult, mint_blob: dict, chain_epoch: int
+) -> tuple[PayoutPlan, dict] | None:
+    """Offline Token-2022 plan for the push list: ledger gets net, treasury sends gross."""
+    if res.rail != "push":
+        return None
+    if fx.mint is None:
+        raise InputError("--mint-account needs `mint` in the fixture")
+    try:
+        mint = parse_mint_account(mint_blob, address=fx.mint)
+        plan = plan_payouts(dict(res.push), mint, epoch=chain_epoch, expected_decimals=fx.decimals)
+    except ValueError as exc:
+        raise InputError(f"epoch {res.epoch}: {exc}") from None
+    if plan.ledger_credits() != dict(res.push):
+        raise AssertionError(f"epoch {res.epoch}: plan net != ledger push")
+    legs = plan.legs
+    if any(leg.gross != leg.net + leg.fee for leg in legs):
+        raise AssertionError(f"epoch {res.epoch}: gross != net + fee")
+    doc = {
+        "epoch": res.epoch,
+        "chain_epoch": chain_epoch,
+        "mint": plan.mint,
+        "program_id": plan.program_id,
+        "decimals": plan.decimals,
+        "total_net": sum(leg.net for leg in legs),
+        "total_fee": sum(leg.fee for leg in legs),
+        "total_gross": sum(leg.gross for leg in legs),
+        "legs": [
+            {"wallet": g.wallet, "ata": g.ata, "net": g.net, "fee": g.fee, "gross": g.gross}
+            for g in legs
+        ],
+    }
+    return plan, doc
+
+
 def run(
     fixture: Path,
     out: Path,
@@ -298,7 +334,19 @@ def run(
     *,
     dry_run: bool = False,
     max_epochs: int | None = None,
+    mint_account: Path | None = None,
+    chain_epoch: int | None = None,
 ) -> list[dict]:
+    mint_blob = None
+    if mint_account is not None:
+        if chain_epoch is None:
+            raise InputError(
+                "--mint-account needs --chain-epoch (Solana epoch for the fee schedule)"
+            )
+        try:
+            mint_blob = json.loads(Path(mint_account).read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise InputError(f"{mint_account}: {exc}") from None
     fx, params = load_fixture(fixture)
     state_path = state_path or out / "state.json"
     state = load_state(state_path, fx)
@@ -312,14 +360,23 @@ def run(
         except ValueError as exc:
             raise InputError(f"epoch {w.epoch}: {exc}") from None
         check_conservation(state, w.pot_inflow, res, nxt)
+        planned = push_plan(fx, res, mint_blob, chain_epoch) if mint_blob is not None else None
         dest = None
         if not dry_run:
             dest = write_epoch(out, res, nxt, claims_tree(res))
+            if planned:
+                (dest / "push_plan.json").write_text(
+                    json.dumps(planned[1], sort_keys=True, separators=(",", ":")) + "\n",
+                    encoding="utf-8",
+                )
             tmp = state_path.parent / (state_path.name + ".tmp")
             tmp.parent.mkdir(parents=True, exist_ok=True)
             tmp.write_bytes((dest / "state.json").read_bytes())
             tmp.replace(state_path)
-        rows.append(summary(state, w.pot_inflow, res, nxt, dest))
+        row = summary(state, w.pot_inflow, res, nxt, dest)
+        if planned:
+            row |= {k: planned[1][k] for k in ("total_net", "total_fee", "total_gross")}
+        rows.append(row)
         state = nxt
     return rows
 
@@ -331,11 +388,25 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--state", type=Path, help="Carried state (default: <out>/state.json)")
     p.add_argument("--epochs", type=int, help="Run at most N pending epochs (default: all)")
     p.add_argument("--dry-run", action="store_true", help="Print summary only, write nothing")
+    p.add_argument("--mint-account", type=Path, help="Recorded getAccountInfo JSON of the mint")
+    p.add_argument(
+        "--chain-epoch", type=int, help="Solana epoch used for the transfer-fee schedule"
+    )
     args = p.parse_args(argv)
+    if args.chain_epoch is not None and args.chain_epoch < 0:
+        p.error("--chain-epoch must be >= 0")
     if args.epochs is not None and args.epochs < 1:
         p.error("--epochs must be >= 1")
     try:
-        rows = run(args.fixture, args.out, args.state, dry_run=args.dry_run, max_epochs=args.epochs)
+        rows = run(
+            args.fixture,
+            args.out,
+            args.state,
+            dry_run=args.dry_run,
+            max_epochs=args.epochs,
+            mint_account=args.mint_account,
+            chain_epoch=args.chain_epoch,
+        )
     except (InputError, FileNotFoundError, FileExistsError, AssertionError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
