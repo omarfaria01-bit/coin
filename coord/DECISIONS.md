@@ -96,3 +96,59 @@ variables and CCR's local data dir, never in git. Router launch uses the isolate
 must keep using `~/.claude/settings.json` with no `apiKeyHelper` or `ANTHROPIC_BASE_URL`.
 This supersedes the last sentence of D12 ("Routing Claude Code itself through a gateway
 stays off"); the rest of D12 still holds.
+
+## D16 · 2026-11-14 · Adopt COIN_MATH v0.3.3 (mechanisms frozen, parameters open)
+kiwi's v0.3.3 (merged #62) is the source of truth. **Superseded:** D2 (float64 scores: payout
+path is ints + `Fraction`), D4 (USD eligibility/1h hold: now supply share, §2), D13 (float
+price conversion: payout-path prices are exact rationals), D14 and the "24→36h" idea in #56 (unlock is
+linear in the 24h *harmonic* mean, §11; #56 closed). D10 stays the default code path, but soft early-buy
+vesting at launch needs kiwi's explicit OK. **Unchanged:** D5, D6, D12, clone path `~/work/coin`; kiwi
+(#62 comment, 2026-11-14 10:27) confirmed install policy: Grok installs what it needs, logged on #1; the
+install-allowlist in the new prompts is ignored, and the "Omega = none" text must never be read as a login.
+**Open parameters** (kiwi picks after the variant report): hold curve, `T_START`, eligibility shares, draw
+period. Slices merged so far: #63 #68 #69 #75 #76 #77 #78 #80 (+ #57 #59 tooling). #70 (balances) needs a
+180-day pull-back fix; #64 (auto-review) needs a security rework.
+
+## D17 · 2026-11-14 · Draw stream byte layout (COIN_MATH §9 leaves it open)
+`x_i = SHA-256("COIN_SYSTEM_DRAW_V1" ‖ genesis_hash[32] ‖ mint[32] ‖ draw_index[u64 BE] ‖
+snapshot_hash[32] ‖ ρ[32] ‖ i[u64 BE])`, as implemented in `engine/draws.py` (#78). Fixed-width
+fields make the concatenation unambiguous. The independent implementation (issue Q) must use the same
+layout; if kiwi wants another, change both and log it here.
+
+## D18 · 2026-11-14 · Cluster id and forfeit window in `run_epoch` (#82 PR3, #103)
+**Cluster id** = the cluster's smallest *holder* wallet (smallest member only if it has no holder, e.g. a
+lone funder), so ids are always holder addresses. Ids are not stable across epochs (a merge with a smaller
+holder renames the cluster), so state keyed by cluster id is never carried: `forfeit_until` is recomputed
+each epoch by replaying the full log under the current map (`soft_vesting_breaches`), and
+`prev.forfeit_until` is ignored. **Forfeit window:** a cluster is forfeited in every epoch with
+`t0 < forfeit_until` (was: eligible iff `forfeit_until <= t1`). With 24h epochs and `forfeit_days = 30`
+that is the breach epoch plus the next 30, as COIN_MATH §11 B says; the old test gave only the next 29.
+
+## D19 · 2026-11-14 · §16 launch flags default off (#82 step 6, #107)
+`draws.enabled` = **false** (was true), new `underwater.enabled` = false and new `treasury_bot.enabled`
+= false, per COIN_MATH §16. Turn on: draws at ≥ 100 eligible clusters + VRF flow tested on devnet (the
+draw pot keeps accumulating meanwhile; `route_v033(draws_disabled=False)`, and once draw code reads
+`draws.enabled` it is the single source of truth); boost after 7 clean epochs; bot after the §14
+backtest passes and kiwi approves (`enabled=false` wins over any `mode`; `live` stays rejected without
+kiwi's `APPROVED`). `run_epoch` raises on `underwater.enabled=true` until §5 u_lot is wired, instead
+of ignoring it. Sim re-run: `sim.run --e2e --seeds 10`, all rows PASS.
+
+## D20 · 2026-11-14 · §11 price unlock from reserves (#82, #108)
+New param `prices.d_trust_lamports` = 2 SOL (D_TRUST, §0). `VestingEntry.p_entry` is an exact `Fraction`
+in Q base units per token base unit (the unit of `prices.price_at`); `state.json` stores `"num/den"`, and
+legacy JSON floats still load by their repr. u_price is skipped for any minute whose 24h window starts
+before the first known reserve point or holds an untrusted second (§11). **Fixed-point P̃_h:** exact
+Σ dt/p needs the lcm of every quote reserve (a 50k-point history exhausts memory), so each
+constant-reserve piece of the window adds `ceil(len · reserve_base · 2^128 / reserve_quote)` and
+P̃_h = window · 2^128 / Σ. Rounding up only lowers P̃_h (relative error < n · P̃_h / (window · 2^128) for n pieces; < (n+2)/2^128
+when P̃_h ≲ window), so the unlock
+is never above the exact one; the independent implementation (§14) must use the same rule. This is the
+one place in the payout path that rounds before the final payout step; COIN_MATH §0 and §11 say so.
+
+## D21 · 2026-11-14 · T_START = 6h (kiwi, #85)
+kiwi decided **T_START = 6 hours** (was 2h) after the #119 variant report; his decision relayed on #85 and
+by the operator instruction of this loop. Other parameters unchanged (default curve, eligibility 1/1,000,000,
+draws off at launch, draw period later). The knot table is unchanged: `h` is 0 below 6h and jumps to the
+6h knot (1.15) at T_START, exactly the "T_START 6h" variant in the #119 report. Effect measured there:
+the 4-hour-cycle trader earns 0; €100 holder first paid in 1.7 days. Changed: `hold.t_start_seconds`
+21600, `DEFAULT_T_START_SECONDS`, config/coin.json + schema, COIN_MATH §3–4, goldens regenerated.

@@ -45,15 +45,67 @@ def run_scenario(name: str, seeds: int, out_dir: Path | None = None) -> dict:
     return payload
 
 
+def exit_code(payload: dict, *, strict: bool) -> int:
+    """Non-strict: skipped counts as success. Strict: every seed must pass."""
+    runs = payload.get("runs") or []
+    if strict:
+        if not runs:
+            return 1
+        return 0 if all(run.get("pass") is True for run in runs) else 1
+    return 0 if payload["pass"] in (True, "skipped") else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="sim.run")
-    parser.add_argument("--scenario", required=True, choices=sorted(REGISTRY))
+    parser.add_argument("--scenario", required=False, choices=sorted(REGISTRY))
     parser.add_argument("--seeds", type=int, default=1)
-    parser.add_argument("--out", default="reports/sim/")
+    parser.add_argument("--out", default=None, help="default depends on the mode")
+    parser.add_argument(
+        "--e2e",
+        action="store_true",
+        help="run full-epoch §14 scenarios via sim.epoch_runner (requires engine.epoch)",
+    )
+    parser.add_argument(
+        "--acceptance",
+        action="store_true",
+        help="run the v0.3.3 §14 rows (sim.acceptance_v033); exit 1 if any row fails",
+    )
+    parser.add_argument(
+        "--report",
+        action="store_true",
+        help="write reports/sim_<date>.md (sim.report_v033); exit 1 if any §14 row fails",
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="exit non-zero if any seed is skipped or failed, or if no run happened",
+    )
     args = parser.parse_args(argv)
     if args.seeds <= 0:
         raise SystemExit("--seeds must be > 0")
-    payload = run_scenario(args.scenario, args.seeds, Path(args.out))
+    if args.report:
+        from sim.report_v033 import main as report_main
+
+        return report_main(args.seeds, args.out, args.strict)
+    if args.acceptance:
+        from sim.acceptance_v033 import render, run_rows
+
+        rows = run_rows(args.seeds)
+        report = Path(args.out or "reports/sim_v033_acceptance.md")
+        report.parent.mkdir(parents=True, exist_ok=True)
+        head = f"# COIN_MATH v0.3.3 §14 rows (#84 step 1)\n\nSeeds: {args.seeds} per row.\n\n"
+        table = render(rows)
+        report.write_text(head + table, encoding="utf-8")
+        print(table, end="")
+        return 0 if all(r.passed == r.seeds for r in rows) else 1
+    if args.e2e:
+        from sim.epoch_runner import main as e2e_main
+
+        e2e_out = Path(args.out or "reports/sim_epoch_e2e.md")
+        return e2e_main(["--seeds", str(args.seeds), "--out", str(e2e_out)])
+    if not args.scenario:
+        raise SystemExit("need --scenario or --e2e")
+    payload = run_scenario(args.scenario, args.seeds, Path(args.out or "reports/sim/"))
     print(
         json.dumps(
             {
@@ -65,7 +117,7 @@ def main(argv: list[str] | None = None) -> int:
             indent=2,
         )
     )
-    return 0 if payload["pass"] in (True, "skipped") else 1
+    return exit_code(payload, strict=args.strict)
 
 
 if __name__ == "__main__":

@@ -7,7 +7,8 @@ data/*
 !data/MANIFEST.json
 !data/hubs/
 !data/hubs/solana_hubs.csv
-epochs/
+epochs/*
+!epochs/README.md
 state.json
 *.log
 STOP
@@ -25,3 +26,12 @@ htmlcov/
 
 # simulator outputs
 reports/sim/
+
+# local coding-agent artifacts (never commit)
+.aider.conf.yml
+.aider.chat.history.md
+.aider.input.history
+.aider.tags.cache.v4/
+.aider*
+!tests/golden/**/state.json
+tests/golden/v033.new/

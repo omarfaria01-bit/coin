@@ -25,8 +25,8 @@
       "additionalProperties": false,
       "properties": {
         "enabled": {
-          "default": true,
-          "description": "Legal switch (§16)",
+          "default": false,
+          "description": "§16: off at launch (draw pot keeps accumulating); on at ≥ 100 eligible clusters + VRF tested on devnet. Also the legal switch",
           "title": "Enabled",
           "type": "boolean"
         },
@@ -76,19 +76,11 @@
     "EligibilityParams": {
       "additionalProperties": false,
       "properties": {
-        "min_eligible_usd": {
-          "default": 10.0,
-          "description": "B̄_c · TWAP_epoch threshold (§2)",
-          "minimum": 0,
-          "title": "Min Eligible Usd",
-          "type": "number"
-        },
-        "min_hold_hours": {
-          "default": 1.0,
-          "description": "Cluster must have held this long (§2)",
-          "minimum": 0,
-          "title": "Min Hold Hours",
-          "type": "number"
+        "min_eligible_share": {
+          "default": "1/1000000",
+          "description": "B̄_c ≥ share · total supply (§2); exact rational as 'num/den'",
+          "title": "Min Eligible Share",
+          "type": "string"
         }
       },
       "title": "EligibilityParams",
@@ -154,13 +146,105 @@
       "properties": {
         "horizon_days": {
           "default": 30.0,
-          "description": "h(a)=1+min(1, ln(1+a)/ln(1+H)) (§3)",
+          "description": "v0.2 h(a); removed when #82 wires score_lots",
           "exclusiveMinimum": 0,
           "title": "Horizon Days",
           "type": "number"
+        },
+        "knots": {
+          "default": [
+            [
+              7200,
+              "1"
+            ],
+            [
+              21600,
+              "23/20"
+            ],
+            [
+              43200,
+              "13/10"
+            ],
+            [
+              86400,
+              "3/2"
+            ],
+            [
+              172800,
+              "7/4"
+            ],
+            [
+              259200,
+              "19/10"
+            ],
+            [
+              604800,
+              "21/10"
+            ],
+            [
+              1209600,
+              "23/10"
+            ],
+            [
+              2592000,
+              "5/2"
+            ],
+            [
+              5184000,
+              "27/10"
+            ],
+            [
+              7776000,
+              "14/5"
+            ]
+          ],
+          "description": "v0.3.3 h(a) knots [age_s, 'num/den'], linear between (§3)",
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Knots",
+          "type": "array"
+        },
+        "t_start_seconds": {
+          "default": 21600,
+          "description": "T_START: lot-time below scores 0 (§4)",
+          "minimum": 0,
+          "title": "T Start Seconds",
+          "type": "integer"
+        },
+        "boost_age_seconds": {
+          "default": 172800,
+          "description": "E1/E2 split, boost start (§3, §5)",
+          "minimum": 0,
+          "title": "Boost Age Seconds",
+          "type": "integer"
         }
       },
       "title": "HoldParams",
+      "type": "object"
+    },
+    "PriceParams": {
+      "additionalProperties": false,
+      "properties": {
+        "d_trust_lamports": {
+          "default": 2000000000,
+          "description": "D_TRUST (§0): trusted second if a swap this big moves p < 5%",
+          "exclusiveMinimum": 0,
+          "title": "D Trust Lamports",
+          "type": "integer"
+        }
+      },
+      "title": "PriceParams",
       "type": "object"
     },
     "RewardParams": {
@@ -196,7 +280,8 @@
         },
         "push_min_transfer_lamports": {
           "default": 1000000,
-          "description": "PROVISIONAL (0.001 SOL): smaller amounts carry forward (§13)",
+          "description": "MIN_PAYOUT_Q (§13): pending below it stays pending; published max 0.005 SOL",
+          "maximum": 5000000,
           "minimum": 0,
           "title": "Push Min Transfer Lamports",
           "type": "integer"
@@ -341,6 +426,12 @@
     "TreasuryBotParams": {
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "default": false,
+          "description": "§16: off; on only after the §14 backtest passes and kiwi approves",
+          "title": "Enabled",
+          "type": "boolean"
+        },
         "mode": {
           "default": "paper",
           "enum": [
@@ -478,6 +569,12 @@
     "UnderwaterParams": {
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "default": false,
+          "description": "§5 boost; off at launch, on after 7 clean epochs (§16). Not wired yet",
+          "title": "Enabled",
+          "type": "boolean"
+        },
         "twap_hours": {
           "default": 6.0,
           "description": "P̃ window (§5)",
@@ -583,14 +680,61 @@
     "eligibility": {
       "$ref": "#/$defs/EligibilityParams",
       "default": {
-        "min_eligible_usd": 10.0,
-        "min_hold_hours": 1.0
+        "min_eligible_share": "1/1000000"
       }
     },
     "hold": {
       "$ref": "#/$defs/HoldParams",
       "default": {
-        "horizon_days": 30.0
+        "horizon_days": 30.0,
+        "knots": [
+          [
+            7200,
+            "1"
+          ],
+          [
+            21600,
+            "23/20"
+          ],
+          [
+            43200,
+            "13/10"
+          ],
+          [
+            86400,
+            "3/2"
+          ],
+          [
+            172800,
+            "7/4"
+          ],
+          [
+            259200,
+            "19/10"
+          ],
+          [
+            604800,
+            "21/10"
+          ],
+          [
+            1209600,
+            "23/10"
+          ],
+          [
+            2592000,
+            "5/2"
+          ],
+          [
+            5184000,
+            "27/10"
+          ],
+          [
+            7776000,
+            "14/5"
+          ]
+        ],
+        "t_start_seconds": 21600,
+        "boost_age_seconds": 172800
       }
     },
     "churn": {
@@ -603,6 +747,7 @@
     "underwater": {
       "$ref": "#/$defs/UnderwaterParams",
       "default": {
+        "enabled": false,
         "twap_hours": 6.0,
         "min_age_hours": 48.0,
         "beta": 0.5,
@@ -651,7 +796,7 @@
     "draws": {
       "$ref": "#/$defs/DrawParams",
       "default": {
-        "enabled": true,
+        "enabled": false,
         "period_days": 7.0,
         "min_balance_usd": 10.0,
         "min_hold_hours": 24.0,
@@ -690,9 +835,16 @@
         "forfeit_days": 30.0
       }
     },
+    "prices": {
+      "$ref": "#/$defs/PriceParams",
+      "default": {
+        "d_trust_lamports": 2000000000
+      }
+    },
     "treasury_bot": {
       "$ref": "#/$defs/TreasuryBotParams",
       "default": {
+        "enabled": false,
         "mode": "paper",
         "seed_lamports": null,
         "ema_halflife_hours": 6.0,

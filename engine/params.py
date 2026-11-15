@@ -7,9 +7,12 @@ Unknown keys are rejected everywhere (extra="forbid").
 from __future__ import annotations
 
 import math
+from fractions import Fraction
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from engine.eligibility import parse_share
 
 
 class _Strict(BaseModel):
@@ -24,12 +27,65 @@ class EpochParams(_Strict):
 
 
 class EligibilityParams(_Strict):
-    min_eligible_usd: float = Field(10.0, ge=0, description="B̄_c · TWAP_epoch threshold (§2)")
-    min_hold_hours: float = Field(1.0, ge=0, description="Cluster must have held this long (§2)")
+    min_eligible_share: str = Field(
+        "1/1000000",
+        description="B̄_c ≥ share · total supply (§2); exact rational as 'num/den'",
+    )
+
+    @model_validator(mode="after")
+    def _share_ok(self) -> EligibilityParams:
+        parse_share(self.min_eligible_share)
+        return self
+
+
+# v0.3.3 §3 knot table: [age_seconds, h as an exact rational string]. Strings, not
+# floats, so the payout path stays exact (§0). Mirrors engine.scoring.DEFAULT_HOLD_KNOTS.
+_DEFAULT_KNOTS: tuple[tuple[int, str], ...] = (
+    (7_200, "1"),
+    (21_600, "23/20"),
+    (43_200, "13/10"),
+    (86_400, "3/2"),
+    (172_800, "7/4"),
+    (259_200, "19/10"),
+    (604_800, "21/10"),
+    (1_209_600, "23/10"),
+    (2_592_000, "5/2"),
+    (5_184_000, "27/10"),
+    (7_776_000, "14/5"),
+)
+
+
+def parse_rational(text: str) -> Fraction:
+    """'23/20', '1.15' or '2' → exact Fraction (never via float)."""
+    if not isinstance(text, str):
+        raise TypeError("rational must be a string")
+    return Fraction(text.strip())
 
 
 class HoldParams(_Strict):
-    horizon_days: float = Field(30.0, gt=0, description="h(a)=1+min(1, ln(1+a)/ln(1+H)) (§3)")
+    horizon_days: float = Field(
+        30.0, gt=0, description="v0.2 h(a); removed when #82 wires score_lots"
+    )
+    knots: tuple[tuple[int, str], ...] = Field(
+        _DEFAULT_KNOTS, description="v0.3.3 h(a) knots [age_s, 'num/den'], linear between (§3)"
+    )
+    t_start_seconds: int = Field(21_600, ge=0, description="T_START: lot-time below scores 0 (§4)")
+    boost_age_seconds: int = Field(172_800, ge=0, description="E1/E2 split, boost start (§3, §5)")
+
+    @model_validator(mode="after")
+    def _knots_ok(self) -> HoldParams:
+        if not self.knots:
+            raise ValueError("hold.knots must be non-empty")
+        prev_a, prev_h = -1, Fraction(-1)
+        for age, h_text in self.knots:
+            h = parse_rational(h_text)
+            if age <= prev_a or h < prev_h or h < 0:
+                raise ValueError("hold.knots: ages strictly increasing, h nondecreasing, h ≥ 0")
+            prev_a, prev_h = age, h
+        return self
+
+    def knot_fractions(self) -> tuple[tuple[int, Fraction], ...]:
+        return tuple((age, parse_rational(h)) for age, h in self.knots)
 
 
 class ChurnParams(_Strict):
@@ -38,6 +94,9 @@ class ChurnParams(_Strict):
 
 
 class UnderwaterParams(_Strict):
+    enabled: bool = Field(
+        False, description="§5 boost; off at launch, on after 7 clean epochs (§16). Not wired yet"
+    )
     twap_hours: float = Field(6.0, gt=0, description="P̃ window (§5)")
     min_age_hours: float = Field(48.0, ge=0, description="Only pool-buy lots this old count (§5)")
     beta: float = Field(0.5, ge=0, description="Max boost = 1+β (§5)")
@@ -80,7 +139,10 @@ class RewardParams(_Strict):
         500, ge=0, description="Below this, push instead of claims (§13)"
     )
     push_min_transfer_lamports: int = Field(
-        1_000_000, ge=0, description="PROVISIONAL (0.001 SOL): smaller amounts carry forward (§13)"
+        1_000_000,
+        ge=0,
+        le=5_000_000,
+        description="MIN_PAYOUT_Q (§13): pending below it stays pending; published max 0.005 SOL",
     )
     lst_fraction: float = Field(
         0.0, ge=0, le=1, description="Share of idle pot held in an LST; 0 until decided (§8)"
@@ -88,7 +150,11 @@ class RewardParams(_Strict):
 
 
 class DrawParams(_Strict):
-    enabled: bool = Field(True, description="Legal switch (§16)")
+    enabled: bool = Field(
+        False,
+        description="§16: off at launch (draw pot keeps accumulating); on at ≥ 100 eligible "
+        "clusters + VRF tested on devnet. Also the legal switch",
+    )
     period_days: float = Field(7.0, gt=0)
     min_balance_usd: float = Field(10.0, ge=0, description="PROVISIONAL threshold (§9)")
     min_hold_hours: float = Field(24.0, ge=0)
@@ -130,7 +196,18 @@ class VestingParams(_Strict):
     forfeit_days: float = Field(30.0, ge=0, description="Soft-mode forfeit duration (§11B)")
 
 
+class PriceParams(_Strict):
+    d_trust_lamports: int = Field(
+        2_000_000_000,
+        gt=0,
+        description="D_TRUST (§0): trusted second if a swap this big moves p < 5%",
+    )
+
+
 class TreasuryBotParams(_Strict):
+    enabled: bool = Field(
+        False, description="§16: off; on only after the §14 backtest passes and kiwi approves"
+    )
     mode: Literal["paper", "devnet", "live"] = "paper"
     seed_lamports: int | None = Field(None, description="TREASURY_SEED_SOL, set by kiwi (§12)")
     ema_halflife_hours: float = 6.0
@@ -173,6 +250,7 @@ class CoinParams(_Strict):
     draws: DrawParams = DrawParams()
     fees: FeeParams = FeeParams()
     vesting: VestingParams = VestingParams()
+    prices: PriceParams = PriceParams()
     treasury_bot: TreasuryBotParams = TreasuryBotParams()
 
 
@@ -196,17 +274,29 @@ class PadDevBuy(_Strict):
     lockable: bool | None = None
 
 
+class PadPriceSource(_Strict):
+    """Where p(t) is read from pool reserves (§0, §15)."""
+
+    before_graduation: str | None = None
+    after_graduation: str | None = None
+    pool_type: Literal["cpmm", "clmm", "curve"] | None = None
+    reserve_accounts: tuple[str, ...] = ()
+
+
 class PadParams(_Strict):
     """Filled on launch day from the pad's public docs (§15); each field needs a source."""
 
     name: str | None = None
     program_ids: tuple[str, ...] = ()
     token_program: Literal["spl", "token2022"] | None = None
+    quote_asset: str = Field("SOL", description="Unit of account Q for every price/cost (§0)")
+    price_source: PadPriceSource = PadPriceSource()
     curve: PadCurve = PadCurve()
     creator_fee: PadCreatorFee = PadCreatorFee()
     vesting_mode: Literal["native", "soft"] | None = None
     native_vesting_params_map: dict[str, str] = Field(default_factory=dict)
     dev_buy: PadDevBuy = PadDevBuy()
+    burn_allowed: bool | None = Field(None, description="Token allows Burn from our account (§10)")
     anti_snipe: str | None = None
     transfer_hook_allowed: bool | None = None
     docs_url: str | None = None

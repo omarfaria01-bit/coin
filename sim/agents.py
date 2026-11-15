@@ -44,10 +44,16 @@ class Clock:
         self.start_slot = start_slot
         self.seed = seed
         self._ix: dict[str, int] = {}
+        self._seq = 0
 
     def stamp(self, ts: int, tag: str) -> tuple[int, str, int]:
         slot = self.start_slot + (ts - self.start_ts)
-        sig = sha256(f"{self.seed}:{ts}:{tag}".encode()).hexdigest()
+        # The engine orders a slot's events by (slot, sig, ix) until TokenEvent carries a
+        # tx index (#82). Prefix a creation counter so sigs sort in execution order: a
+        # sell-then-rebuy in one slot must not replay as rebuy-then-sell (LIFO, §1).
+        self._seq += 1
+        digest = sha256(f"{self.seed}:{ts}:{tag}".encode()).hexdigest()
+        sig = f"{self._seq:010x}{digest[10:]}"
         ix = self._ix.get(sig, 0)
         self._ix[sig] = ix + 1
         return slot, sig, ix

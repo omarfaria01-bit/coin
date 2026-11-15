@@ -1,4 +1,4 @@
-"""Load the public hubs allowlist used by engine.sybil (SAME_FEE_PAYER / SAME_FIRST_FUNDER)."""
+"""Load the public hubs allowlist used by the sybil modules (fee payer / first funder)."""
 
 from __future__ import annotations
 

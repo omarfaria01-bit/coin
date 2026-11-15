@@ -1,0 +1,28 @@
+{
+ "params": "../../config/coin.json",
+ "decimals": 9,
+ "total_supply": 1000000000000000,
+ "sol_usd": 150.0,
+ "events": [
+  {"slot": 2800, "ts": -7200, "sig": "f2ff215c2829c2c9c464f710d3501f000ec2401cd71f56048db74484310fba97", "ix": 0, "kind": "buy", "dst": "GMgwzAVzwGr7tEWDxpsnovDHsADbcAkdR98BqDLRwZYd", "amount": 10000000000000, "lamports": 100000000000, "fee_payer": "GMgwzAVzwGr7tEWDxpsnovDHsADbcAkdR98BqDLRwZYd"},
+  {"slot": 3000, "ts": -7000, "sig": "380a125db8c6fb72e59225a38eca13fb82b34776b3286c6b4bb5307dc42065c5", "ix": 0, "kind": "buy", "dst": "5GxkXy9Ze7GnKyA3BLkJj3SHs2WB3XoSz9na2ubcy1RB", "amount": 7000000000, "lamports": 70000000, "fee_payer": "5GxkXy9Ze7GnKyA3BLkJj3SHs2WB3XoSz9na2ubcy1RB"},
+  {"slot": 3100, "ts": -6900, "sig": "9ffbfdbdc5409fa7d46aa9c38071b32531b0654c9dcaabfa3b67b0b031fcd361", "ix": 0, "kind": "buy", "dst": "GHNEEeyPJq4F5LJDfmQ9SbhRqCY5WLp4Z3e1TSu23BFb", "amount": 2000000000, "lamports": 20000000, "fee_payer": "GHNEEeyPJq4F5LJDfmQ9SbhRqCY5WLp4Z3e1TSu23BFb"},
+  {"slot": 100000, "ts": 90000, "sig": "3e43cedb2f8476e860e2d8ca10ec58841fa9135110fb2c723a9ab682f6218848", "ix": 0, "kind": "buy", "dst": "CteooBGuozX6hBqfQyppTFcxMeeqRz2ojws9HhpRs3CD", "amount": 50000000000, "lamports": 500000000, "fee_payer": "CteooBGuozX6hBqfQyppTFcxMeeqRz2ojws9HhpRs3CD"},
+  {"slot": 110000, "ts": 100000, "sig": "17087d6af44906364f7615f3f5a6734505fabdc82ca12eabbd8ce7ec37d3bcb6", "ix": 0, "kind": "transfer", "src": "GMgwzAVzwGr7tEWDxpsnovDHsADbcAkdR98BqDLRwZYd", "dst": "5GxkXy9Ze7GnKyA3BLkJj3SHs2WB3XoSz9na2ubcy1RB", "amount": 100000000000, "lamports": null, "fee_payer": "GMgwzAVzwGr7tEWDxpsnovDHsADbcAkdR98BqDLRwZYd"}
+ ],
+ "prices": [
+  {"ts": -10800, "price": 0.01},
+  {"ts": 10800, "price": 0.01},
+  {"ts": 32400, "price": 0.01},
+  {"ts": 54000, "price": 0.01},
+  {"ts": 75600, "price": 0.01},
+  {"ts": 97200, "price": 0.01},
+  {"ts": 118800, "price": 0.01},
+  {"ts": 140400, "price": 0.01},
+  {"ts": 162000, "price": 0.01}
+ ],
+ "epochs": [
+  {"epoch": 0, "t0": 0, "t1": 86400, "slot_range": [10000, 96399], "pot_inflow": 10000000000},
+  {"epoch": 1, "t0": 86400, "t1": 172800, "slot_range": [96400, 182799], "pot_inflow": 2000000000}
+ ]
+}

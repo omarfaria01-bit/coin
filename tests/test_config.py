@@ -27,6 +27,7 @@ def test_committed_pad_json_is_unfilled_template():
 
 def test_spec_defaults():
     p = CoinParams()
+    assert p.eligibility.min_eligible_share == "1/1000000"
     assert p.scoring.cap == 0.05
     assert p.rewards.alpha_per_day == 0.10
     assert (p.fees.dev, p.fees.holder_pot, p.fees.draw_pot, p.fees.buyback_burn) == (
@@ -38,6 +39,16 @@ def test_spec_defaults():
     assert p.draws.prize_split == (0.40,) + (0.10,) * 3 + (0.05,) * 6
     assert p.vesting.unlock_twap_hours == 24.0
     assert p.treasury_bot.mode == "paper"
+
+
+def test_launch_flags_default_off_section_16():
+    """COIN_MATH §16: boost, draws, LST and the treasury bot are off at launch."""
+    for p in (CoinParams(), load_coin(CONFIG_DIR / "coin.json")):
+        assert p.underwater.enabled is False
+        assert p.draws.enabled is False
+        assert p.rewards.lst_fraction == 0.0
+        assert p.treasury_bot.enabled is False and p.treasury_bot.mode == "paper"
+        assert p.rewards.enabled is True  # holder rewards are on (§16 row 2)
 
 
 def test_unknown_keys_rejected():
@@ -78,3 +89,25 @@ def test_schema_files_up_to_date():
         text=True,
     )
     assert result.returncode == 0, result.stdout
+
+
+def test_hold_v033_defaults_match_scoring_table():
+    from fractions import Fraction
+
+    from engine.params import HoldParams, parse_rational
+    from engine.scoring import (
+        DEFAULT_BOOST_AGE_SECONDS,
+        DEFAULT_HOLD_KNOTS,
+        DEFAULT_T_START_SECONDS,
+    )
+
+    hold = CoinParams().hold
+    assert hold.knot_fractions() == DEFAULT_HOLD_KNOTS
+    assert hold.t_start_seconds == DEFAULT_T_START_SECONDS
+    assert hold.boost_age_seconds == DEFAULT_BOOST_AGE_SECONDS
+    assert parse_rational("1.15") == Fraction(23, 20)
+    with pytest.raises(TypeError):
+        parse_rational(1.15)  # type: ignore[arg-type]
+    for bad in (((7200, "2"), (7200, "3")), ((7200, "2"), (9000, "1")), ()):
+        with pytest.raises(ValidationError, match="knots"):
+            HoldParams(knots=bad)

@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from fractions import Fraction
 
 
-def twab(start_balance: int, changes: Sequence[tuple[int, int]], t0: int, t1: int) -> float:
+def twab_exact(
+    start_balance: int, changes: Sequence[tuple[int, int]], t0: int, t1: int
+) -> Fraction:
     """Exact integral of a piecewise-constant balance over [t0, t1) divided by (t1 - t0).
 
     `changes` are (ts, new_balance) pairs sorted by ts; entries outside [t0, t1) are ignored
@@ -30,4 +33,4 @@ def twab(start_balance: int, changes: Sequence[tuple[int, int]], t0: int, t1: in
         balance = new_balance
         cursor = ts
     numerator += balance * (t1 - cursor)
-    return numerator / (t1 - t0)
+    return Fraction(numerator, t1 - t0)
