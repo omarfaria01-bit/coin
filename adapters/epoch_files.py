@@ -9,6 +9,8 @@ from fractions import Fraction
 from pathlib import Path
 from typing import Any, Literal
 
+from adapters.ingest import load_balances
+from engine.balances import WalletBalance
 from engine.merkle import MerkleTree
 from engine.types import ClusterId, WalletId
 
@@ -284,6 +286,19 @@ def _build_state(data: dict[str, Any]):
         vesting=vesting,
         paid_total=dict(data.get("paid_total") or {}),
     )
+
+
+def read_balances(dir: Path) -> dict[WalletId, WalletBalance]:
+    """Load `dir/balances.json` back into the §13 running book, validated first."""
+    path = Path(dir) / "balances.json"
+    if not path.is_file():
+        raise FileNotFoundError(f"{path}: missing balances.json")
+    return {
+        wallet: WalletBalance(
+            wallet=wallet, earned_total=row.earned_total, paid_total=row.paid_total
+        )
+        for wallet, row in load_balances(path).items()
+    }
 
 
 def read_epoch(dir: Path) -> tuple[Any, Any, MerkleTree | None]:

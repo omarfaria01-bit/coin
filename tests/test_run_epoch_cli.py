@@ -89,6 +89,18 @@ def test_rerun_is_idempotent_and_refuses_changed_artifacts(tmp_path: Path) -> No
         (lambda d: d["epochs"][0].update(epoch=3), "epochs[0].epoch must be 0"),
         (lambda d: d.pop("prices"), "prices: Field required"),
         (lambda d: d["events"].append(dict(d["events"][0])), "duplicate event"),
+        (
+            lambda d: d["events"].append(
+                {**d["events"][0], "slot": 999_999, "ts": 999_999, "ix": 1}
+            ),
+            "duplicate tx sig",
+        ),
+        (lambda d: d["events"][1].update(ts=d["events"][0]["ts"] - 1), "non-decreasing"),
+        (
+            lambda d: d["events"][0].update(mint="So11111111111111111111111111111111111111112"),
+            "unknown mint",
+        ),
+        (lambda d: d["prices"][1].update(ts=d["prices"][0]["ts"]), "strictly increasing"),
     ],
 )
 def test_bad_fixture_rejected_with_clear_error(tmp_path: Path, mutate, needle: str) -> None:

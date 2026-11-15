@@ -15,9 +15,17 @@ import json
 import sys
 from fractions import Fraction
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
@@ -27,6 +35,13 @@ import base58  # noqa: E402
 
 from adapters.config_loader import load_coin  # noqa: E402
 from adapters.epoch_files import write_epoch  # noqa: E402
+from adapters.ingest import (  # noqa: E402
+    check_events,
+    check_known_mints,
+    check_prices,
+    format_validation_error,
+    solana_id,
+)
 from engine.epoch import EpochInputs, EpochResult, EpochState, VestingEntry, run_epoch  # noqa: E402
 from engine.merkle import MerkleTree, build, leaf  # noqa: E402
 from engine.params import CoinParams  # noqa: E402
@@ -44,11 +59,17 @@ class EventIn(_Strict):
     sig: str = Field(min_length=1)
     ix: int = Field(ge=0)
     kind: Literal["buy", "sell", "transfer"]
+    mint: str | None = Field(None, description="Token mint moved; checked against the allowlist")
     src: str | None = None
     dst: str | None = None
     amount: int = Field(gt=0)
     lamports: int | None = Field(default=None, ge=0)
     fee_payer: str = Field(min_length=1)
+
+    @field_validator("mint")
+    @classmethod
+    def _mint(cls, value: str | None) -> str | None:
+        return None if value is None else solana_id("mint", value)
 
     @model_validator(mode="after")
     def _sides(self) -> EventIn:
@@ -133,12 +154,26 @@ class Fixture(_Strict):
     excluded: list[str] = []
     hubs: list[str] = []
     vesting: list[VestingIn] = Field([], description="Seeds epoch 0 only (no state.json yet)")
-    events: list[EventIn]
+    mint: str | None = Field(None, description="Project token mint; event mints must match it")
+    known_mints: list[str] = Field([], description="Other accepted mints (quote asset etc.)")
+    events: Annotated[list[EventIn], AfterValidator(check_events)]
     sol_transfers: list[SolTransferIn] = []
     fundings: list[FundingIn] = []
-    prices: list[PriceIn] = Field(min_length=1)
+    prices: Annotated[list[PriceIn], AfterValidator(check_prices)] = Field(min_length=1)
     reserves: list[ReserveIn] = Field([], description="§0 pool reserves for the §11 unlock")
     epochs: list[WindowIn] = Field(min_length=1)
+
+    @field_validator("mint")
+    @classmethod
+    def _mint(cls, value: str | None) -> str | None:
+        return None if value is None else solana_id("mint", value)
+
+    @field_validator("known_mints")
+    @classmethod
+    def _known_mints(cls, values: list[str]) -> list[str]:
+        for i, mint in enumerate(values):
+            solana_id(f"known_mints[{i}]", mint)
+        return values
 
     @model_validator(mode="after")
     def _windows(self) -> Fixture:
@@ -147,9 +182,10 @@ class Fixture(_Strict):
                 raise ValueError(f"epochs[{i}].epoch must be {i}, got {w.epoch}")
             if i and w.t0 != self.epochs[i - 1].t1:
                 raise ValueError(f"epochs[{i}].t0 must equal epochs[{i - 1}].t1")
-        keys = [(e.slot, e.sig, e.ix) for e in self.events]
-        if len(set(keys)) != len(keys):
-            raise ValueError("duplicate event (slot, sig, ix)")
+        known = set(self.known_mints)
+        if self.mint is not None:
+            known.add(self.mint)
+        check_known_mints(self.events, known)
         return self
 
 
@@ -169,24 +205,16 @@ class InputError(ValueError):
     """Bad fixture or state; message is shown to the user as-is."""
 
 
-def _validation_msg(where: Path, exc: ValidationError) -> str:
-    lines = [f"{where}: {exc.error_count()} validation error(s)"]
-    for err in exc.errors():
-        loc = ".".join(str(p) for p in err["loc"]) or "<root>"
-        lines.append(f"  {loc}: {err['msg']}")
-    return "\n".join(lines)
-
-
 def load_fixture(path: Path) -> tuple[Fixture, CoinParams]:
     try:
         fx = Fixture.model_validate_json(Path(path).read_bytes())
     except ValidationError as exc:
-        raise InputError(_validation_msg(path, exc)) from None
+        raise InputError(format_validation_error(Path(path), exc)) from None
     params_path = (Path(path).parent / fx.params).resolve()
     try:
         params = load_coin(params_path)
     except ValidationError as exc:
-        raise InputError(_validation_msg(params_path, exc)) from None
+        raise InputError(format_validation_error(params_path, exc)) from None
     return fx, params
 
 
@@ -198,7 +226,7 @@ def load_state(path: Path, fx: Fixture) -> EpochState:
     try:
         st = StateIn.model_validate_json(path.read_bytes())
     except ValidationError as exc:
-        raise InputError(_validation_msg(path, exc)) from None
+        raise InputError(format_validation_error(path, exc)) from None
     vest = tuple(VestingEntry(**v.model_dump()) for v in st.vesting)
     return EpochState(**{**st.model_dump(), "vesting": vest})
 
@@ -209,7 +237,7 @@ def build_inputs(fx: Fixture, w: WindowIn) -> EpochInputs:
         t1=w.t1,
         slot_range=w.slot_range,
         events=tuple(
-            TokenEvent(**{**e.model_dump(), "kind": EventKind(e.kind)})
+            TokenEvent(**{**e.model_dump(exclude={"mint"}), "kind": EventKind(e.kind)})
             for e in fx.events
             if e.ts < w.t1
         ),

@@ -3,6 +3,7 @@
  "decimals": 9,
  "total_supply": 1000000000000000,
  "sol_usd": 150.0,
+ "mint": "FQvums9N2RLvft7qX7dBHCBDtZa8ngx5ywcPCB93LhJK",
  "events": [
   {"slot": 2800, "ts": -7200, "sig": "f2ff215c2829c2c9c464f710d3501f000ec2401cd71f56048db74484310fba97", "ix": 0, "kind": "buy", "dst": "GMgwzAVzwGr7tEWDxpsnovDHsADbcAkdR98BqDLRwZYd", "amount": 10000000000000, "lamports": 100000000000, "fee_payer": "GMgwzAVzwGr7tEWDxpsnovDHsADbcAkdR98BqDLRwZYd"},
   {"slot": 3000, "ts": -7000, "sig": "380a125db8c6fb72e59225a38eca13fb82b34776b3286c6b4bb5307dc42065c5", "ix": 0, "kind": "buy", "dst": "5GxkXy9Ze7GnKyA3BLkJj3SHs2WB3XoSz9na2ubcy1RB", "amount": 7000000000, "lamports": 70000000, "fee_payer": "5GxkXy9Ze7GnKyA3BLkJj3SHs2WB3XoSz9na2ubcy1RB"},

@@ -13,6 +13,7 @@ from adapters.epoch_files import (
     _EpochResult,
     _EpochState,
     _VestingEntry,
+    read_balances,
     read_epoch,
     write_epoch,
 )
@@ -87,6 +88,21 @@ def test_balances_json_is_the_running_book(tmp_path: Path) -> None:
     assert list(book) == sorted(book)
     _, state, _ = read_epoch(dest)
     assert state.paid_total == {W_A: 7, "Z" * 32: 5}
+
+
+def test_read_balances_validates_the_written_book(tmp_path: Path) -> None:
+    dest = write_epoch(tmp_path, _result(), _state(), TREE)
+    book = read_balances(dest)
+    assert book[W_A].earned_total == 1 and book[W_A].paid_total == 0
+    assert book[W_A].pending == 1
+    raw = json.loads((dest / "balances.json").read_text(encoding="utf-8"))
+    raw[W_A]["paid_total"] = 2  # 1 != 2 + 1: no longer the §13 invariant
+    (dest / "balances.json").write_text(json.dumps(raw), encoding="utf-8")
+    with pytest.raises(ValueError, match="earned_total"):
+        read_balances(dest)
+    (dest / "balances.json").unlink()
+    with pytest.raises(FileNotFoundError, match="balances.json"):
+        read_balances(dest)
 
 
 def test_byte_identical_on_repeat_and_shuffled_order(tmp_path: Path) -> None:
