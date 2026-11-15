@@ -1,4 +1,4 @@
-last_tick: 2026-11-15 UTC (merged #50 D15 after kiwi APPROVED #50 from his own login; no open PRs; open: #29 held for kiwi/legal #8, #7 needs kiwi; main CI green)
+last_tick: 2026-11-15 UTC (nothing actionable: no open PRs; #29 held for kiwi/legal #8, #7 needs kiwi; D21 T_START=6h already recorded + default + goldens; main CI green)
 updated: 2026-11-14
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 
