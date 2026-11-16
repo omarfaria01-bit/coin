@@ -196,3 +196,52 @@ def test_fixture_reserves_and_rational_p_entry_reach_the_engine() -> None:
     assert fx.vesting[0].p_entry == "1/3"
     with pytest.raises(ValueError, match="positive rational"):
         fx.model_validate({**fx.model_dump(), "vesting": [{**raw["vesting"][0], "p_entry": "0"}]})
+
+
+def test_run_epoch_with_token2022_mint_account(tmp_path: Path) -> None:
+    data = _fx()
+    mint_addr = "FQvums9N2RLvft7qX7dBHCBDtZa8ngx5ywcPCB93LhJK"
+    data["mint"] = mint_addr
+    data["decimals"] = 6
+    fx_path = _write(tmp_path, data)
+    mint_acc_path = Path(__file__).parent / "fixtures" / "token2022" / "mint_t22_transfer_fee.json"
+    rows = run(fx_path, tmp_path / "e", mint_account=mint_acc_path, max_epochs=1)
+    assert len(rows) == 1
+    push_json_path = tmp_path / "e" / "0" / "push.json"
+    assert push_json_path.is_file()
+    push_plan = json.loads(push_json_path.read_text(encoding="utf-8"))
+    assert push_plan["mint"] == mint_addr
+    assert len(push_plan["legs"]) > 0
+    for leg in push_plan["legs"]:
+        net = leg["net"]
+        gross = leg["gross"]
+        fee = leg["fee"]
+        assert gross >= net
+        assert fee >= 0
+        assert gross - fee == net
+        assert leg["received"] == net
+
+
+def test_run_epoch_with_legacy_mint_account(tmp_path: Path) -> None:
+    data = _fx()
+    mint_addr = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    data["mint"] = mint_addr
+    fx_path = _write(tmp_path, data)
+    mint_acc_path = Path(__file__).parent / "fixtures" / "token2022" / "mint_legacy.json"
+    rows = run(fx_path, tmp_path / "e", mint_account=mint_acc_path, max_epochs=1)
+    assert len(rows) == 1
+    push_json_path = tmp_path / "e" / "0" / "push.json"
+    assert push_json_path.is_file()
+    push_plan = json.loads(push_json_path.read_text(encoding="utf-8"))
+    for leg in push_plan["legs"]:
+        assert leg["fee"] == 0
+        assert leg["gross"] == leg["net"]
+
+
+def test_run_epoch_mint_without_mint_field_raises_input_error(tmp_path: Path) -> None:
+    data = _fx()
+    data["mint"] = None
+    fx_path = _write(tmp_path, data)
+    mint_acc_path = Path(__file__).parent / "fixtures" / "token2022" / "mint_t22_transfer_fee.json"
+    with pytest.raises(InputError, match="fixture must specify 'mint'"):
+        run(fx_path, tmp_path / "e", mint_account=mint_acc_path, max_epochs=1)

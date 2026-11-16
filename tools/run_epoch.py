@@ -42,6 +42,7 @@ from adapters.ingest import (  # noqa: E402
     format_validation_error,
     solana_id,
 )
+from adapters.token2022 import parse_mint_account, plan_payouts  # noqa: E402
 from engine.epoch import EpochInputs, EpochResult, EpochState, VestingEntry, run_epoch  # noqa: E402
 from engine.merkle import MerkleTree, build, leaf  # noqa: E402
 from engine.params import CoinParams  # noqa: E402
@@ -298,8 +299,18 @@ def run(
     *,
     dry_run: bool = False,
     max_epochs: int | None = None,
+    mint_account: Path | None = None,
 ) -> list[dict]:
     fx, params = load_fixture(fixture)
+    mint_acc = None
+    if mint_account is not None:
+        if fx.mint is None:
+            raise InputError("fixture must specify 'mint' when --mint-account is provided")
+        try:
+            blob = json.loads(mint_account.read_text(encoding="utf-8"))
+            mint_acc = parse_mint_account(blob, address=fx.mint)
+        except (ValueError, ValidationError, json.JSONDecodeError) as exc:
+            raise InputError(f"bad mint account {mint_account}: {exc}") from None
     state_path = state_path or out / "state.json"
     state = load_state(state_path, fx)
     if state.epoch > len(fx.epochs):
@@ -314,7 +325,15 @@ def run(
         check_conservation(state, w.pot_inflow, res, nxt)
         dest = None
         if not dry_run:
-            dest = write_epoch(out, res, nxt, claims_tree(res))
+            push_plan = None
+            if mint_acc is not None and res.rail == "push" and res.transferred_or_claimable:
+                push_plan = plan_payouts(
+                    res.transferred_or_claimable,
+                    mint_acc,
+                    epoch=res.epoch,
+                    expected_decimals=fx.decimals,
+                )
+            dest = write_epoch(out, res, nxt, claims_tree(res), push_plan=push_plan)
             tmp = state_path.parent / (state_path.name + ".tmp")
             tmp.parent.mkdir(parents=True, exist_ok=True)
             tmp.write_bytes((dest / "state.json").read_bytes())
@@ -331,11 +350,23 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--state", type=Path, help="Carried state (default: <out>/state.json)")
     p.add_argument("--epochs", type=int, help="Run at most N pending epochs (default: all)")
     p.add_argument("--dry-run", action="store_true", help="Print summary only, write nothing")
+    p.add_argument(
+        "--mint-account",
+        type=Path,
+        help="Recorded getAccountInfo JSON for Token-2022/SPL mint",
+    )
     args = p.parse_args(argv)
     if args.epochs is not None and args.epochs < 1:
         p.error("--epochs must be >= 1")
     try:
-        rows = run(args.fixture, args.out, args.state, dry_run=args.dry_run, max_epochs=args.epochs)
+        rows = run(
+            args.fixture,
+            args.out,
+            args.state,
+            dry_run=args.dry_run,
+            max_epochs=args.epochs,
+            mint_account=args.mint_account,
+        )
     except (InputError, FileNotFoundError, FileExistsError, AssertionError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
