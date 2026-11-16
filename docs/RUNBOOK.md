@@ -186,6 +186,19 @@ default change needs a DECISIONS.md entry with the failing §14 evidence.
 `tests/test_epoch_runner.py::test_e2e_ten_seeds_under_60s_and_committed_report`,
 `tests/test_report_v033.py::test_every_row_and_gap_is_listed`.
 
+### 3.5 Devnet-only epoch dry run script (read-only, no signing)
+
+To pull holder and transfer data for a test mint on Solana devnet via public RPC, run one epoch through `engine/epoch.py`, and write the payout plan to `reports/`:
+
+```bash
+uv run python tools/devnet_epoch_dry_run.py --mint <MINT_ADDRESS> --rpc https://api.devnet.solana.com --t0 <START_TS> --t1 <END_TS> --pot-inflow <INFLOW>
+```
+
+- **Read-only invariant:** No transactions are sent, no signing occurs, and no keypairs are used.
+- **URL validation:** The script strictly refuses any non-devnet cluster URL (must contain `"devnet"`).
+- **Output:** Writes the dry run payout report to `reports/devnet_dry_run_<MINT>.json`.
+- **Mainnet or real funds:** Out of scope and **needs kiwi APPROVED**.
+
 ## 4. Failure modes
 
 Each mode maps to a test, or is called out as a **gap**.
