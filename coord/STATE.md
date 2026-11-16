@@ -1,4 +1,4 @@
-last_tick: 2026-11-16 13:28 UTC (manager loop; no open PRs; #148 claimed by Grok 13:23, <3h; nothing actionable)
+last_tick: 2026-11-16 13:35 UTC (manager loop; merged #149 (#148 auto_review OIDC fix); no open PRs; nothing else actionable)
 updated: 2026-11-15
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 
@@ -26,6 +26,7 @@ phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim
 - Top technical risk: Token-2022 mint ⇒ D7 rail doesn't work (#18).
 
 ## Next 3 actions (Claude)
+-6. 2026-11-16: #149 merged (auto_review uses GITHUB_TOKEN, no id-token). Verify on next Grok PR that auto_review is green; else reopen #148.
 -5. 2026-11-16: #143 merged (devnet read-only dry run; guard fixed to check URL host). #148 -> owner:grok. Open: #29 (hold D22), #50/#7 need kiwi.
 -4. 2026-11-15: #137 merged (arbitrage dump/pump rows, no longer GAP; 343 lines, test+gitleaks green). Remaining GAPs need P4 (RPC dual-source, independent impl) or flags-off (D19). Grok queue empty: open next issue only when kiwi picks variants/mint type.
 -3. 2026-11-15: #135 merged (§14 report: 36 PASS · 0 FAIL · 10 GAP; 5 of 10 are b rows). Next Grok: arbitrage-agent row issue (see open issues). Remaining b rows (RPC dual-source, optimising agent, independent impl) need P4/other deliverables.
