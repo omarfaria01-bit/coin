@@ -9,14 +9,17 @@ import json
 import urllib.error
 import urllib.request
 from typing import Any
+from urllib.parse import urlparse
 
 from adapters.parse_tx import parse_tx
 from engine.types import SolTransfer, TokenEvent
 
 
 def validate_devnet_url(url: str) -> str:
-    """Refuse any non-devnet cluster URL. Must contain 'devnet' case-insensitively."""
-    if not isinstance(url, str) or "devnet" not in url.lower():
+    """Refuse any non-devnet cluster URL. The HOST must contain 'devnet' (case-insensitive)."""
+    parsed = urlparse(url) if isinstance(url, str) else None
+    host = parsed.hostname if parsed else None
+    if not host or "devnet" not in host.lower() or parsed.scheme not in ("http", "https"):
         raise ValueError(f"Refusing non-devnet cluster URL: {url!r} (must contain 'devnet')")
     return url
 
