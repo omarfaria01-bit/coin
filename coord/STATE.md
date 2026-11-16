@@ -1,4 +1,4 @@
-last_tick: 2026-11-16 13:35 UTC (manager loop; merged #149 (#148 auto_review OIDC fix); no open PRs; nothing else actionable)
+last_tick: 2026-11-16 (manager loop; no open PRs; open issues only #29 hold, #7 needs kiwi, #1; nothing actionable)
 updated: 2026-11-15
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 
