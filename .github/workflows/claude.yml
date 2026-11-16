@@ -74,10 +74,13 @@ jobs:
       group: claude-auto-review
       cancel-in-progress: false
     # Review only: no contents/issues write. Merging stays with the manager.
+    # No `id-token: write`: the Anthropic OIDC app-token exchange rejects
+    # pull_request_target tokens with "401 Invalid OIDC token" (upstream
+    # anthropics/claude-code-action#713 and #1886), so this job passes the
+    # job-scoped GITHUB_TOKEN instead (see `github_token` below).
     permissions:
       contents: read
       pull-requests: write
-      id-token: write
       actions: read
     steps:
       # Base ref only (CLAUDE.md, prompts). PR head code is never checked out or run;
@@ -90,6 +93,12 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Skip the OIDC -> GitHub App token exchange, which fails on
+          # pull_request_target (upstream #713/#1886). With an explicit token the
+          # action and `gh` run as github-actions[bot] using this job's
+          # `permissions:` above; reviews still post, and commits/merges stay
+          # impossible (contents: read).
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           prompt: |
             You are the manager of ${{ github.repository }}. Review PR #${{ github.event.pull_request.number }}
             according to CLAUDE.md and docs/prompts/PROMPT_CLAUDE_CODE.md.
