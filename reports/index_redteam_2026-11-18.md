@@ -99,7 +99,7 @@ A candidate is any token whose name, ticker or description matches a strong keyw
 T22 first_failed=None status=None logS=10.794623981827
 ```
 
-Token-2022 officially supports `permanent_delegate`, `transfer_hook`, `transfer_fee`, `pausable` and `default_account_state` (SPL docs, 18 Nov 2026). Revoking mint/freeze does not remove them. A permanent delegate can move/close a holder's tokens; a hook can block the basket buy; a fee taxes it; a frozen default state makes new ATAs unusable. Raydium rejects transfer hooks and Meteora DBC revokes one at graduation, but a custom pool or another venue may not; the G2 adapter must record the owner program and extensions.
+Token-2022 officially supports `permanent_delegate`, `transfer_hook`, `transfer_fee`, `pausable` and `default_account_state` (SPL docs, 18 Nov 2026). Revoking mint/freeze does not remove them. A permanent delegate can transfer or burn a holder's tokens; a hook can block the basket buy; a fee taxes it; a frozen default state makes new ATAs unusable. Raydium rejects transfer hooks and Meteora DBC revokes one at graduation, but a custom pool or another venue may not; the G2 adapter must record the owner program and extensions.
 
 ## 6. Prize basket and emergency removal
 
