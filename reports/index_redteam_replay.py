@@ -7,7 +7,7 @@ Run from the repo root::
 
     uv run python reports/index_redteam_replay.py
 
-The output is reproduced in §9 of the report.
+An abridged excerpt is in §9 of the report; run the script for the full output.
 """
 
 from __future__ import annotations

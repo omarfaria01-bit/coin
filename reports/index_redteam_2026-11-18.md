@@ -144,7 +144,7 @@ Metrics used (synthetic; all other fields pass: `coverage=1`, `age=48h`, `bundle
 | REBRAND | 8,000,000 | 400,000 | 12 | 250 | 800,000 | 20% |
 | T22 | 5,000,000 | 150,000 | 12 | 250 | 300,000 | 20% |
 
-`uv run python reports/index_redteam_replay.py`, `main` at `6129c84` (#157–#160, #165), 17 Nov 2026 UTC. The script is committed in this PR under `reports/`; it uses only the pure `index/` code and synthetic metrics.
+`uv run python reports/index_redteam_replay.py`, `main` at `6129c84` (#157–#160, #165), 17 Nov 2026 UTC. The script is committed in this PR under `reports/`; it uses only the pure `index/` code and synthetic metrics. The block below is an abridged excerpt (ranks 1–5, no filler rows, no dust section); run the script for the full output.
 
 ```
 == filter/score checks ==
