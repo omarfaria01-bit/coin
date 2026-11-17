@@ -114,6 +114,9 @@ def test_prize_split_conserves_lamports(lamports: int, n: int) -> None:
     bps = weights_bps(members, dict.fromkeys(members, 0.0), P)
     parts = split_prize(lamports, members, bps)
     assert sum(parts.values()) == lamports and all(v >= 0 for v in parts.values())
+    floors = {m: lamports * bps[m] // 10_000 for m in members}
+    assert all(parts[m] == floors[m] for m in members[1:])  # only rank 1 gets the remainder
+    assert parts[members[0]] == floors[members[0]] + lamports - sum(floors.values())
 
 
 # ------------------------------------------------------------------ §8

@@ -76,16 +76,22 @@ def emergency_reason(
 # ------------------------------------------------------------------ §6 weights
 
 
-def _largest_remainder(exact: Sequence[float], total: int) -> list[int]:
-    """Floor each value, then +1 to the largest remainders.
+def _largest_remainder(
+    exact: Sequence[float], total: int, frozen: frozenset[int] = frozenset()
+) -> list[int]:
+    """Floor each value, then +1 to the largest remainders, skipping `frozen` indices.
 
     Ties go to the earlier index, i.e. the better rank.
     """
     floors = [math.floor(x) for x in exact]
     left = total - sum(floors)
-    if not 0 <= left <= len(exact):
+    order = [
+        i
+        for i in sorted(range(len(exact)), key=lambda i: (-(exact[i] - floors[i]), i))
+        if i not in frozen
+    ]
+    if not 0 <= left <= len(order):
         raise ValueError("weights do not sum to the total")
-    order = sorted(range(len(exact)), key=lambda i: (-(exact[i] - floors[i]), i))
     for i in order[:left]:
         floors[i] += 1
     return floors
@@ -98,8 +104,10 @@ def weights_bps(
     n = len(members)
     if n == 0:
         return {}
-    cap = float(frac(params.weights.cap_pct)) / 100
-    if params.weights.mode == "equal" or n * cap < 1:
+    cap_bps = frac(params.weights.cap_pct) * 100  # exact, e.g. 2000
+    cap = float(cap_bps) / BPS
+    frozen: frozenset[int] = frozenset()
+    if params.weights.mode == "equal" or n * cap_bps < BPS:
         exact = [BPS / n] * n
     else:
         top = max(log_s[m] for m in members)
@@ -118,8 +126,9 @@ def weights_bps(
                 break
             for i in over:
                 capped[i] = True
-        exact = [x * BPS for x in w]
-    bps = _largest_remainder(exact, BPS)
+        frozen = frozenset(i for i in range(n) if capped[i])
+        exact = [float(cap_bps) if capped[i] else w[i] * BPS for i in range(n)]
+    bps = _largest_remainder(exact, BPS, frozen)
     return dict(zip(members, bps, strict=True))
 
 
@@ -131,6 +140,8 @@ def split_prize(lamports: int, members: Sequence[str], bps: Mapping[str, int]) -
     if lamports < 0:
         raise ValueError("negative prize")
     if not members:
+        if lamports:
+            raise ValueError("a prize needs at least one member")
         return {}
     parts = {m: lamports * bps[m] // BPS for m in members}
     parts[members[0]] += lamports - sum(parts.values())
@@ -166,6 +177,7 @@ def run_index(
         by_mint[m.mint] = m
 
     excluded: list[dict] = []
+    status: dict[str, str] = {}
     scored: dict[str, float] = {}
     for mint in sorted(by_mint, key=mint_key):
         m = by_mint[mint]
@@ -178,21 +190,22 @@ def run_index(
                 reason = MISSING
             else:
                 scored[mint] = ls
-        if reason is not None and reason != "no_keyword":
-            excluded.append({"mint": mint, "ticker": m.ticker, "reason": reason})
+        if reason is not None:
+            status[mint] = reason
+            if reason != "no_keyword":
+                excluded.append({"mint": mint, "ticker": m.ticker, "reason": reason})
 
     ranked = rank(scored)
     pos = {mint: i + 1 for i, mint in enumerate(ranked)}
     members = select_members(ranked, prev_members, params)
     bps = weights_bps(members, scored, params)
 
-    reasons = {e["mint"]: e["reason"] for e in excluded}
     changes = {
         "entered": sorted(set(members) - set(prev_members), key=lambda x: pos[x]),
         "exited": [
             {
                 "mint": mint,
-                "reason": reasons.get(mint, f"rank_{pos[mint]}" if mint in pos else "not_measured"),
+                "reason": status.get(mint, f"rank_{pos[mint]}" if mint in pos else "not_measured"),
             }
             for mint in sorted(set(prev_members) - set(members), key=mint_key)
         ],
