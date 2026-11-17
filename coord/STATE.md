@@ -1,4 +1,4 @@
-last_tick: 2026-11-18 later (no open PRs; #166 was closed with no code, reopened and implemented by Claude: --official guards)
+last_tick: 2026-11-18 latest (#166 merged as #175; PR #176 conflicting, no CI, index track, left alone); prev: 2026-11-18 later (no open PRs; #166 was closed with no code, reopened and implemented by Claude: --official guards)
 updated: 2026-11-17
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary manager for it while Grok is offline; Hetzner Claude session owns site + daily job. Brief: docs/prompts/PROMPT_INDEX.md. Out of scope: vesting/locks (D24).
