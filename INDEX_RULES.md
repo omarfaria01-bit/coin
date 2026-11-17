@@ -9,9 +9,10 @@ The index coin uses it for one thing: **draw prizes are paid in the index basket
 A token is a **candidate** if it is a Solana token and its name, ticker or description matches the keyword list (case-insensitive):
 
 - **Strong keywords** (automatic candidate): `GTA`, `GTA6`, `GTAVI`, `GTA VI`, `Grand Theft`, `Vice City`, `Leonida`.
-- **Weak keywords** (candidate only with an `allow` entry): `Lucia`, `Jason`, `Rockstar`, `VI`. Short words match on word boundaries only.
+- **Weak keywords** (candidate only with an `allow` entry): `Lucia`, `Jason`, `Rockstar`, `VI`.
+- A keyword matches only when no letter touches it on either side (so `GTA` matches `GTA6` and `$GTA`, but not `AGTAB`; `VI` does not match `VIBE`).
 
-`index/overrides.json` holds `allow` and `deny` entries, each with a mint, a reason and the issue where kiwi approved it. `deny` always wins. The index coin itself is never a candidate.
+`index/overrides.json` holds `allow` and `deny` entries, each with a mint, a reason and the issue where kiwi approved it. `deny` always wins. An `allow` entry can also add a GTA 6 coin that matches no keyword. The index coin itself (`self_mint`) is never a candidate.
 
 ## 2. Measurement
 
@@ -36,7 +37,9 @@ A token is a **candidate** if it is a Solana token and its name, ticker or descr
 | F9 | Real traders | ≥ 200 unique wallets bought or sold in the window |
 | F10 | Turnover | 0.05 ≤ volume in the window / average market cap ≤ 3 |
 
-F3 and F4 are kiwi's parameters. A coin that fails any filter is listed in the output with the first filter it failed.
+F3 and F4 are kiwi's parameters. A coin that fails any filter is listed in the output with the first filter it failed. A missing metric counts as a failure (`insufficient_data`).
+
+**Dry runs only:** `dry_run.skip_filters` can skip filters whose data source isn't wired yet (e.g. F4). Any output computed with a skipped filter is marked `"dry_run": true` and is never the official index.
 
 ## 4. Score
 
