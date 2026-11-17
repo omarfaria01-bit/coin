@@ -160,3 +160,31 @@ never enters `R_e`. Open question resolved by recommendation: config lives under
 (pad-specific, still empty). **No code issue is opened**: the pad's features are unknown and
 #29 step 4 requires kiwi to confirm scope first. Enabling (or even building) needs: real pad spec,
 sim re-run, kiwi `APPROVED`, and legal/disclosure review (#8; related-party risk, hard rule 6).
+
+## D24 · 2026-11-17 · Index coin: no supply vesting or locks (kiwi, #156)
+kiwi decided (in chat with the cloud Claude session, 17 Nov): the first coin on the engine is the GTA 6
+index coin, and it has **no supply vesting, no dev-token lock, no early-buy vesting, no taint/forfeit,
+no underwater boost, no treasury bot**. Their flags stay off (D19 already has them off at launch) and the
+dev lock is removed from this coin's launch checklist. This overrides the COIN_MATH §16 "dev tokens
+hard-locked: on" row **for this coin only**. Launch stays clean under hard rule 6: 0% bundle, no team
+buys except an optional single dev buy in the creation tx from the publicly declared dev wallet.
+No engine default changed, so no sim re-run is needed.
+
+## D25 · 2026-11-17 · GTA 6 index rules v0.1 (kiwi's parameters, #156)
+`INDEX_RULES.md` + `index/params.json`. kiwi set F3 (top 10 holders between 13% and 27%) and F4
+(total fees ≥ 10 SOL, a minimum). Other values are starting defaults chosen by Claude: liquidity ≥ $50k,
+bundle ≤ 10%, dev ≤ 5%, ≤ 3 launches in 7 days, authorities revoked, ≥ 200 unique traders,
+turnover 0.05–3, score `0.4 ln MC + 0.3 ln Liq + 0.2 ln Fees + 0.1 ln Traders`, buffer 8/12,
+equal weights, rebalance 18:00 UTC. Open: the data source for F4 and F9 (G1 found no confirmed
+official source for total fees; `reports/research_index_data_2026-11.md`). Until a source is fixed,
+F4 cannot be evaluated and the index is computed only as a dry run.
+
+## D23 · 2026-11-18 · Align `params.py` defaults to COIN_MATH v0.3.3 (#152)
+Eight defaults in `engine/params.py` / `config/coin.json` moved to the spec values: `underwater.twap_hours`
+6→24 (§5), `sybil.weights.same_fee_payer` 1→0, `direct_transfer` 1→3/5, `co_buy` 7/10→2/5,
+`identical_balances` 3/5→3/10, `sybil.review_cluster_size` 10→50 (§7), `draws.min_balance_usd` 10→0 (§9),
+`treasury_bot.breaker_drawdown` 3/5→2/5 (§12). COIN_MATH is the source of truth, so the code was stale.
+All eight fields are unused by `run_epoch` today (enforced weights live in `engine/sybil_v033.py`), so the
+sim re-run is unchanged: only goldens' `inputs_hash` moves, payouts/scores/state are byte-identical
+(`tools/regen_golden.py --check`, 33 acceptance rows PASS). `KNOWN_DRIFT` is now empty; the consistency
+test fails hard on any future movement. No kiwi decision needed (spec values, not new choices).
