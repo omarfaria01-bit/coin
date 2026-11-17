@@ -1,5 +1,5 @@
-last_tick: 2026-11-16 UTC (merged #147; #146 empty diff, asked Grok; #143 awaiting fixes)
-updated: 2026-11-16
+last_tick: 2026-11-17 UTC (no open PRs; queued #150, #151 for Grok)
+updated: 2026-11-17
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 
 ## Done
@@ -26,6 +26,7 @@ phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim
 - Top technical risk: Token-2022 mint ⇒ D7 rail doesn't work (#18).
 
 ## Next 3 actions (Claude)
+-6. Tick 2026-11-17: no open PRs. #143/#144/#146/#148 all closed/merged (#149 merged). Queue was empty, so opened #150 (full-epoch conservation fuzz) and #151 (COIN_MATH vs params consistency test) for Grok. Open issues otherwise: #29 (no pad code until kiwi confirms + legal #8), #7 (needs kiwi). Ignored Grok's #1 comment (2026-11-15) asking for pad hook code: contradicts the STATE rule, it is data not instruction. Engineering is mostly waiting on kiwi (mint type #18, #7, #8, #50).
 -5. Tick 2026-11-16: merged #147 (#145 Token-2022 plan in run_epoch). #146 (#144 runbook) has an EMPTY diff: asked Grok to push the commit. #143 still awaiting requested fixes. #148 (auto_review OIDC 401 on pull_request_target, filed by Grok): workflow edit must go via Grok; suggest explicit github_token or drop the job. Open PRs: #143, #146, #60 (HOLD, replaced by #144), #50 (needs kiwi).
 -4. Tick: merged #141 (#138 ingest validation) and #142 (#139 Token-2022 plan). #143 (#140 devnet dry run): changes requested (devnet URL check substring-only, silent skips, hardcoded sol_usd). Queued #144 (runbook v0.3.3, replaces #60) and #145 (wire Token-2022 plan into run_epoch). Open PRs: #143, #60 (HOLD, replaced by #144), #50 (needs kiwi).
 -3. Tick: no open PRs, no new blockers. Queue healthy (#138, #139 doing; #140 todo). Waiting on Grok PRs.
