@@ -1,12 +1,12 @@
-# Index red team — GTA 6 index v0.1 (18 Nov 2026)
+# Index red team — GTA 6 index v0.1 (18 Nov 2026 CET)
 
-Scope: `INDEX_RULES.md` v0.1 (#157) and the `index/` code (#158–#160), all merged on `main` at `6129c84` (#157–#160, plus #165 emergency/review fixes), against the attacks in #162. Analysis and simulation only: no wallets, no token creation, no mainnet writes. The G2 adapter (#161) is not merged and F4 has no confirmed source, so "replay" below means the actual pure filter/select code on synthetic metrics, plus a cost model using live chain constants. Replay pinned `main@6129c84`; re-run it if the rules or code change.
+Scope: `INDEX_RULES.md` v0.1 (#157) and the `index/` code (#158–#160), all merged on `main` at `6129c84` (#157–#160, plus #165 emergency/review fixes), against the attacks in #162. Date note: data reads were made 2026-11-17 23:00–23:25 UTC (2026-11-18 00:00–00:25 CET). The filename uses the CET date; every chain/API timestamp below is UTC. Analysis and simulation only: no wallets, no token creation, no mainnet writes. The G2 adapter (#161) is not merged and F4 has no confirmed source, so "replay" below means the actual pure filter/select code on synthetic metrics, plus a cost model using live chain constants. Replay pinned `main@6129c84`; re-run it if the rules or code change.
 
 ## TL;DR
 
 A well-funded attacker can buy a top-10 slot for roughly **10–17 SOL ($750–$1,300) plus recoverable capital**, and can make a low-float coin rank **#1** with a $50k pool. The binding constraints are not the hard filters; they are the 10 SOL F4 floor and the 24-hour averaging. Three things are cheap enough to be launch-day risks: a low-float high-MC coin, a sybil-distributed supply, and a fixed 10 SOL fee floor that does not scale with market cap. One config hole (`self_mint: null`) and one process hole (F4 can be skipped) must be closed before the first official output.
 
-| # | Attack | Works? | Cost (18 Nov 2026) | Rule that stops it | Proposed fix |
+| # | Attack | Works? | Cost (17 Nov 2026 UTC) | Rule that stops it | Proposed fix |
 |---|---|---|---|---|---|
 | 1 | Low-float high-MC: 0.1% float + $50k liquidity, 37 holder wallets | **Yes** | ~17 SOL ($1,290) + $50k recoverable capital | none; F10 only forces 5% volume | #167 |
 | 2 | Wash volume to pass F10 (attacker owns the pool) | **Yes** | 0.27–6.7 SOL at 0.02% protocol fee; 334 SOL at 1% | F10 ratio only; no wallet/round-trip check | #170 |
@@ -44,7 +44,7 @@ rank  3 T22      logS=10.794624 bps= 1000 mc=5000000  liq=150000
 rank  4 LEGIT    logS=10.428108 bps= 1000 mc=2000000  liq=150000
 ```
 
-FLOAT passes F1–F10 with `top10=20%`, `dev=2%`, `200` traders, `10` SOL fees, `volume=$2.5M`. DexScreener documents FDV as `(total supply − burned) × price`; `marketCap` may use self-reported circulating supply, and aggregation across pairs is not documented (docs read 18 Nov 2026).
+FLOAT passes F1–F10 with `top10=20%`, `dev=2%`, `200` traders, `10` SOL fees, `volume=$2.5M`. DexScreener documents FDV as `(total supply − burned) × price`; `marketCap` may use self-reported circulating supply, and aggregation across pairs is not documented (docs read 17 Nov 2026 UTC).
 
 ## 2. Wash volume and fake traders (F10, F9)
 
@@ -99,7 +99,7 @@ A candidate is any token whose name, ticker or description matches a strong keyw
 T22 first_failed=None status=None logS=10.794623981827
 ```
 
-Token-2022 officially supports `permanent_delegate`, `transfer_hook`, `transfer_fee`, `pausable` and `default_account_state` (SPL docs, 18 Nov 2026). Revoking mint/freeze does not remove them. A permanent delegate can transfer or burn a holder's tokens; a hook can block the basket buy; a fee taxes it; a frozen default state makes new ATAs unusable. Raydium rejects transfer hooks and Meteora DBC revokes one at graduation, but a custom pool or another venue may not; the G2 adapter must record the owner program and extensions.
+Token-2022 officially supports `permanent_delegate`, `transfer_hook`, `transfer_fee`, `pausable` and `default_account_state` (SPL docs, 17 Nov 2026 UTC). Revoking mint/freeze does not remove them. A permanent delegate can transfer or burn a holder's tokens; a hook can block the basket buy; a fee taxes it; a frozen default state makes new ATAs unusable. Raydium rejects transfer hooks and Meteora DBC revokes one at graduation, but a custom pool or another venue may not; the G2 adapter must record the owner program and extensions.
 
 ## 6. Prize basket and emergency removal
 
@@ -123,12 +123,12 @@ Emergency removal triggers on a ≥50% liquidity drop in 1h. On a constant-produ
 
 | Input | Value | Source |
 |---|---|---|
-| SOL/USD | 74.89 | CoinGecko simple price, 18 Nov 2026 |
-| Token-account rent (165 B) | 0.00148844 SOL (1,488,440 lamports) | `getMinimumBalanceForRentExemption(165)`, mainnet + devnet, 18 Nov 2026 |
+| SOL/USD | 74.89 | CoinGecko simple price, 17 Nov 2026 UTC |
+| Token-account rent (165 B) | 0.00148844 SOL (1,488,440 lamports) | `getMinimumBalanceForRentExemption(165)`, mainnet + devnet, 17 Nov 2026 UTC |
 | Base fee | 0.000005 SOL/signature | Solana docs; verified on tx `2fpoWQS5gxbTWL4fQHMZEXScH7ZfS2aEXyNpdvyJgbfBdUAqBsDuXrqQnM2FNsbq8dbfhExzktB9FqkggN8yXorg` (fee 5,036, 1 signature) |
 | F4 floor | 10 SOL = $749 | `index/params.json` |
 | Swap/protocol fee | 1% pump curve; 0.02–0.25% own DEX pool | Assumption; verify the venue before using these numbers |
-| Token creation | 0–0.02 SOL | Assumption/upper bound; pump.fun docs were not reachable 18 Nov 2026 — **UNVERIFIED** |
+| Token creation | 0–0.02 SOL | Assumption/upper bound; pump.fun docs were not reachable 17 Nov 2026 UTC — **UNVERIFIED** |
 
 Costs exclude capital that is returned (liquidity, ATA rent) and exclude the attacker's market risk. A 3% slippage cap on a prize part is a limit on the victim, not on the attacker.
 
@@ -144,7 +144,7 @@ Metrics used (synthetic; all other fields pass: `coverage=1`, `age=48h`, `bundle
 | REBRAND | 8,000,000 | 400,000 | 12 | 250 | 800,000 | 20% |
 | T22 | 5,000,000 | 150,000 | 12 | 250 | 300,000 | 20% |
 
-`PYTHONPATH=. uv run python /tmp/opencode/index_redteam_replay.py`, `main` at `6129c84` (#157–#160, #165), 18 Nov 2026:
+`uv run python reports/index_redteam_replay.py`, `main` at `6129c84` (#157–#160, #165), 17 Nov 2026 UTC. The script is committed in this PR under `reports/`; it uses only the pure `index/` code and synthetic metrics.
 
 ```
 == filter/score checks ==
@@ -204,16 +204,16 @@ volume=   6000001 turnover=3.000001 -> F10
 2. **P1 if the rules can still change:** #167 (low-float), #169 (seasoning/clusters), #170 (F9/F10), #171 (metadata/Token-2022). These are the attacks that cost under 20 SOL.
 3. **P1, kiwi's number:** #168. A flat 10 SOL is 0.0015% of a $50M coin; the floor should scale or the index is a pay-to-enter leaderboard at the high end.
 4. **P2:** #172. Do not run a public prize buy as a single market order at a known slot.
-5. Keep the "someone can pay to qualify" caveat in §9 known limits, and add these measured costs to it once the rules are updated.
+5. Keep the "someone can pay to qualify" caveat in `INDEX_RULES.md` §9 known limits, and add these measured costs to it once the rules are updated.
 
 ## 12. Limitations
 
 - The rules and code are merged on `main` at `6129c84` (#157–#160, #165). The replay pins that commit; if they change, re-run it.
-- G2 (#161) is unmerged, so there is no live recorded index data; the replay is synthetic. The cost model uses live constants, not live attack transactions.
-- Pump.fun creation fee, metadata mutability and Token-2022 venue policy were not confirmed on 18 Nov 2026; those rows are marked **UNVERIFIED**. The pump.fun docs pages returned 403/transport errors from this session.
+- G2 (#161) is unmerged, so there is no live recorded index data; the replay is synthetic. The cost model uses live constants, not live attack transactions. The replay is reproducible from `reports/index_redteam_replay.py`.
+- Pump.fun creation fee, metadata mutability and Token-2022 venue policy were not confirmed on 17 Nov 2026 UTC; those rows are marked **UNVERIFIED**. The pump.fun docs pages returned 403/transport errors from this session.
 - No wallet, token creation, swap or mainnet write was used. All chain reads were `getMinimumBalanceForRentExemption`, `getSignaturesForAddress` and `getTransaction` against the public RPC.
 
-## Sources (accessed 18 Nov 2026)
+## Sources (accessed 17 Nov 2026 UTC)
 
 - `INDEX_RULES.md` v0.1 (#157), `index/params.json`, `index/filters.py`, `index/select.py` (#158–#160).
 - `reports/research_index_data_2026-11.md` (G1): F4 source gap, DexScreener/Birdeye/Solana Tracker fields.
