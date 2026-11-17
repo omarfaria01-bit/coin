@@ -18,6 +18,7 @@ liquidity source, and the price source when DAS `price_info` is missing.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
@@ -28,6 +29,119 @@ def lamports_to_sol(lamports: int) -> float:
     if lamports < 0:
         raise ValueError("negative lamports")
     return lamports / LAMPORTS_PER_SOL
+
+
+def _finite(value: object) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    number = float(value)
+    return number if math.isfinite(number) else None
+
+
+def market_cap_usd(
+    price: float | None, supply_raw: int | None, decimals: int | None
+) -> float | None:
+    """Whole-token USD price times UI supply. Missing or non-finite inputs stay None."""
+    px = _finite(price)
+    if px is None or supply_raw is None or decimals is None or supply_raw < 0 or decimals < 0:
+        return None
+    cap = px * supply_raw / 10**decimals
+    return cap if math.isfinite(cap) else None
+
+
+def mean(values: Iterable[float]) -> float | None:
+    rows = [v for v in values if _finite(v) is not None]
+    if not rows:
+        return None
+    return sum(rows) / len(rows)
+
+
+def median(values: Sequence[float]) -> float | None:
+    rows = sorted(v for v in values if _finite(v) is not None)
+    if not rows:
+        return None
+    mid = len(rows) // 2
+    if len(rows) % 2:
+        return rows[mid]
+    return (rows[mid - 1] + rows[mid]) / 2
+
+
+def coverage(times: Iterable[int], start: int, end: int, bucket_seconds: int) -> float:
+    """Share of `[start, end)` buckets that contain a sample. Empty window → 0."""
+    if bucket_seconds <= 0 or end <= start:
+        return 0.0
+    expected = max(1, (end - start) // bucket_seconds)
+    filled = {
+        (t - start) // bucket_seconds
+        for t in times
+        if start <= t < end and 0 <= (t - start) // bucket_seconds < expected
+    }
+    return len(filled) / expected
+
+
+@dataclass(frozen=True)
+class Sample:
+    mint: str
+    t: int
+    mc_usd: float | None = None
+    liquidity_usd: float | None = None
+    volume_usd: float | None = None
+    top10_pct: float | None = None
+
+
+@dataclass(frozen=True)
+class WindowStats:
+    coverage: float
+    mc_usd: float | None
+    liquidity_usd: float | None
+    volume_usd: float | None
+    top10_pct: float | None
+
+
+def aggregate_samples(
+    samples: Sequence[Sample],
+    start: int,
+    end: int,
+    sample_seconds: int,
+    holder_seconds: int,
+) -> WindowStats:
+    """Means of MC and liquidity. Volume is the latest h24 reading, already a window sum.
+
+    Top-10 is the median of the last holder sample in each holder bucket.
+    """
+    rows = [s for s in samples if start <= s.t < end]
+    vol = [s for s in rows if _finite(s.volume_usd) is not None]
+    per_bucket: dict[int, float] = {}
+    for row in rows:
+        pct = _finite(row.top10_pct)
+        if pct is None or holder_seconds <= 0:
+            continue
+        per_bucket[row.t // holder_seconds] = pct
+    latest = max(vol, key=lambda s: s.t).volume_usd if vol else None
+    return WindowStats(
+        coverage=coverage((s.t for s in rows), start, end, sample_seconds),
+        mc_usd=mean(s.mc_usd for s in rows if s.mc_usd is not None),
+        liquidity_usd=mean(s.liquidity_usd for s in rows if s.liquidity_usd is not None),
+        volume_usd=latest,
+        top10_pct=median(list(per_bucket.values())),
+    )
+
+
+def pick_pair(pairs: Sequence[Mapping[str, object]], mint: str) -> Mapping[str, object] | None:
+    """Deepest DexScreener pair whose base token is `mint`. Missing liquidity sorts last."""
+    best: Mapping[str, object] | None = None
+    best_liq = -1.0
+    for pair in pairs:
+        base = pair.get("baseToken")
+        if not isinstance(base, Mapping) or base.get("address") != mint:
+            continue
+        liq = pair.get("liquidity")
+        usd = liq.get("usd") if isinstance(liq, Mapping) else None
+        score = _finite(usd)
+        rank = score if score is not None else -1.0
+        if best is None or rank > best_liq:
+            best, best_liq = pair, rank
+    return best
 
 
 def trades_mint(tx: Mapping[str, object], mint: str) -> bool:
