@@ -50,7 +50,8 @@ log S = 0.4·ln(MC) + 0.3·ln(Liquidity) + 0.2·ln(Fees) + 0.1·ln(Traders)
 ```
 
 - `MC`, `Liquidity`: window averages in USD. `Traders`: F9's count.
-- `Fees`: trader fees in the window if the source provides them, otherwise lifetime total fees (`score_fees_window` in params; the choice is a DECISIONS.md entry).
+- `Fees`: trader fees in the window if the source provides them, otherwise lifetime total fees (`score_fees_window` in params; the choice is a DECISIONS.md entry). The choice is **global**: every coin is scored on the same fee measure, and a coin missing it is `insufficient_data`.
+- Any metric that is not a finite number (NaN, infinity) counts as missing.
 - The filters guarantee every input is > 0. Changing units (USD vs SOL, lamports) does not change the ranking.
 - `log S` is rounded to 12 decimals. Ties are broken by mint address (byte order). **Rank 1 = highest S.**
 
@@ -84,7 +85,7 @@ Weights are published as integer basis points summing to 10,000: floor each, the
 ## 8. Output (`index/out/<YYYY-MM-DD>.json`, canonical JSON)
 
 - `as_of` (rebalance time), `params_hash`, `code_commit`, `inputs_hash`
-- `members`: mint, ticker, rank, `log_s`, `weight_bps`, every metric with its source and fetch time
+- `members`: mint, ticker, rank, `log_s`, `weight_bps`, every metric, and `sources` mapping each metric to `"<source>@<ISO fetch time>"`
 - `excluded`: mint, ticker, first failed filter (or `insufficient_data`, `denied`)
 - `changes`: entered / exited, with the reason
 - `emergency`: removals since the last rebalance, with the reason
