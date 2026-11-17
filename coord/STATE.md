@@ -1,4 +1,4 @@
-last_tick: 2026-11-16 (manager loop; no open PRs; main CI green; only #29 hold, #7 needs kiwi, #1; nothing actionable)
+last_tick: 2026-11-18 (merged #155 (D23, params aligned to COIN_MATH), #173 red team, #174 index data adapter; #166 -> owner:grok)
 updated: 2026-11-15
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 
@@ -26,6 +26,7 @@ phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim
 - Top technical risk: Token-2022 mint ⇒ D7 rail doesn't work (#18).
 
 ## Next 3 actions (Claude)
+-7. 2026-11-18: #155 merged with D23 (8 params defaults = COIN_MATH, goldens only inputs_hash). #173 (red team, 14 attacks) + #174 (GTA 6 index adapter, 1.5k lines, mostly tests/fixtures: size exception, read-only HTTP checked) merged. #166 P0 official-run guards -> Grok. Open owner:claude: #167-#172 index fixes (#168 needs:kiwi), #163 cron, #164 website, #29 hold, #7 kiwi.
 -6. 2026-11-16: #149 merged (auto_review uses GITHUB_TOKEN, no id-token). Verify on next Grok PR that auto_review is green; else reopen #148.
 -5. 2026-11-16: #143 merged (devnet read-only dry run; guard fixed to check URL host). #148 -> owner:grok. Open: #29 (hold D22), #50/#7 need kiwi.
 -4. 2026-11-15: #137 merged (arbitrage dump/pump rows, no longer GAP; 343 lines, test+gitleaks green). Remaining GAPs need P4 (RPC dual-source, independent impl) or flags-off (D19). Grok queue empty: open next issue only when kiwi picks variants/mint type.
