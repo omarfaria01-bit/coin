@@ -1,6 +1,6 @@
 # Index red team — GTA 6 index v0.1 (18 Nov 2026)
 
-Scope: `INDEX_RULES.md` v0.1 (#157) and the pure `index/` code (#158–#160), against the attacks in #162. Analysis and simulation only: no wallets, no token creation, no mainnet writes. The G2 adapter (#161) is not merged and F4 has no confirmed source, so "replay" below means the actual pure filter/select code on synthetic metrics, plus a cost model using live chain constants. The rules and code are still open PRs; replay pinned PR #160 head `ed9d37e`. Re-run the replay if the rules change before merge.
+Scope: `INDEX_RULES.md` v0.1 (#157) and the `index/` code (#158–#160), all merged on `main` at `6129c84` (#157–#160, plus #165 emergency/review fixes), against the attacks in #162. Analysis and simulation only: no wallets, no token creation, no mainnet writes. The G2 adapter (#161) is not merged and F4 has no confirmed source, so "replay" below means the actual pure filter/select code on synthetic metrics, plus a cost model using live chain constants. Replay pinned `main@6129c84`; re-run it if the rules or code change.
 
 ## TL;DR
 
@@ -35,7 +35,7 @@ With `L = $50,000` and `f = 0.1%`, `MC = $50,000,000` — a top score with a $50
 
 F10 then requires `0.05 × MC = $2.5M` of 24h volume. If the attacker owns the pool, the LP share of the swap fee comes back to them; the net cost is the protocol share. At 0.02% that is **$500 (6.7 SOL)**, at 0.25% **$6,250 (83 SOL)**, at a 1% pump curve **$25,000 (334 SOL)**. Add F4's 10 SOL and the sybil rent: **~17 SOL ($1,290) + $50k recoverable capital** at the low end.
 
-Replay (10 synthetic candidates, pure code from PR #160):
+Replay (10 synthetic candidates, main `6129c84`):
 
 ```
 rank  1 FLOAT    logS=11.327296 bps= 1000 mc=50000000 liq=50000
@@ -144,7 +144,7 @@ Metrics used (synthetic; all other fields pass: `coverage=1`, `age=48h`, `bundle
 | REBRAND | 8,000,000 | 400,000 | 12 | 250 | 800,000 | 20% |
 | T22 | 5,000,000 | 150,000 | 12 | 250 | 300,000 | 20% |
 
-`uv run python /tmp/opencode/index_redteam_replay.py`, pure `index/` code from PR #160 (`ed9d37e`), 18 Nov 2026:
+`PYTHONPATH=. uv run python /tmp/opencode/index_redteam_replay.py`, `main` at `6129c84` (#157–#160, #165), 18 Nov 2026:
 
 ```
 == filter/score checks ==
@@ -208,7 +208,7 @@ volume=   6000001 turnover=3.000001 -> F10
 
 ## 12. Limitations
 
-- The rules and code are open PRs #157–#160, not `main`. The replay pins `ed9d37e`; if the rules change, re-run.
+- The rules and code are merged on `main` at `6129c84` (#157–#160, #165). The replay pins that commit; if they change, re-run it.
 - G2 (#161) is unmerged, so there is no live recorded index data; the replay is synthetic. The cost model uses live constants, not live attack transactions.
 - Pump.fun creation fee, metadata mutability and Token-2022 venue policy were not confirmed on 18 Nov 2026; those rows are marked **UNVERIFIED**. The pump.fun docs pages returned 403/transport errors from this session.
 - No wallet, token creation, swap or mainnet write was used. All chain reads were `getMinimumBalanceForRentExemption`, `getSignaturesForAddress` and `getTransaction` against the public RPC.
