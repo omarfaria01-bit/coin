@@ -178,3 +178,19 @@ def test_ranking_unchanged_by_unit_scaling(rows: list, k: float) -> None:
 def test_rank_ties_broken_by_mint_bytes() -> None:
     scores = {mint(9): 1.0, mint(3): 1.0, mint(5): 2.0}
     assert rank(scores) == [mint(5), mint(3), mint(9)]
+
+
+@pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf")])
+@pytest.mark.parametrize("key", ["liquidity_usd", "top10_pct", "total_fees_sol", "dev_pct"])
+def test_non_finite_metrics_fail_safe(key: str, bad: float) -> None:
+    assert first_failed_filter(good(**{key: bad}), P) == "insufficient_data"
+
+
+def test_lifetime_fee_measure_is_global() -> None:
+    life = P.model_copy(
+        update={"score": P.score.model_copy(update={"score_fees_window": "lifetime"})}
+    )
+    m = good(window_fees_sol=None)
+    assert log_score(m, P) is None  # window measure chosen, missing -> excluded
+    assert log_score(m, life) is not None
+    assert log_score(good(window_fees_sol=float("nan")), P) is None

@@ -37,7 +37,7 @@ class Metrics:
     freeze_authority_revoked: bool | None = None
     unique_traders: int | None = None
     volume_usd: float | None = None  # window total
-    sources: Mapping[str, str] = field(default_factory=dict)
+    sources: Mapping[str, str] = field(default_factory=dict)  # metric -> "<source>@<ISO time>"
 
 
 # ------------------------------------------------------------------ §1 universe
@@ -73,6 +73,24 @@ def candidate_status(m: Metrics, params: IndexParams, overrides: Overrides) -> s
 
 MISSING = "insufficient_data"
 
+_NUMERIC = (
+    "coverage",
+    "age_hours",
+    "liquidity_usd",
+    "mc_usd",
+    "top10_pct",
+    "total_fees_sol",
+    "window_fees_sol",
+    "bundle_pct",
+    "dev_pct",
+    "volume_usd",
+)
+
+
+def _all_finite(m: Metrics) -> bool:
+    """NaN or infinity anywhere counts as missing data (fail-safe, never fail-open)."""
+    return all(getattr(m, k) is None or math.isfinite(getattr(m, k)) for k in _NUMERIC)
+
 
 def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
     """First failed filter ("F1".."F10" or "insufficient_data"), or None if all pass.
@@ -81,6 +99,8 @@ def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
     """
     f = params.filters
     skip = set(params.dry_run.skip_filters)
+    if not _all_finite(m):
+        return MISSING
     if m.coverage is None or m.coverage < float(frac(params.min_coverage)):
         return MISSING
 
@@ -148,7 +168,7 @@ def log_score(m: Metrics, params: IndexParams) -> float | None:
     s = params.score
     fees = m.window_fees_sol if s.score_fees_window == "window" else m.total_fees_sol
     vals = (m.mc_usd, m.liquidity_usd, fees, m.unique_traders)
-    if any(v is None or v <= 0 for v in vals):
+    if any(v is None or not math.isfinite(v) or v <= 0 for v in vals):
         return None
     mc, liq, fe, tr = (float(v) for v in vals)  # type: ignore[arg-type]
     raw = (
