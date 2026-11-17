@@ -22,7 +22,10 @@ def frac(x: Num) -> Fraction:
     if isinstance(x, int):
         return Fraction(x)
     if isinstance(x, str):
-        return Fraction(x.strip())
+        try:
+            return Fraction(x.strip())
+        except ZeroDivisionError as e:
+            raise ValueError(f"zero denominator: {x!r}") from e
     raise ValueError(f"not an exact number: {x!r}")
 
 

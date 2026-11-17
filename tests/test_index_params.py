@@ -65,3 +65,5 @@ def test_frac_parses_exact_values() -> None:
     assert frac(3) == 3
     with pytest.raises(ValueError):
         frac(True)  # type: ignore[arg-type]
+    with pytest.raises(ValueError):
+        frac("1/0")
