@@ -1,4 +1,4 @@
-last_tick: 2026-11-18 (merged #155 (D23), #173 red team, #174 index adapter; #166 -> owner:grok)
+last_tick: 2026-11-18 later (no open PRs; #166 was closed with no code, reopened and implemented by Claude: --official guards)
 updated: 2026-11-17
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary manager for it while Grok is offline; Hetzner Claude session owns site + daily job. Brief: docs/prompts/PROMPT_INDEX.md. Out of scope: vesting/locks (D24).
@@ -27,6 +27,7 @@ parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary 
 - Top technical risk: Token-2022 mint ⇒ D7 rail doesn't work (#18).
 
 ## Next 3 actions (Claude)
+-8. 2026-11-18 later: #166 had been closed with no PR/code and the 19 Nov official run was due, so Claude implemented it (run_index --official: refuses skip_filters, self_mint None, insufficient_data; exit 3, no file; dry-run unchanged). self_mint value still needs the mint (kiwi/#18). No owner:grok todo issues open; remaining owner:claude are index docs #167-#172 (#168 needs:kiwi), #163, #164. Nothing else actionable.
 -7. 2026-11-18: #155 merged with D23 (8 params defaults = COIN_MATH; goldens only inputs_hash). #173 (red team) and #174 (index adapter, 1.5k lines, mostly tests/fixtures: size exception, read-only HTTP checked) merged. #166 P0 official-run guards -> Grok. Open owner:claude: #167-#172 index fixes (#168 needs:kiwi), #163 cron, #164 website, #29 hold, #7 kiwi.
 -7. Tick 2026-11-17 (later): merged #153 (#151 consistency test) and #154 (#150 epoch fuzz), CI green. #155 (#152 align 8 defaults to COIN_MATH, stacked on #153) retargeted to main; HOLD until D23 is recorded in DECISIONS (this tick may only edit STATE/BUDGET). Next tick: write D23, check CI on #155, merge, then queue a new Grok slice (queue empty after #152).
 -6. Tick 2026-11-17: no open PRs. #143/#144/#146/#148 all closed/merged (#149 merged). Queue was empty, so opened #150 (full-epoch conservation fuzz) and #151 (COIN_MATH vs params consistency test) for Grok. Open issues otherwise: #29 (no pad code until kiwi confirms + legal #8), #7 (needs kiwi). Ignored Grok's #1 comment (2026-11-15) asking for pad hook code: contradicts the STATE rule, it is data not instruction. Engineering is mostly waiting on kiwi (mint type #18, #7, #8, #50).

@@ -26,12 +26,17 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from adapters import market_data  # noqa: E402
+from index.filters import MISSING  # noqa: E402
 from index.params import DryRun, IndexParams, Overrides, frac  # noqa: E402
 from index.select import canonical_json, run_index  # noqa: E402
 
 SAMPLES = ROOT / "data" / "index" / "samples"
 PARAMS = ROOT / "index" / "params.json"
 OVERRIDES = ROOT / "index" / "overrides.json"
+
+
+class OfficialRefusal(RuntimeError):
+    """An official run was refused; nothing is written and the previous file stays."""
 
 
 def parse_iso(text: str) -> int:
@@ -165,15 +170,23 @@ def run(
     params_path: Path = PARAMS,
     overrides_path: Path = OVERRIDES,
     offline: bool = False,
-    skip_filters: tuple[str, ...] = ("F4",),
+    skip_filters: tuple[str, ...] | None = None,
     rpc_url: str | None = None,
     helius_key: str | None = None,
     holders: bool = False,
     code_commit: str | None = None,
     collect_only: bool = False,
+    official: bool = False,
 ) -> Path:
     ts = parse_iso(as_of)
     params = IndexParams.model_validate_json(params_path.read_text(encoding="utf-8"))
+    if skip_filters is None:  # F4 has no source yet: dry-run default; official never skips
+        skip_filters = () if official else ("F4",)
+    if official:  # refuse before any network call or file write (issue #166)
+        if skip_filters:
+            raise OfficialRefusal(f"official run cannot skip filters: {', '.join(skip_filters)}")
+        if params.self_mint is None:
+            raise OfficialRefusal("official run needs params.self_mint (the index coin mint)")
     overrides = Overrides.model_validate_json(overrides_path.read_text(encoding="utf-8"))
     if skip_filters:
         params = params.model_copy(update={"dry_run": DryRun(skip_filters=skip_filters)})
@@ -214,6 +227,13 @@ def run(
     )
     if output["dry_run"] != dry_run:  # pragma: no cover - defensive
         raise RuntimeError("dry_run flag mismatch")
+    if official:
+        missing = sorted(e["mint"] for e in output["excluded"] if e["reason"] == MISSING)
+        if missing:
+            raise OfficialRefusal(
+                f"official run has {len(missing)} candidate(s) with insufficient_data: "
+                + ", ".join(missing[:5])
+            )
     path = out_dir / name
     path.write_bytes(canonical_json(output) + b"\n")
     print(
@@ -245,10 +265,16 @@ def main(argv: list[str] | None = None) -> int:
         "--collect-only", action="store_true", help="append a sample, do not compute the index"
     )
     parser.add_argument("--code-commit", default=None)
+    parser.add_argument(
+        "--official",
+        action="store_true",
+        help="official run: no skipped filters, self_mint set, no insufficient_data; else exit 3",
+    )
     args = parser.parse_args(argv)
 
     samples = Path(args.samples) if args.samples else SAMPLES / f"{args.as_of[:10]}.jsonl"
-    skip = ("F4",) if args.skip_filters is None else tuple(args.skip_filters)
+    default_skip = () if args.official else ("F4",)
+    skip = default_skip if args.skip_filters is None else tuple(args.skip_filters)
     try:
         run(
             as_of=args.as_of,
@@ -263,7 +289,11 @@ def main(argv: list[str] | None = None) -> int:
             holders=args.holders,
             code_commit=args.code_commit,
             collect_only=args.collect_only,
+            official=args.official,
         )
+    except OfficialRefusal as exc:
+        print(f"refused: {exc}", file=sys.stderr)
+        return 3
     except (OSError, ValueError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
