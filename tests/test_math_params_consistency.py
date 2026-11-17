@@ -93,12 +93,22 @@ SPEC_DEFAULTS: tuple[SpecDefault, ...] = (
     SpecDefault("3", "T_START = 6 hours", "hold.t_start_seconds", 6 * _HOUR),
     SpecDefault("3", "h(a) knot table", "hold.knots", _HOLD_KNOTS),
     SpecDefault("3", "E1/E2 split at 48h", "hold.boost_age_seconds", 48 * _HOUR),
+    SpecDefault("5", "P-bar window = the epoch's 86,400 s", "underwater.twap_hours", 24),
     SpecDefault("5", "beta = 1/2", "underwater.beta", Fraction(1, 2)),
     SpecDefault("5", "D_max = 3/4", "underwater.d_max", Fraction(3, 4)),
     SpecDefault("5", "boost starts at age 48h", "underwater.min_age_hours", 48),
     SpecDefault("16", "underwater boost off at launch", "underwater.enabled", False),
     SpecDefault("6", "CAP = 1/20", "scoring.cap", Fraction(1, 20)),
     SpecDefault("7", "links merge at sum >= 1", "sybil.merge_threshold", 1),
+    SpecDefault("7", "shared fee payer has no link weight", "sybil.weights.same_fee_payer", 0),
+    SpecDefault(
+        "7", "L1 token transfer weight 0.6", "sybil.weights.direct_transfer", Fraction(3, 5)
+    ),
+    SpecDefault("7", "L4 co-trade weight 0.4", "sybil.weights.co_buy", Fraction(2, 5)),
+    SpecDefault(
+        "7", "L5 identical balance weight 0.3", "sybil.weights.identical_balances", Fraction(3, 10)
+    ),
+    SpecDefault("7", "review clusters > 50 wallets", "sybil.review_cluster_size", 50),
     SpecDefault("7", "L4 same-second tolerance +/-1", "sybil.co_buy_slot_tolerance", 1),
     SpecDefault("7", "L4 size tolerance 10%", "sybil.co_buy_size_tolerance", Fraction(1, 10)),
     SpecDefault("7", "L4 min occurrences 3", "sybil.co_buy_min_occurrences", 3),
@@ -114,6 +124,7 @@ SPEC_DEFAULTS: tuple[SpecDefault, ...] = (
         "13", "MIN_PAYOUT_Q default 0.001 SOL", "rewards.push_min_transfer_lamports", 1_000_000
     ),
     SpecDefault("16", "holder rewards on at launch", "rewards.enabled", True),
+    SpecDefault("9", "draw eligibility has no USD gate", "draws.min_balance_usd", 0),
     SpecDefault("9", "DRAW_PERIOD = 7 epochs", "draws.period_days", 7),
     SpecDefault(
         "9",
@@ -145,59 +156,18 @@ SPEC_DEFAULTS: tuple[SpecDefault, ...] = (
     SpecDefault("12", "band = 0.05", "treasury_bot.band", 0.05),
     SpecDefault("12", "max 2% of 1h pool volume", "treasury_bot.max_pool_volume_fraction", 0.02),
     SpecDefault("12", "no trades in the first 24h", "treasury_bot.no_trade_first_hours", 24),
+    SpecDefault(
+        "12",
+        "falling knife at -40% from the 72h high",
+        "treasury_bot.breaker_drawdown",
+        Fraction(2, 5),
+    ),  # fmt: skip
     SpecDefault("12", "weekly profit sweep 50%", "treasury_bot.sweep_fraction", 0.5),
 )
 
-KNOWN_DRIFT: tuple[Drift, ...] = (
-    Drift(
-        section="5",
-        name="boost price window",
-        spec_says="P-bar_e is the epoch arithmetic mean over 86,400 s, not a 6h P-tilde window",
-        values={"underwater.twap_hours": (24, 6)},
-    ),
-    Drift(
-        section="7",
-        name="shared fee payer weight",
-        spec_says="informational only: no link weight",
-        values={"sybil.weights.same_fee_payer": (0, 1)},
-    ),
-    Drift(
-        section="7",
-        name="L1 token transfer weight",
-        spec_says="two-sided token transfers weigh 0.6",
-        values={"sybil.weights.direct_transfer": (Fraction(3, 5), 1)},
-    ),
-    Drift(
-        section="7",
-        name="L4 co-trade weight",
-        spec_says="co-trades weigh 0.4",
-        values={"sybil.weights.co_buy": (Fraction(2, 5), Fraction(7, 10))},
-    ),
-    Drift(
-        section="7",
-        name="L5 identical balance weight",
-        spec_says="identical balances weigh 0.3",
-        values={"sybil.weights.identical_balances": (Fraction(3, 10), Fraction(3, 5))},
-    ),
-    Drift(
-        section="7",
-        name="review cluster size",
-        spec_says="clusters with more than 50 wallets go to review",
-        values={"sybil.review_cluster_size": (50, 10)},
-    ),
-    Drift(
-        section="9",
-        name="draw USD gate",
-        spec_says="draw eligibility is price-free (MIN_DRAW_SHARE of supply), no USD threshold",
-        values={"draws.min_balance_usd": (0, 10)},
-    ),
-    Drift(
-        section="12",
-        name="falling knife stop",
-        spec_says="buys halt at -40% from the 72h high",
-        values={"treasury_bot.breaker_drawdown": (Fraction(2, 5), Fraction(3, 5))},
-    ),
-)
+# Empty since #152 aligned all eight rows with COIN_MATH. Kept so a future drift can be
+# pinned here instead of turning CI red on the day it is found.
+KNOWN_DRIFT: tuple[Drift, ...] = ()
 
 OUTSIDE_PARAMS: tuple[OutsideParams, ...] = (
     OutsideParams("6", "G = 2 uplift limit", "engine.rewards.DEFAULT_G", 2),

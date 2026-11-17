@@ -97,7 +97,11 @@ class UnderwaterParams(_Strict):
     enabled: bool = Field(
         False, description="§5 boost; off at launch, on after 7 clean epochs (§16). Not wired yet"
     )
-    twap_hours: float = Field(6.0, gt=0, description="P̃ window (§5)")
+    twap_hours: float = Field(
+        24.0,
+        gt=0,
+        description="P̄ window (§5): arithmetic mean over the epoch's 86,400 s, not a 6 h P̃",
+    )
     min_age_hours: float = Field(48.0, ge=0, description="Only pool-buy lots this old count (§5)")
     beta: float = Field(0.5, ge=0, description="Max boost = 1+β (§5)")
     d_max: float = Field(0.75, gt=0, le=1, description="Drawdown that saturates the boost (§5)")
@@ -108,11 +112,13 @@ class ScoringParams(_Strict):
 
 
 class SybilWeights(_Strict):
-    same_fee_payer: float = 1.0
-    direct_transfer: float = 1.0
+    # COIN_MATH §7 link weights. A shared fee payer is informational only, so it gets no
+    # weight (0.0); the enforced v0.3.3 weights live in engine.sybil_v033.WEIGHTS.
+    same_fee_payer: float = Field(0.0, description="§7: informational only, no link weight")
+    direct_transfer: float = Field(0.6, description="§7 L1: two-sided token transfers")
     same_first_funder: float = 1.0
-    co_buy: float = 0.7
-    identical_balances: float = 0.6
+    co_buy: float = Field(0.4, description="§7 L4: co-trades")
+    identical_balances: float = Field(0.3, description="§7 L5: identical balances")
 
 
 class SybilParams(_Strict):
@@ -126,7 +132,9 @@ class SybilParams(_Strict):
     identical_balance_tolerance: float = Field(0.001, ge=0)
     identical_balance_min_wallets: int = Field(4, ge=2)
     identical_balance_created_within_hours: float = Field(24.0, gt=0)
-    review_cluster_size: int = Field(10, ge=2, description="Clusters this big go to review.csv")
+    review_cluster_size: int = Field(
+        50, ge=2, description="Clusters with more wallets than this go to review.csv (§7)"
+    )
 
 
 class RewardParams(_Strict):
@@ -156,7 +164,11 @@ class DrawParams(_Strict):
         "clusters + VRF tested on devnet. Also the legal switch",
     )
     period_days: float = Field(7.0, gt=0)
-    min_balance_usd: float = Field(10.0, ge=0, description="PROVISIONAL threshold (§9)")
+    min_balance_usd: float = Field(
+        0.0,
+        ge=0,
+        description="Unused: §9 draw eligibility is price-free (MIN_DRAW_SHARE), not a USD gate",
+    )
     min_hold_hours: float = Field(24.0, ge=0)
     prize_split: tuple[float, ...] = Field(
         (0.40, 0.10, 0.10, 0.10, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05),
@@ -221,7 +233,7 @@ class TreasuryBotParams(_Strict):
     max_trade_lamports: int | None = None
     no_trade_first_hours: float = 24.0
     breaker_drawdown: float = Field(
-        0.60, gt=0, lt=1, description="Stop buying at −60% from 7d high"
+        0.40, gt=0, lt=1, description="Stop buying at −40% from the 72h high (§12)"
     )
     min_liquidity_lamports: int | None = Field(None, description="L_MIN")
     daily_loss_limit_lamports: int | None = None
