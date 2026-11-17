@@ -10,7 +10,7 @@ import pytest
 from adapters import market_data as md
 from index.params import IndexParams, OverrideEntry, Overrides
 from index.select import canonical_json
-from tools.run_index import collect, parse_iso, previous_members, run
+from tools.run_index import OfficialRefusal, collect, main, parse_iso, previous_members, run
 
 ROOT = Path(__file__).resolve().parent.parent
 FIX = Path(__file__).resolve().parent / "fixtures" / "index"
@@ -360,3 +360,63 @@ def test_parse_iso_requires_a_real_timestamp() -> None:
     assert parse_iso("2026-11-18") == END - 18 * 3600
     with pytest.raises(ValueError):
         parse_iso("yesterday")
+
+
+# ------------------------------------------------------------------ official guards (#166)
+
+
+def _official_params(tmp_path: Path, self_mint: str | None) -> Path:
+    data = json.loads((FIX / "params_small.json").read_text(encoding="utf-8"))
+    data["self_mint"] = self_mint
+    path = tmp_path / "params.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    return path
+
+
+def _official(tmp_path: Path, params: Path, **kwargs):
+    return run(
+        as_of="2026-11-18T18:00:00Z",
+        out_dir=tmp_path / "out",
+        samples_path=FIX / "samples.jsonl",
+        params_path=params,
+        overrides_path=FIX / "overrides_empty.json",
+        offline=True,
+        code_commit="abc123",
+        official=True,
+        **kwargs,
+    )
+
+
+def test_official_refuses_skipped_filters(tmp_path: Path) -> None:
+    params = _official_params(tmp_path, A)
+    with pytest.raises(OfficialRefusal, match="skip filters: F4"):
+        _official(tmp_path, params, skip_filters=("F4",))
+    assert not (tmp_path / "out").exists()
+
+
+def test_official_refuses_unset_self_mint(tmp_path: Path) -> None:
+    params = _official_params(tmp_path, None)
+    with pytest.raises(OfficialRefusal, match="self_mint"):
+        _official(tmp_path, params)
+    assert not (tmp_path / "out").exists()
+
+
+def test_official_refuses_insufficient_data_and_writes_nothing(tmp_path: Path) -> None:
+    params = _official_params(tmp_path, A)
+    with pytest.raises(OfficialRefusal, match="insufficient_data"):
+        _official(tmp_path, params)
+    assert list((tmp_path / "out").glob("*.json")) == []
+
+
+def test_main_official_exits_3_and_dry_run_still_writes(tmp_path: Path) -> None:
+    base = [
+        "--as-of", "2026-11-18T18:00:00Z", "--out", str(tmp_path / "out"),
+        "--samples", str(FIX / "samples.jsonl"), "--overrides", str(FIX / "overrides_empty.json"),
+        "--offline", "--code-commit", "abc123",
+    ]  # fmt: skip
+    params = _official_params(tmp_path, A)
+    assert main([*base, "--params", str(params), "--official"]) == 3
+    assert list((tmp_path / "out").glob("*.json")) == []
+    assert main([*base, "--params", str(params)]) == 0
+    data = json.loads((tmp_path / "out" / "2026-11-18.dryrun.json").read_bytes())
+    assert data["dry_run"] is True
