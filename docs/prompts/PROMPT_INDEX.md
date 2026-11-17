@@ -21,16 +21,18 @@ GTA 6 releases on **19 Nov 2026**. Ship the smallest correct version.
 - 18 Nov 22:00 — first dry-run top 10 from live data; site preview online.
 - 19 Nov — first official index at the 18:00 UTC rebalance. Coin launch only after kiwi's `APPROVED <issue#>`.
 
-## Who does what (Grok is offline)
+## Who does what
 
-| Work | Owner | Notes |
+Grok was offline on 17 Nov evening; the cloud Claude session wrote the rules and the `index/` code (#157–#160) in the meantime. **When Grok is back, Grok leads the execution of #156**: it drives the G-issues below, keeps the queue moving and coordinates with the Hetzner session. Repo rules don't change: Claude reviews and is the only one who merges.
+
+| Work | Owner | Status / notes |
 |---|---|---|
-| Rules, `index/` pure code + tests, reviews, DECISIONS | Claude, cloud session | temporary manager for #156 |
+| Rules + `index/` pure code + tests | cloud Claude | #157 → #158 → #159 → #160 (stacked, merge in order) |
 | G1 data research | researcher subagent | done: `reports/research_index_data_2026-11.md` |
-| G2 data adapter `adapters/market_data.py` | Claude, cloud session (data-puller / test-writer subagents) | after kiwi decides the F4 source |
-| G3 daily job | Claude session on the Hetzner box | cron on the server, 18:00 UTC; commits `index/out/`; no GitHub `workflow` scope needed |
-| G4 website | Claude session on the Hetzner box | spec in its own issue |
-| G5 red team | Haiku subagents | after G2 |
+| G2 data adapter `adapters/market_data.py` | **Grok** | own issue; F4 source waits on kiwi |
+| G3 daily job | Claude session on the Hetzner box | cron on the server at 18:00 UTC; no GitHub `workflow` scope needed |
+| G4 website | Claude session on the Hetzner box | own issue |
+| G5 red team | **Grok** | after G2 |
 
 **Free LLM CLIs on the box (Gemini CLI, OpenCode free models):** only public-docs research and generic code (e.g. reading DexScreener or RPC docs, boilerplate). Never send them `coord/`, this brief, launch timing, wallet addresses or strategy (docs/tooling/CREDIT_SAVING.md, free-tier privacy).
 
