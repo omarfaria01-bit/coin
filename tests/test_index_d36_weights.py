@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -75,15 +76,18 @@ def test_d36_golden() -> None:
     out = run_index(candidates, [], P, OVERRIDES, as_of, code_commit)
 
     weights = [m["weight_bps"] for m in out["members"]]
+    # Hand-checked: raw shares .4222/.2111/.1541/.1156/.0678/.0293; two coins hit the
+    # 25% cap, the rest are rescaled (water-filling) to .2101/.1576/.0924/.0399.
+    assert weights == [2_500, 2_500, 2_101, 1_576, 924, 399]
     assert sum(weights) == 10_000
-    assert len(weights) == 6
-    assert all(w <= 2_500 for w in weights)  # cap 25% for n=6 >= 4
 
-    # Check canonical JSON hash stability
+    # Canonical JSON is byte-stable and pinned
     cj = canonical_json(out)
-    assert out["params_hash"]
-    assert out["inputs_hash"]
-    assert len(cj) > 0
+    assert cj == canonical_json(run_index(candidates, [], P, OVERRIDES, as_of, code_commit))
+    raw = cj if isinstance(cj, bytes) else cj.encode()
+    assert hashlib.sha256(raw).hexdigest() == (
+        "c1f1c60436aef6bb3bb773e2a444fade9a5629dc84fd95d65c5edbcf0c13957c"
+    )
 
 
 @settings(max_examples=50)
