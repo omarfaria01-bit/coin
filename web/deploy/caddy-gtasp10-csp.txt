@@ -1,0 +1,4 @@
+# Live in /etc/caddy/Caddyfile, inside `handle_path /gtasp10/*` (audit #271 L1, D39, 18 Nov 2026).
+# Verified with Chrome: 0 CSP violations, coin logos, Google fonts and the DexScreener embed load.
+header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://dd.dexscreener.com https://cdn.dexscreener.com; connect-src 'self' https://api.dexscreener.com; frame-src https://dexscreener.com; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
