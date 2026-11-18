@@ -31,10 +31,10 @@ def test_spec_defaults():
     assert p.scoring.cap == 0.05
     assert p.rewards.alpha_per_day == 0.10
     assert (p.fees.dev, p.fees.holder_pot, p.fees.draw_pot, p.fees.buyback_burn) == (
-        0.25,
-        0.35,
-        0.25,
-        0.15,
+        0.0,
+        0.7,
+        0.3,
+        0.0,
     )
     assert p.draws.prize_split == (0.40,) + (0.10,) * 3 + (0.05,) * 6
     assert p.vesting.unlock_twap_hours == 24.0

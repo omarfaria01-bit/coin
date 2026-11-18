@@ -11,7 +11,16 @@ from engine.fees import route
 from engine.params import FeeParams
 
 _KEYS = ("dev", "holder_pot", "draw_pot", "buyback_burn")
-_DEFAULT = FeeParams()
+_DEFAULT = FeeParams(dev=0.25, holder_pot=0.35, draw_pot=0.25, buyback_burn=0.15)  # mechanics
+
+
+def test_d28_defaults_70_30_no_team_no_buyback() -> None:
+    assert route(100, FeeParams()) == {
+        "dev": 0,
+        "holder_pot": 70,
+        "draw_pot": 30,
+        "buyback_burn": 0,
+    }
 
 
 def test_default_split_and_dust_goes_to_holder_pot() -> None:

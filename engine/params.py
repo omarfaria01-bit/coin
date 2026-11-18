@@ -159,13 +159,19 @@ class DrawParams(_Strict):
         description="§16: off at launch (draw pot keeps accumulating); on at ≥ 100 eligible "
         "clusters + VRF tested on devnet. Also the legal switch",
     )
-    period_days: float = Field(7.0, gt=0)
+    period_hours: float = Field(1.0, gt=0, description="D28: one draw per hour (was 7 days)")
+    cap: float = Field(0.05, gt=0, le=1, description="D28: no cluster above 5% of the odds")
+    min_pot_lamports: int = Field(
+        10_000_000, ge=0, description="D28: below this the pot rolls over to the next hour"
+    )
     min_balance_usd: float = Field(
         0.0,
         ge=0,
         description="Unused: §9 draw eligibility is price-free (MIN_DRAW_SHARE), not a USD gate",
     )
-    min_hold_hours: float = Field(24.0, ge=0)
+    min_hold_hours: float = Field(
+        1.0, ge=0, description="D28: eligible after a 1h hold (= T_START)"
+    )
     prize_split: tuple[float, ...] = Field(
         (0.40, 0.10, 0.10, 0.10, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05),
         description="Share of the draw pot per rank (§9)",
@@ -181,10 +187,10 @@ class DrawParams(_Strict):
 
 
 class FeeParams(_Strict):
-    dev: float = Field(0.25, ge=0, le=1)
-    holder_pot: float = Field(0.35, ge=0, le=1)
-    draw_pot: float = Field(0.25, ge=0, le=1)
-    buyback_burn: float = Field(0.15, ge=0, le=1)
+    dev: float = Field(0.0, ge=0, le=1, description="D28: no team share")
+    holder_pot: float = Field(0.70, ge=0, le=1, description="D28: 70% holder rewards")
+    draw_pot: float = Field(0.30, ge=0, le=1, description="D28: 30% hourly draw pot")
+    buyback_burn: float = Field(0.0, ge=0, le=1, description="D28: no buyback")
     router_interval_minutes: int = Field(60, gt=0)
 
     @model_validator(mode="after")

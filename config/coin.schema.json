@@ -30,11 +30,27 @@
           "title": "Enabled",
           "type": "boolean"
         },
-        "period_days": {
-          "default": 7.0,
+        "period_hours": {
+          "default": 1.0,
+          "description": "D28: one draw per hour (was 7 days)",
           "exclusiveMinimum": 0,
-          "title": "Period Days",
+          "title": "Period Hours",
           "type": "number"
+        },
+        "cap": {
+          "default": 0.05,
+          "description": "D28: no cluster above 5% of the odds",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Cap",
+          "type": "number"
+        },
+        "min_pot_lamports": {
+          "default": 10000000,
+          "description": "D28: below this the pot rolls over to the next hour",
+          "minimum": 0,
+          "title": "Min Pot Lamports",
+          "type": "integer"
         },
         "min_balance_usd": {
           "default": 0.0,
@@ -44,7 +60,8 @@
           "type": "number"
         },
         "min_hold_hours": {
-          "default": 24.0,
+          "default": 1.0,
+          "description": "D28: eligible after a 1h hold (= T_START)",
           "minimum": 0,
           "title": "Min Hold Hours",
           "type": "number"
@@ -104,28 +121,32 @@
       "additionalProperties": false,
       "properties": {
         "dev": {
-          "default": 0.25,
+          "default": 0.0,
+          "description": "D28: no team share",
           "maximum": 1,
           "minimum": 0,
           "title": "Dev",
           "type": "number"
         },
         "holder_pot": {
-          "default": 0.35,
+          "default": 0.7,
+          "description": "D28: 70% holder rewards",
           "maximum": 1,
           "minimum": 0,
           "title": "Holder Pot",
           "type": "number"
         },
         "draw_pot": {
-          "default": 0.25,
+          "default": 0.3,
+          "description": "D28: 30% hourly draw pot",
           "maximum": 1,
           "minimum": 0,
           "title": "Draw Pot",
           "type": "number"
         },
         "buyback_burn": {
-          "default": 0.15,
+          "default": 0.0,
+          "description": "D28: no buyback",
           "maximum": 1,
           "minimum": 0,
           "title": "Buyback Burn",
@@ -769,9 +790,11 @@
       "$ref": "#/$defs/DrawParams",
       "default": {
         "enabled": false,
-        "period_days": 7.0,
+        "period_hours": 1.0,
+        "cap": 0.05,
+        "min_pot_lamports": 10000000,
         "min_balance_usd": 0.0,
-        "min_hold_hours": 24.0,
+        "min_hold_hours": 1.0,
         "prize_split": [
           0.4,
           0.1,
@@ -789,10 +812,10 @@
     "fees": {
       "$ref": "#/$defs/FeeParams",
       "default": {
-        "dev": 0.25,
-        "holder_pot": 0.35,
-        "draw_pot": 0.25,
-        "buyback_burn": 0.15,
+        "dev": 0.0,
+        "holder_pot": 0.7,
+        "draw_pot": 0.3,
+        "buyback_burn": 0.0,
         "router_interval_minutes": 60
       }
     },
