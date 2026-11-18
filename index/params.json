@@ -1,7 +1,7 @@
 {
   "version": "0.1",
   "rebalance_hour_utc": 18,
-  "rebalance_hours": 24,
+  "rebalance_hours": 1,
   "window_hours": 24,
   "sample_minutes": 5,
   "holder_sample_minutes": 60,
@@ -59,6 +59,16 @@
   },
   "prize": {
     "slippage_bps": 300
+  },
+  "payout": {
+    "holder_rewards": "7/10",
+    "draw_pot": "3/10",
+    "team": 0,
+    "buyback_burn": 0,
+    "pay_in": "basket",
+    "draw_period_hours": 1,
+    "holder_reward_hours": 24,
+    "min_prize_lamports": 10000000
   },
   "self_mint": null,
   "dry_run": {

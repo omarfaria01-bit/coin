@@ -1,0 +1,8 @@
+[Unit]
+Description=Run the GTASP10 index at every UTC hour
+[Timer]
+OnCalendar=hourly
+TimeZone=UTC
+Persistent=true
+[Install]
+WantedBy=timers.target

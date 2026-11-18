@@ -145,10 +145,31 @@ class DryRun(_Strict):
         return v
 
 
+class Payout(_Strict):
+    """This coin only. Engine `config/coin.json` is unchanged (D26)."""
+
+    holder_rewards: Num = "7/10"
+    draw_pot: Num = "3/10"
+    team: Num = 0
+    buyback_burn: Num = 0
+    pay_in: Literal["basket"] = "basket"
+    draw_period_hours: int = Field(1, ge=1)
+    holder_reward_hours: int = Field(24, ge=1)
+    min_prize_lamports: int = Field(10_000_000, ge=0)
+
+    @model_validator(mode="after")
+    def _sum(self) -> Payout:
+        total = frac(self.holder_rewards) + frac(self.draw_pot)
+        total += frac(self.team) + frac(self.buyback_burn)
+        if total != 1:
+            raise ValueError("payout shares must sum to 1")
+        return self
+
+
 class IndexParams(_Strict):
     version: str
     rebalance_hour_utc: int = Field(18, ge=0, le=23)
-    rebalance_hours: int = Field(24, ge=1)
+    rebalance_hours: int = Field(1, ge=1)
     window_hours: int = Field(24, ge=1)
     sample_minutes: int = Field(5, ge=1)
     holder_sample_minutes: int = Field(60, ge=1)
@@ -160,6 +181,7 @@ class IndexParams(_Strict):
     emergency: Emergency = Emergency()
     weights: Weights = Weights()
     prize: Prize = Prize()
+    payout: Payout = Payout()
     self_mint: str | None = None
     dry_run: DryRun = DryRun()
 
