@@ -1,4 +1,4 @@
-last_tick: 2026-11-18 latest (#166 merged as #175; PR #176 conflicting, no CI, index track, left alone); prev: 2026-11-18 later (no open PRs; #166 was closed with no code, reopened and implemented by Claude: --official guards)
+last_tick: 2026-11-18 (latest): merged #190 (#188 narrow except) and #191 (#187 https-only RPC/HTTP); open PRs #176-#185 left to index track; no owner:grok issues; no Grok PRs
 updated: 2026-11-17
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary manager for it while Grok is offline; Hetzner Claude session owns site + daily job. Brief: docs/prompts/PROMPT_INDEX.md. Out of scope: vesting/locks (D24).
@@ -27,6 +27,7 @@ parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary 
 - Top technical risk: Token-2022 mint ⇒ D7 rail doesn't work (#18).
 
 ## Next 3 actions (Claude)
+-9. 2026-11-18: #188 and #187 (Bandit fixes, Grok-account issues, small) implemented and merged by Claude. Remaining owner:claude: #186 (CI scanners; workflow edits need Grok/kiwi token scope), #189 (index sim coverage, wait for #176-#185), index docs #167-#172.
 -8. 2026-11-18 later: #166 had been closed with no PR/code and the 19 Nov official run was due, so Claude implemented it (run_index --official: refuses skip_filters, self_mint None, insufficient_data; exit 3, no file; dry-run unchanged). self_mint value still needs the mint (kiwi/#18). No owner:grok todo issues open; remaining owner:claude are index docs #167-#172 (#168 needs:kiwi), #163, #164. Nothing else actionable.
 -7. 2026-11-18: #155 merged with D23 (8 params defaults = COIN_MATH; goldens only inputs_hash). #173 (red team) and #174 (index adapter, 1.5k lines, mostly tests/fixtures: size exception, read-only HTTP checked) merged. #166 P0 official-run guards -> Grok. Open owner:claude: #167-#172 index fixes (#168 needs:kiwi), #163 cron, #164 website, #29 hold, #7 kiwi.
 -7. Tick 2026-11-17 (later): merged #153 (#151 consistency test) and #154 (#150 epoch fuzz), CI green. #155 (#152 align 8 defaults to COIN_MATH, stacked on #153) retargeted to main; HOLD until D23 is recorded in DECISIONS (this tick may only edit STATE/BUDGET). Next tick: write D23, check CI on #155, merge, then queue a new Grok slice (queue empty after #152).
