@@ -433,3 +433,15 @@ the D27 5× table, so there is no sim re-run. Rewards and the SOL draw call `loy
 4. Loyalty: 0 before 1h; 1× on [1h, 1h30]; 1.5× at 1h45; 2× at 2h; 3× at 2h30; 4× at 3h; 5× at 4h;
    then `5 + 5·ln(t/4h)/ln(30d/4h)`, capped at 10× at 30 days. Same function for both weights.
 
+
+## D44 · 2026-11-18 · Discovery: search the DCTY ticker; DacityCoin 9hjBLB is a reference coin (kiwi, project thread 18:46 Rome)
+kiwi reported DacityCoin (DCTY, `9hjBLBrc7WZW2H8UQvBAvG5WiTZotXUv2Bdcn4f4pump`, ~$11.3M MC, ~$24.8M 24h volume, pool
+since 19 Oct) missing from the index and said it is the example of a coin that must be in it. Cause: DexScreener search
+returns at most 30 pairs; on 18 Nov `Dacity` returned 30 copycats (other chains and tiny Solana clones) and not this coin,
+so it was never a candidate (absent from `2026-11-18T15.json`, neither member nor excluded). `DCTY` returns it.
+1. `discovery.search_terms` adds `DCTY`. The name `DacityCoin` is already a strong keyword (D37), so the vocabulary
+   check passes without change.
+2. The mint is in `index/seed_mints.txt` (#306), so it is measured every hour even if search misses it again.
+3. Not an allow entry: it still has to pass F1-F11 (D35/D37: no manual allow).
+4. Known limit: any search term crowded by 30+ copycats can hide a real coin. Reference coins must be seeded.
+Tests: `tests/test_index_discovery_dcty.py`.
