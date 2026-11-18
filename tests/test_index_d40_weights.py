@@ -1,11 +1,9 @@
-"""D36 weights: golden fixture and property sweep over full run_index output (#249).
+"""D40 weights (kiwi delegated, 18 Nov 14:20 Rome): w ~ sqrt(MC), cap 18%, floor 5%.
 
-(1) Golden: 6 hand-built candidates through run_index with fixed as_of/commit;
-    exact weight_bps and canonical-JSON hash.
-(2) Hypothesis: 1..10 members with random mc/volume (incl. zeros): sum == 10000,
-    max <= 2500 when n >= 4, equal fallback when n < 4, weight order monotone
-    with raw share (0.5 * mc_share + 0.5 * vol_share) when n >= 4.
-(3) Emergency removal recomputes weights using the same inputs and sums to 10000.
+(1) Golden: 6 hand-built candidates through run_index with fixed as_of/commit.
+(2) Hypothesis: 1..25 members with random MC (incl. zeros): sum == 10000, every weight in
+    [floor, cap] (relaxed to 1/n when infeasible), monotone in MC.
+(3) Emergency removal recomputes weights and sums to 10000.
 """
 
 from __future__ import annotations
@@ -62,7 +60,7 @@ def coin(i: int, mc: float, vol: float) -> Metrics:
     )
 
 
-def test_d36_golden() -> None:
+def test_d40_golden() -> None:
     # 6 hand-built candidates with distinct mc and volume
     candidates = [
         coin(0, 1_000_000.0, 500_000.0),
@@ -77,9 +75,9 @@ def test_d36_golden() -> None:
     out = run_index(candidates, [], P, OVERRIDES, as_of, code_commit)
 
     weights = [m["weight_bps"] for m in out["members"]]
-    # Hand-checked: raw shares .4222/.2111/.1541/.1156/.0678/.0293; two coins hit the
-    # 25% cap, the rest are rescaled (water-filling) to .2101/.1576/.0924/.0399.
-    assert weights == [2_500, 2_500, 2_101, 1_576, 924, 399]
+    # Hand-checked: sqrt(MC) for 10/5/4/3/2/1 M = 3162/2236/2000/1732/1414/1000. The top four
+    # hit the 18% cap (72%); the last 28% splits 1414:1000 -> 16.40% / 11.60%.
+    assert weights == [1_800, 1_800, 1_800, 1_800, 1_640, 1_160]
     assert sum(weights) == 10_000
 
     # Canonical JSON is byte-stable and pinned
@@ -87,62 +85,40 @@ def test_d36_golden() -> None:
     assert cj == canonical_json(run_index(candidates, [], P, OVERRIDES, as_of, code_commit))
     raw = cj if isinstance(cj, bytes) else cj.encode()
     assert hashlib.sha256(raw).hexdigest() == (
-        "67b2c841897083d37e29b15b32e2fbd166ba5a874d00be94b533bb1b5fab1734"
+        "dfac54264c65e1ea6ed7417745f34624d554b274d9333cf813b70b1650a50746"
     )
 
 
-@settings(max_examples=50)
+@settings(max_examples=300, deadline=None)
 @given(
-    st.integers(1, 10),
-    st.lists(
-        st.tuples(
-            st.floats(min_value=0.0, max_value=1e8),
-            st.floats(min_value=0.0, max_value=1e8),
-        ),
-        min_size=1,
-        max_size=10,
-    ),
+    st.integers(1, 25),
+    st.lists(st.floats(min_value=0.0, max_value=1e12), min_size=25, max_size=25),
 )
-def test_d36_weights_property_sweep(n_members: int, mc_vol_list: list[tuple[float, float]]) -> None:
-    # Ensure we have exactly n_members
-    if len(mc_vol_list) < n_members:
-        mc_vol_list = mc_vol_list * ((n_members // len(mc_vol_list)) + 1)
-    mc_vol_list = mc_vol_list[:n_members]
-
-    members = [mint(i) for i in range(n_members)]
-    log_s = {m: float(i) for i, m in enumerate(members)}
-    mc_vol_map = {m: (mc_vol_list[i][0], mc_vol_list[i][1]) for i, m in enumerate(members)}
-
-    bps = weights_bps(members, log_s, P, mc_vol_map)
-
+def test_d40_weights_property_sweep(n: int, mcs: list[float]) -> None:
+    members = [mint(i) for i in range(n)]
+    mc = {m: (mcs[i], 0.0) for i, m in enumerate(members)}
+    bps = weights_bps(members, dict.fromkeys(members, 0.0), P, mc)
     assert sum(bps.values()) == 10_000
-    assert all(v >= 0 for v in bps.values())
-
-    if n_members >= 4:
-        assert max(bps.values()) <= 2_500
-        # Monotonicity with raw shares when cap holds (n >= 4)
-        total_mc = sum(max(v[0], 0.0) for v in mc_vol_map.values())
-        total_vol = sum(max(v[1], 0.0) for v in mc_vol_map.values())
-
-        raw_shares = {}
-        for m in members:
-            mc, vol = mc_vol_map[m]
-            mc_share = (max(mc, 0.0) / total_mc) if total_mc > 0 else (1.0 / n_members)
-            vol_share = (max(vol, 0.0) / total_vol) if total_vol > 0 else (1.0 / n_members)
-            raw_shares[m] = 0.5 * mc_share + 0.5 * vol_share
-
-        for mi in members:
-            for mj in members:
-                if math.isclose(raw_shares[mi], raw_shares[mj], rel_tol=1e-9, abs_tol=0.0):
-                    assert abs(bps[mi] - bps[mj]) <= 1
-                elif raw_shares[mi] > raw_shares[mj]:
-                    assert bps[mi] >= bps[mj]
-    else:
-        # equal fallback when n < 4
-        assert max(bps.values()) - min(bps.values()) <= 1
+    cap = max(1_800, math.ceil(10_000 / n))  # relaxed to 1/n when 18% can't hold (n <= 5)
+    floor = min(500, 10_000 // n)  # relaxed to 1/n when 5% can't hold (n > 20)
+    assert all(floor <= v <= cap for v in bps.values()), bps
+    for a in members:  # monotone in sqrt(MC): a bigger coin never weighs less (1 bp rounding)
+        for b in members:
+            if mc[a][0] > mc[b][0]:
+                assert bps[a] >= bps[b] - 1
+            if mc[a][0] == mc[b][0]:
+                assert abs(bps[a] - bps[b]) <= 1
 
 
-def test_d36_emergency_removal_recomputation() -> None:
+def test_d40_dry_run_shape() -> None:
+    """The 18 Nov 12:00Z dry-run market caps give kiwi's expected spread."""
+    caps = [14.79e6, 7.51e6, 1.71e6, 1.74e6, 1.64e6, 1.29e6, 0.857e6, 0.454e6, 0.616e6, 0.693e6]
+    members = [mint(i) for i in range(10)]
+    bps = weights_bps(members, {}, P, {m: (caps[i], 0.0) for i, m in enumerate(members)})
+    assert [bps[m] for m in members] == [1800, 1800, 1013, 1022, 992, 880, 718, 522, 608, 645]
+
+
+def test_d40_emergency_removal_recomputation() -> None:
     # Create 12 candidates so 10 are selected
     candidates = [coin(i, 1_000_000.0 + i * 100_000.0, 500_000.0 + i * 50_000.0) for i in range(12)]
     out = run_index(candidates, [], P, OVERRIDES, "2026-11-18T18:00:00Z", "abc")
@@ -154,7 +130,7 @@ def test_d36_emergency_removal_recomputation() -> None:
     assert len(removed_out["members"]) == 9
     assert sum(m["weight_bps"] for m in removed_out["members"]) == 10_000
     assert all(m["weight_bps"] >= 0 for m in removed_out["members"])
-    assert all(m["weight_bps"] <= 2_500 for m in removed_out["members"])  # n=9 >= 4
+    assert all(m["weight_bps"] <= 1_800 for m in removed_out["members"])  # n=9: 18% cap holds
     assert victim not in {m["mint"] for m in removed_out["members"]}
 
 

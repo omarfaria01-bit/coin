@@ -139,8 +139,11 @@ class Emergency(_Strict):
 
 
 class Weights(_Strict):
-    mode: Literal["equal", "score_capped", "mc_volume_capped"] = "mc_volume_capped"  # D36
-    cap_pct: Num = 25
+    mode: Literal["equal", "score_capped", "mc_volume_capped", "sqrt_mc_capped"] = (
+        "sqrt_mc_capped"  # D40
+    )
+    cap_pct: Num = 18
+    floor_pct: Num = 0  # D40: per-member minimum (sqrt_mc_capped only)
 
     @field_validator("cap_pct")
     @classmethod
@@ -148,6 +151,19 @@ class Weights(_Strict):
         if not 0 < frac(v) <= 100:
             raise ValueError("cap_pct must be in (0, 100]")
         return v
+
+    @field_validator("floor_pct")
+    @classmethod
+    def _floor(cls, v: Num) -> Num:
+        if not 0 <= frac(v) < 100:
+            raise ValueError("floor_pct must be in [0, 100)")
+        return v
+
+    @model_validator(mode="after")
+    def _floor_below_cap(self) -> Weights:
+        if frac(self.floor_pct) > frac(self.cap_pct):
+            raise ValueError("floor_pct must be <= cap_pct")
+        return self
 
 
 class Prize(_Strict):
