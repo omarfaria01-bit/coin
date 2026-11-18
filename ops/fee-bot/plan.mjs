@@ -77,6 +77,18 @@ export function applySpent(state, spentLamports, dayKey) {
   };
 }
 
+/**
+ * D46 payout rent: SOL to move from the basket budget into free SOL before buying, so the payout
+ * sender can open token accounts for new holders. free = wallet - pot - basket - reserve.
+ * Tops free SOL up to `target`, never more than the basket holds or the day's cap allows.
+ */
+export function rentTopUp(basketLamports, freeLamports, targetLamports, dayLeftLamports) {
+  let x = targetLamports > freeLamports ? targetLamports - freeLamports : 0n;
+  if (x > basketLamports) x = basketLamports;
+  if (x > dayLeftLamports) x = dayLeftLamports;
+  return x > 0n ? x : 0n;
+}
+
 /** Conservation: everything that came in is either still in pot/basket or was spent. */
 export function conserved(state) {
   return state.totalInLamports === state.potLamports + state.basketLamports + state.totalSpentLamports;

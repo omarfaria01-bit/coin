@@ -19,6 +19,14 @@ Public: `/var/www/gtasp10/data/payouts.json`, shown as "Latest payouts" on the R
 - Exclusions: `team_wallets` → team, the system wallet → system, program-owned (off-curve) accounts →
   pool, plus `excluded` in the config (`burn`, `cex`, ...). They are published in each plan.
 
+## Who pays for new token accounts
+The first payout of a basket token to a holder opens their token account (~0.0021 SOL rent, Token-2022).
+- The planner never pays a share worth less than the rent (D43 floor): it stays owed and grows.
+- The fee bot tops free SOL up to `payout_rent_target_lamports` (0.5 SOL) **from the 70% basket
+  budget, before buying**, and the top-up counts against its `max_per_day_lamports`. Ledger event `payout_rent`.
+- The sender only spends SOL above the fee bot's pot + basket + `min_reserve_lamports`, and stops
+  (`low_reserve`, exit 2) before it would go below; `max_transfers_per_day` caps accounts opened per day.
+
 ## Safety
 - Same key as the fee bot (`/etc/coin/fee-bot/keypair.json`, owner `coinbot`, mode 600). Never printed.
 - Kill switch: `touch /etc/coin/payout-bot/STOP` pauses payouts for everyone (announce any use), or `"enabled": false`.

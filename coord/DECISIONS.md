@@ -481,3 +481,8 @@ out of the standing approval.
 5. Public docs (site Rewards + FAQ, README) say payouts are automatic and the dev does not sign or touch them, and
    name the kill switch. They must not claim more than is true (for example, that the dev has no access to the server).
 6. Still needs kiwi: raising caps, transfers out of the system wallet other than payouts, changing the exclusion rule.
+7. Token-account rent for new holders (manager design check, 20:12): paid from the 70% basket budget before buying.
+   The fee bot tops free SOL (wallet minus pot, basket and reserve) up to `payout_rent_target_lamports` (default
+   0.5 SOL), within its `max_per_day_lamports`; the sender only spends SOL above pot + basket + reserve. The D43 floor
+   still skips shares worth less than the rent (carried). Team wallets excluded and disclosed on the site:
+   creator `E8Jg…4uXJ`, fomo dev share `GscV…JEks`. System wallet `3ann…hJkd`.
