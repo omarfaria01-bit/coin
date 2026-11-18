@@ -1,4 +1,4 @@
-# GTASP10 logo palettes (kiwi 18 Nov: black logo disappears on X dark mode)
+# GTASP10 logo palettes — B (vice sunset) is LIVE and the default (kiwi 18 Nov: black logo disappears on X dark mode)
 
 Recolored versions of `../logo_template.jpg`. Same concept (heist bag, 6 stars, coin stacks, GTASP10),
 but bright backgrounds so the avatar reads on X dark (#000) and light (#fff).
