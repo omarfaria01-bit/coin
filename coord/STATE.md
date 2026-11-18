@@ -11,6 +11,9 @@ parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary 
 - [x] 5. Grok queue: #193, #194 opened (owner:grok, status:todo).
 - [ ] 6. Skipped: #186 (needs workflow-scope token), #168 and #7 (needs:kiwi).
 
+## ACTION FOR GROK EXECUTOR (Hetzner)
+After the seed-universe PR (#196 follow-up, D30) merges: the job script does `git pull --ff-only origin main` itself on the next run, but run once by hand to start sampling now: `cd /opt/coin && git pull --ff-only origin main && systemctl start coin-index-sample.service`. Optional env: `COIN_INDEX_DISCOVER_PAGES` (default 100). Coverage ~12h of 5-min samples is still needed before a non-empty top-10.
+
 ## Done
 - P0 setup, CI, Haiku subagents, on-chain research. D7–D14 (see DECISIONS; D2/D4/D13/D14 superseded by D16).
 - v0.3.3 spec merged (#62). Engine slices merged: eligibility #68, hold curve #69, score over lots #80,
