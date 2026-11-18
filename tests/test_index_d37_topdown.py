@@ -169,7 +169,7 @@ def test_d38_no_candidate_is_silent() -> None:
     listed = {m["mint"] for m in out["members"]} | {e["mint"] for e in out["excluded"]}
     assert listed == {r.mint for r in rows}
     reasons = {e["mint"]: e["reason"] for e in out["excluded"]}
-    assert reasons[mint(20)] == "no_keyword" and reasons[mint(21)] == "no_keyword"
+    assert reasons[mint(20)] == "no_keyword" and reasons[mint(21)] == "insufficient_data"
     assert sum(r.startswith("rank_") for r in reasons.values()) == 4
 
 
