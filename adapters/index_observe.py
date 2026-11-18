@@ -87,6 +87,8 @@ def metrics_from(
         creator_launches_7d=_int_opt(facts.get("creator_launches_7d")),
         mint_authority_revoked=_bool_opt(facts.get("mint_authority_revoked")),
         freeze_authority_revoked=_bool_opt(facts.get("freeze_authority_revoked")),
+        token_program=facts["program"] if isinstance(facts.get("program"), str) else None,
+        extensions=_ext_opt(facts.get("mint_extensions")),
         unique_traders=_int_opt(facts.get("unique_traders")),
         volume_usd=stats.volume_usd,
         sources={
@@ -106,6 +108,12 @@ def metrics_from(
             "mint_program": f"{facts.get('program')}@{fetched_at}",
         },
     )
+
+
+def _ext_opt(value: object) -> tuple[str, ...] | None:
+    if not isinstance(value, (list, tuple)) or not all(isinstance(v, str) for v in value):
+        return None
+    return tuple(value)
 
 
 def _opt(value: object) -> float | None:

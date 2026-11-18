@@ -36,6 +36,8 @@ class Metrics:
     creator_launches_7d: int | None = None
     mint_authority_revoked: bool | None = None
     freeze_authority_revoked: bool | None = None
+    token_program: str | None = None  # owner program of the mint account (F8c, #171)
+    extensions: tuple[str, ...] | None = None  # Token-2022 mint extension names, () for legacy
     unique_traders: int | None = None
     volume_usd: float | None = None  # window total
     sources: Mapping[str, str] = field(default_factory=dict)  # metric -> "<source>@<ISO time>"
@@ -73,6 +75,8 @@ def candidate_status(m: Metrics, params: IndexParams, overrides: Overrides) -> s
 # ------------------------------------------------------------------ §3 filters
 
 MISSING = "insufficient_data"
+SPL_TOKEN = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+TOKEN_2022 = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
 
 _NUMERIC = (
     "coverage",
@@ -147,6 +151,17 @@ def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
         if m.mint_authority_revoked is None or m.freeze_authority_revoked is None:
             return MISSING
         if not (m.mint_authority_revoked and m.freeze_authority_revoked):
+            return "F8"
+    if "F8" not in skip:
+        # F8c (#171, D32): legacy SPL, or Token-2022 with only allowlisted extensions. Fail-safe.
+        if m.token_program is None:
+            return MISSING
+        if m.token_program == TOKEN_2022:
+            if m.extensions is None:
+                return MISSING
+            if not set(m.extensions) <= set(f.token2022_allowed_extensions):
+                return "F8"
+        elif m.token_program != SPL_TOKEN:
             return "F8"
     if "F9" not in skip:
         if m.unique_traders is None:

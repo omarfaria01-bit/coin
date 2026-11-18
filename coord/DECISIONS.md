@@ -250,3 +250,11 @@ Red team #162: F5 counted only the creation slot and only 2+ wallets, so one sni
 (`BUNDLE_WINDOW_SLOTS`, ~4 s); the creator's own buy is left to F6 (`dev_pct` ≤ 5%). Threshold `max_bundle_pct`
 (10) unchanged; metric is stricter, so some coins that passed now fail F5. Not done (needs kiwi or chain data
 design): F1 48h seasoning (kiwi picks 48/72h), creator-cluster F3/F6/F7 (needs funding-trace collection).
+
+## D32 · 2026-11-18 · F8c: token program and Token-2022 extension allowlist (#171, Claude)
+F8 only checked mint/freeze authorities. Added **F8c** (inside F8): legacy SPL Token passes; Token-2022 passes only when every
+mint extension is in `filters.token2022_allowed_extensions` (default `metadataPointer`, `tokenMetadata`, `interestBearingConfig`,
+`scaledUiAmountConfig`); any other extension (PermanentDelegate, TransferHook, TransferFeeConfig, Pausable, DefaultAccountState,
+Confidential*, unknown) or any other program fails F8. Unknown program/extensions → `insufficient_data` (fail-safe). The adapter
+reads the owner program and `info.extensions` from the parsed mint account (no new RPC call). Not done: F8b metadata-authority
+check (step 0 needs a live pump.fun mint check first; metadata mutability is UNVERIFIED) and creator-cluster deny; kept in #171.

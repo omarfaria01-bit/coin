@@ -47,6 +47,8 @@ def good(i: int = 1, **kw: object) -> Metrics:
         creator_launches_7d=1,
         mint_authority_revoked=True,
         freeze_authority_revoked=True,
+        token_program="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        extensions=(),
         unique_traders=900,
         volume_usd=600_000.0,
     )
@@ -222,3 +224,40 @@ def test_f11_missing_mc_is_insufficient_and_skip_works() -> None:
     )
     float_coin = good(liquidity_usd=50_000.0, mc_usd=50_000_000.0, volume_usd=2_500_000.0)
     assert first_failed_filter(float_coin, skipped) is None
+
+
+# ------------------------------------------------------------------ F8c (#171, D32)
+
+T22 = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+
+
+@pytest.mark.parametrize(
+    "ext",
+    ["permanentDelegate", "transferHook", "transferFeeConfig", "pausableConfig", "madeUpNew"],
+)
+def test_f8c_dangerous_or_unknown_extension_fails(ext: str) -> None:
+    assert first_failed_filter(good(token_program=T22, extensions=(ext,)), P) == "F8"
+    assert (
+        first_failed_filter(good(token_program=T22, extensions=("metadataPointer", ext)), P) == "F8"
+    )
+
+
+def test_f8c_allowlisted_t22_and_legacy_spl_pass() -> None:
+    assert first_failed_filter(good(token_program=T22, extensions=("metadataPointer",)), P) is None
+    assert first_failed_filter(good(), P) is None
+
+
+def test_f8c_unknown_program_or_missing_data_fails_safe() -> None:
+    assert first_failed_filter(good(token_program="Other111"), P) == "F8"
+    assert first_failed_filter(good(token_program=None), P) == "insufficient_data"
+    assert first_failed_filter(good(token_program=T22, extensions=None), P) == "insufficient_data"
+
+
+def test_f8c_skip_works() -> None:
+    skipped = P.model_copy(
+        update={"dry_run": P.dry_run.model_copy(update={"skip_filters": ("F8",)})}
+    )
+    assert (
+        first_failed_filter(good(token_program=T22, extensions=("permanentDelegate",)), skipped)
+        is None
+    )
