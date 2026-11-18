@@ -13,6 +13,9 @@ A token is a **candidate** if it is a Solana token and its name, ticker or descr
 - **D37 (kiwi 18 Nov):** the list is one big GTA-series vocabulary (`keywords.strong` in params). Ambiguous words
   (`keywords.needs_context`: Jason, Vice, Trevor, Franklin, ...) count only with GTA context: a strong word, or a second
   different ambiguous word, in the same name/ticker/description.
+- **D41 (kiwi 18 Nov 14:24):** GTA in-game app / Snapmatic meme words are strong (Snapmatic, Hugh Johnson, Lifeinvader,
+  Bleeter, Eyefind, iFruit, Weazel, In-game meme). Everyday words (`keywords.generic`: Hugh, Johnson, Core, Meme) count
+  only next to a strong word or a non-generic ambiguous word; two generic words are never enough.
 - **Discovery (D37):** top-down, never new launches. DexScreener search for the vocabulary terms (Solana); the top h24-volume
   (trending) coins are collected first, then the biggest market caps (`discovery` in params). Seed file and last members too.
 
