@@ -97,7 +97,8 @@ export function loadKeypair(file) {
   }
   const raw = Uint8Array.from(JSON.parse(fs.readFileSync(file, "utf8")));
   if (raw.length !== 64) throw new Error("keypair file is not a 64-byte secret key");
-  const kp = Keypair.fromSecretKey(raw);
+  // fromSecretKey keeps a reference to the array it gets, so pass a copy before zeroing ours.
+  const kp = Keypair.fromSecretKey(Uint8Array.from(raw));
   raw.fill(0);
   return kp;
 }
