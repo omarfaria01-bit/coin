@@ -69,6 +69,17 @@ def test_top10_excludes_vaults_and_unknown_owner_fails_closed() -> None:
     assert top10_pct([(ALICE, 10)], 0, set()) is None
 
 
+def test_bundle_window_single_sniper_and_creator_exempt() -> None:
+    def buy(slot: int, to: str, amount: int) -> dict[str, object]:
+        return {"slot": slot, "transfers": [{"mint": MINT, "to": to, "amount": amount}]}
+
+    txs = [buy(100, ALICE, 10), buy(105, BOB, 120), buy(110, "Late", 500)]
+    assert bundle_pct(txs, MINT, 1_000, set(), creator=ALICE) == 12.0  # BOB in window, Late out
+    assert bundle_pct(txs, MINT, 1_000, set(), creator=ALICE, window_slots=5) == 0.0
+    assert bundle_pct([buy(100, ALICE, 40)], MINT, 1_000, set()) == 4.0  # lone wallet counts
+    assert bundle_pct([buy(100, ALICE, 40)], MINT, 1_000, set(), creator=ALICE) == 0.0
+
+
 def test_bundle_two_wallets_one_wallet_and_unknown() -> None:
     txs = [
         {
@@ -88,7 +99,7 @@ def test_bundle_two_wallets_one_wallet_and_unknown() -> None:
             1_000,
             set(),
         )
-        == 0.0
+        == 5.0
     )
     unknown = {
         "slot": 7,

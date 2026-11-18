@@ -1,4 +1,4 @@
-last_tick: 2026-11-18 ~03:15 UTC (overnight backend push: stack #176-#185 all merged; D27 curve #192, D28 draws+fees #195 merged; dry run done, top-10 empty, see #196)
+last_tick: 2026-11-18 ~04:30 Rome (seed universe #199 merged; #169 F5 window PR open; F1 48h and cluster F3/F6/F7 left)
 updated: 2026-11-17
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary manager for it while Grok is offline; Hetzner Claude session owns site + daily job. Brief: docs/prompts/PROMPT_INDEX.md. Out of scope: vesting/locks (D24).

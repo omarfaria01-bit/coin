@@ -139,7 +139,7 @@ def chain_facts(
         "program": mint_acc["program"] if mint_acc else None,
         "age_hours": age,
         "top10_pct": top10,
-        "bundle_pct": bundle_pct(txs, mint, supply_i, skip),
+        "bundle_pct": bundle_pct(txs, mint, supply_i, skip, creator=creator),
         "dev_pct": dev,
         "creator_launches_7d": launches,
         "mint_authority_revoked": revoked[0],

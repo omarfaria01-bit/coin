@@ -243,3 +243,10 @@ by `ops/index-job/index-job.sh` (override path with `COIN_INDEX_MINTS`), and dis
 (`COIN_INDEX_DISCOVER_PAGES`). A seed is only a mint to measure: keyword, F1–F11, `min_coverage` and `deny` all
 still apply; it is not an `allow` entry. No param changed, `min_coverage` untouched. DAS has no name search, so
 keyword discovery stays parsed pump.fun history.
+
+## D31 · 2026-11-18 · F5 bundle window: first 10 slots, single sniper counts, creator exempt (#169, Claude)
+Red team #162: F5 counted only the creation slot and only 2+ wallets, so one sniper wallet or a next-slot buy
+(Jito bundle) scored 0. `bundle_pct` now sums buys by every non-excluded wallet in the first 10 slots
+(`BUNDLE_WINDOW_SLOTS`, ~4 s); the creator's own buy is left to F6 (`dev_pct` ≤ 5%). Threshold `max_bundle_pct`
+(10) unchanged; metric is stricter, so some coins that passed now fail F5. Not done (needs kiwi or chain data
+design): F1 48h seasoning (kiwi picks 48/72h), creator-cluster F3/F6/F7 (needs funding-trace collection).

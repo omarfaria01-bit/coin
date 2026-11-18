@@ -244,23 +244,34 @@ def top10_pct(
     return 100 * sum(kept[:10]) / supply
 
 
+BUNDLE_WINDOW_SLOTS = 10  # D31: ~4 s; a next-slot sniper is inside, a Jito bundle too
+
+
 def bundle_pct(
     txs: Sequence[Mapping[str, object]],
     mint: str,
     supply: int | None,
     excluded: Iterable[str],
+    *,
+    creator: str | None = None,
+    window_slots: int = BUNDLE_WINDOW_SLOTS,
 ) -> float | None:
-    """Supply % bought in the creation slot by 2+ wallets. One wallet → 0. Unknown side → None."""
-    if supply is None or supply <= 0:
+    """Supply % bought in the first `window_slots` slots by any non-excluded wallet except the
+    creator (the creator's own buy is F6's `dev_pct`). One sniper counts. Unknown side → None.
+    """
+    if supply is None or supply <= 0 or window_slots < 1:
         return None
     slots = [tx.get("slot") for tx in txs if isinstance(tx.get("slot"), int) and _moves(tx, mint)]
     if not slots:
         return None
-    slot = min(int(s) for s in slots if isinstance(s, int))
+    first = min(int(s) for s in slots if isinstance(s, int))
     skip = set(excluded)
-    bought: dict[str, int] = {}
+    if creator:
+        skip.add(creator)
+    total = 0
     for tx in txs:
-        if tx.get("slot") != slot:
+        slot = tx.get("slot")
+        if not isinstance(slot, int) or not first <= slot < first + window_slots:
             continue
         for row in _rows(tx):
             amount = row.get("amount")
@@ -269,12 +280,9 @@ def bundle_pct(
             dest = row.get("to")
             if not isinstance(dest, str) or not dest:
                 return None
-            if dest in skip:
-                continue
-            bought[dest] = bought.get(dest, 0) + amount
-    if len(bought) < 2:
-        return 0.0
-    return 100 * sum(bought.values()) / supply
+            if dest not in skip:
+                total += amount
+    return 100 * total / supply
 
 
 def creator_launches(
