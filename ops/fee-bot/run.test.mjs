@@ -6,7 +6,7 @@ import { test } from "node:test";
 
 import { Keypair } from "@solana/web3.js";
 
-import { loadConfig, loadKeypair } from "./run.mjs";
+import { forwardedLamports, loadConfig, loadKeypair } from "./run.mjs";
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "feebot-"));
 const example = JSON.parse(fs.readFileSync(new URL("./config.example.json", import.meta.url), "utf8"));
@@ -63,3 +63,21 @@ test("source never logs or serializes the secret key", () => {
     }
   }
 });
+
+test("fee_mode forwarded: needs forward_from; counts only transfers from it to the system wallet", () => {
+  const from = "E8JgzMnBJU5Mwbsmw88SyivaDiUYJNjkupU53UEG4uXJ";
+  const me = "3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd";
+  assert.equal(load({ fee_mode: "forwarded", forward_from: from }).forward_from, from);
+  assert.throws(() => load({ fee_mode: "forwarded" }), /forward_from/);
+  assert.throws(() => load({ forward_from: from }), /forward_from/);
+  const xfer = (source, destination, lamports) => ({ program: "system", parsed: { type: "transfer", info: { source, destination, lamports } } });
+  const txs = [
+    { sig: "a", tx: { meta: { err: null }, transaction: { message: { instructions: [xfer(from, me, 1_000)] } } } },
+    { sig: "b", tx: { meta: { err: null }, transaction: { message: { instructions: [xfer("Other111", me, 5_000)] } } } },
+    { sig: "c", tx: { meta: { err: { x: 1 } }, transaction: { message: { instructions: [xfer(from, me, 7_000)] } } } },
+    { sig: "d", tx: { meta: { err: null }, transaction: { message: { instructions: [xfer(me, from, 9_000), xfer(from, me, 250)] } } } },
+    { sig: "e", tx: null },
+  ];
+  assert.deepEqual(forwardedLamports(txs, from, me), { total: 1_250n, sigs: ["a", "d"] });
+});
+
