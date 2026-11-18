@@ -342,6 +342,11 @@ stay out: EcLbZ6 ($12B), 3kZoBR, VUduB4, EiLTVJ, EkDjHZ and the 0-trader copies 
    (lower bound when the 3000-swap page cap is hit). Reference coins 61-632 (min rockstar 61); fakes 0-16.
 Unchanged: F1 4h, F2 $50k (kiwi), F5 30%, F8, F10, F11, D36 weights. DCI HCNhQC is at ~$30k liquidity, so it fails F2; reported,
 not lowered.
+5. kiwi's "coin buone" list (12:49 Rome) joins the reference set and the seed file: GTA VI 4kjruq, AudaCity DKYcjo, Dacity
+   nxPqZ4, DacityCoin 4rYsDH, Lucia HsZXb9, BAWSAQ 4La95N, DacityCoin/DACT GZUGmA (+ the 8 above). GZUGmA's pool was created
+   18 Nov ~12:02 Rome, so F1 (4h) holds it out until ~16:02 Rome; not changed.
+6. F5 measurement fix: only swaps in the launch window count as bundle buys (the launch mint-to and pool deposit made GTA VI
+   read 102%).
 Risk, said plainly: F4 now trusts DexScreener volume (wash volume counts, as D35 already accepts), and F9 no longer needs 0.05 SOL
 per wallet, so ~50 dust wallets can satisfy it (red-team case updated: tests/test_index_hourly_attacks.py).
 

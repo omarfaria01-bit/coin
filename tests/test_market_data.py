@@ -156,3 +156,14 @@ def test_authorities_price_and_deepest_pair() -> None:
         MINT,
     )
     assert pair is not None and pair["volume"]["h24"] == 8  # type: ignore[index]
+
+
+def test_d38_bundle_ignores_launch_mint_and_pool_deposit() -> None:
+    # GTA VI (StonkFun) read 102%: the launch mint-to and the pool deposit are not buys.
+    launch = {
+        "slot": 7,
+        "summary": "create",
+        "ok": True,
+        "transfers": [{"mint": MINT, "to": ALICE, "amount": 1_000}],
+    }
+    assert bundle_pct([launch], MINT, 1_000, set()) == 0.0

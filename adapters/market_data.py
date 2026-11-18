@@ -367,6 +367,10 @@ def bundle_pct(
         slot = tx.get("slot")
         if not isinstance(slot, int) or not first <= slot < first + window_slots:
             continue
+        if "summary" in tx and not trades_mint(tx, mint):
+            # D38: only swaps are buys. The launch mint-to and the pool deposit are not (GTA VI
+            # read 102% of supply "bought" in its StonkFun launch block before this fix).
+            continue
         for row in _rows(tx):
             amount = row.get("amount")
             if row.get("mint") != mint or not isinstance(amount, int) or amount <= 0:
