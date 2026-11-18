@@ -4,9 +4,9 @@ const RULES = {
   "fee_line": "0% of fees go to the team. 100% go to holders: 70% is distributed as rewards in the basket coins, and 30% goes to the draw pot.",
   "team_line": "The team holds about 2% of the supply.",
   "weight_line": "Weights are proportional to the square root of market cap, with an 18% cap and a 5% floor, recomputed every hour.",
-  "hold_line": "Nothing before 1h. The multiplier is 1× from 1h to 1h30, 1.5× at 1h45, 2× at 2h, 3× at 2h30, 4× at 3h and 5× at 4h, then stays at 5×.",
-  "reward_line": "Rewards accrue with the holding score and are paid once a day. Anything below the minimum payout of 0.001 SOL stays pending, and no token account is opened for dust. That minimum is never set above 0.005 SOL.",
-  "draw_line": "COMING SOON. The draw is not live. When it is turned on it pays SOL prizes from the pot and rolls the pot over until it reaches 0.01 SOL. It also rolls over when fewer than 100 eligible holders qualify.",
+  "hold_line": "Nothing before 1h. The multiplier is 1× from 1h to 1h30, 1.5× at 1h45, 2× at 2h, 3× at 2h30, 4× at 3h and 5× at 4h, then rises with the logarithm of holding time to 10× at 30 days.",
+  "reward_line": "Rewards accrue with the holding score and are paid once a day in the basket. A position worth less than 0.00151384 SOL (the rent of a token account) stays pending, and no token account is opened for dust.",
+  "draw_line": "COMING SOON. The draw is not live. When it is turned on it pays one SOL prize to one winner and rolls the pot over until it reaches 0.1 SOL. It also rolls over when fewer than 100 eligible holders qualify.",
   "score_line": "Rank uses log S = 40%·ln(market cap) + 30%·ln(liquidity) + 20%·ln(24h fees) + 10%·ln(traders). Buy weights are a separate step.",
   "filters": {
     "min_age_hours": 4,
@@ -45,14 +45,15 @@ const RULES = {
   },
   "rewards": {
     "period_hours": 24,
-    "min_payout_sol": 0.001,
-    "max_min_payout_sol": 0.005,
+    "min_payout_lamports": 1513840,
+    "min_payout_sol": 0.00151384,
     "min_eligible_share": "1/1000000"
   },
   "hold": {
     "t_start_seconds": 3600,
-    "max_multiplier": 5.0,
-    "flat_after_hours": 4.0,
+    "max_multiplier": 10.0,
+    "chart_max": 5.0,
+    "log_cap_hours": 720.0,
     "knots": [
       [
         1.0,
@@ -86,7 +87,7 @@ const RULES = {
   },
   "draw": {
     "live": false,
-    "min_pot_sol": 0.01,
+    "min_pot_sol": 0.1,
     "min_groups": 100,
     "odds_cap": 0.05,
     "supply_cap": 0.05,

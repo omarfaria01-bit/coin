@@ -158,14 +158,17 @@ def test_rules_match_params_and_hold_curve() -> None:
     assert rules["fees"]["team_pct"] == 0
     assert rules["fees"]["holder_pct"] == 70
     assert rules["fees"]["draw_pct"] == 30
-    assert rules["hold"]["max_multiplier"] == 5
-    assert rules["hold"]["flat_after_hours"] == 4
+    assert rules["hold"]["max_multiplier"] == 10
+    assert rules["hold"]["chart_max"] == 5
+    assert rules["hold"]["log_cap_hours"] == 720
     assert rules["hold"]["t_start_seconds"] == 3600
     assert rules["draw"]["live"] is False
-    assert rules["draw"]["min_pot_sol"] == 0.01
-    assert rules["rewards"]["min_payout_sol"] == 0.001
-    assert "stays at 5×" in rules["hold_line"]
-    assert "10×" not in rules["hold_line"]
+    assert rules["draw"]["min_pot_sol"] == 0.1
+    assert rules["rewards"]["min_payout_lamports"] == 1_513_840
+    assert "10× at 30 days" in rules["hold_line"]
+    assert "stays at 5×" not in rules["hold_line"]
+    assert "one SOL prize" in rules["draw_line"]
+    assert "0.1 SOL" in rules["draw_line"]
     text = (ROOT / "web" / "rules.js").read_text()
     assert text == render(rules)
 

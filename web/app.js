@@ -78,13 +78,15 @@
     if (!el) return;
     const hold = (window.RULES && RULES.hold) || {};
     const knots = hold.knots || [[1,1],[1.5,1],[1.75,1.5],[2,2],[2.5,3],[3,4],[4,5]];
-    const maxM = hold.max_multiplier || 5;
-    const maxH = (hold.flat_after_hours || 4) + 1;
+    const maxM = hold.chart_max || knots[knots.length - 1][1] || 5;
+    const maxH = knots[knots.length - 1][0];
     const pts = [[0,0]].concat(knots.map((k) => [k[0], 0])).slice(0, 1);
     const start = (hold.t_start_seconds || 3600) / 3600;
     const plot = [[0, 0], [start, 0]];
     knots.forEach((k) => plot.push([k[0], k[1]]));
     plot.push([maxH, knots[knots.length - 1][1]]);
+    const cap = hold.max_multiplier || knots[knots.length - 1][1];
+    const capH = hold.log_cap_hours;
     const W = 640, H = 260, L = 44, R = 20, Tp = 20, B = 36;
     const x = (h) => L + (h / maxH) * (W - L - R), y = (m) => H - B - (m / maxM) * (H - Tp - B);
     let s = `<defs><linearGradient id="cg" x1="0" x2="1"><stop offset="0" stop-color="#ff2d95"/><stop offset=".6" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ffd166"/></linearGradient>
@@ -98,6 +100,9 @@
     knots.forEach(([h, m]) => {
       s += `<circle cx="${x(h)}" cy="${y(m)}" r="5" fill="#fff" stroke="#ff2d95" stroke-width="3"/><text class="lab" x="${x(h)}" y="${y(m) - 12}" text-anchor="middle">${m}×</text>`;
     });
+    if (capH && cap > knots[knots.length - 1][1]) {
+      s += `<text x="${W - R}" y="${Tp + 4}" text-anchor="end">then ${cap}× at ${Math.round(capH / 24)}d</text>`;
+    }
     el.innerHTML = s;
   }
   if ($("#curve")) curve();
@@ -429,8 +434,16 @@
     const start = (hold.t_start_seconds || 3600) / 3600;
     const knots = hold.knots || [[1,1],[1.5,1],[1.75,1.5],[2,2],[2.5,3],[3,4],[4,5]];
     const cap = hold.max_multiplier || knots[knots.length - 1][1];
+    const capH = hold.log_cap_hours;
     if (h < start) return 0;
-    if (h >= knots[knots.length - 1][0]) return cap;
+    const last = knots[knots.length - 1][0];
+    if (capH && h > last) {
+      if (h >= capH) return cap;
+      const base = knots[knots.length - 1][1];
+      const extra = (cap - base) * Math.log(h / last) / Math.log(capH / last);
+      return Math.min(cap, base + Math.max(0, extra));
+    }
+    if (h >= last) return knots[knots.length - 1][1];
     for (let i = 1; i < knots.length; i++) {
       const [h0, m0] = knots[i - 1], [h1, m1] = knots[i];
       if (h >= h0 && h <= h1) return h1 === h0 ? m1 : m0 + ((m1 - m0) * (h - h0)) / (h1 - h0);
