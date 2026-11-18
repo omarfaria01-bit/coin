@@ -1,0 +1,17 @@
+[Unit]
+Description=GTASP10 fee bot (D45): collect creator fees, 30% SOL pot, 70% index basket
+After=network-online.target
+[Service]
+Type=oneshot
+User=coinbot
+Group=coinbot
+EnvironmentFile=/etc/coin/fee-bot/env
+WorkingDirectory=/opt/coin/ops/fee-bot
+ExecStart=/usr/bin/node /opt/coin/ops/fee-bot/run.mjs --config /etc/coin/fee-bot/config.json
+TimeoutStartSec=15min
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/coin/fee-bot /var/www/gtasp10/data
+ReadOnlyPaths=/etc/coin/fee-bot /var/lib/coin/index-data

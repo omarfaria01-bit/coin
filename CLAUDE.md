@@ -32,7 +32,7 @@ uv run python tools/gen_schema.py        # after changing engine/params.py
 ## Hard rules (summary; full list in the prompt §6)
 1. No seed phrases or mainnet keys anywhere. Devnet throwaway keys only in `~/.config/solana/devnet/`.
 2. No mainnet writes, token creation, swaps, fee claims, bot live mode, or spending without
-   kiwi's `APPROVED <issue#>` comment from his own login.
+   kiwi's `APPROVED <issue#>` comment from his own login. Exception: the D45 fee bot (claims + basket buys, within its caps).
 3. No publishing/DMs without kiwi approving the exact text.
 4. Tools/downloads: anything from official sources, logged. Never wallets, browser extensions,
    pirated software, or anything asking for keys.

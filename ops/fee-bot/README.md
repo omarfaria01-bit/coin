@@ -1,0 +1,42 @@
+# GTASP10 fee bot (D45)
+
+Every hour (minute 20 UTC) the bot:
+1. moves the coin's creator fees into the **system wallet** (pump.fun fee sharing set to 100% this
+   wallet, `fee_mode: "sharing"`; or the wallet is the creator itself, `fee_mode: "creator"`);
+2. keeps **30%** as the SOL prize pot (the draw stays off, legal #8) and puts **70%** in the basket budget;
+3. buys the current index members with the basket budget via Jupiter, split by `weight_bps`.
+
+Bought basket tokens stay in the system wallet (public). Paying them out to holders is the next step
+(not in this bot yet). Everything is in `/var/lib/coin/fee-bot/ledger.jsonl` and the public summary
+`/var/www/gtasp10/data/fee-bot.json`.
+
+## Safety
+- The secret key lives only in `/etc/coin/fee-bot/keypair.json` (owner `coinbot`, mode 600). The bot
+  refuses any other mode or owner. It is never printed, logged or committed (`*keypair*.json` is gitignored).
+- The RPC URL holds the Helius key and is never printed.
+- Caps: `max_per_swap_lamports`, `max_per_run_lamports`, `max_per_day_lamports`; slippage at most 3%;
+  price impact gate; buys only from a fresh, non-dry-run index whose weights sum to 10000; never buys its own mint.
+- The wallet must hold pot + basket + `min_reserve_lamports` (tx fees and token-account rent) or the bot stops.
+- Kill switch: `touch /etc/coin/fee-bot/STOP` or `"enabled": false`. One run at a time (lock file).
+- `"mode": "dry"` does everything except sign and send.
+
+## Install (server, as root)
+```
+useradd --system --no-create-home --shell /usr/sbin/nologin coinbot
+install -d -o coinbot -g coinbot -m 700 /etc/coin/fee-bot /var/lib/coin/fee-bot
+cd /opt/coin/ops/fee-bot && npm ci --ignore-scripts --omit=dev
+sudo -u coinbot node keygen.mjs /etc/coin/fee-bot/keypair.json   # prints the PUBLIC address only
+install -o coinbot -g coinbot -m 600 config.example.json /etc/coin/fee-bot/config.json  # then set "mint"
+printf 'HELIUS_API_KEY=%s\n' "<from /etc/coin/index.env>" > /etc/coin/fee-bot/env  # chown coinbot, chmod 600
+chown coinbot /var/www/gtasp10/data   # or a group with write access to fee-bot.json
+cp coin-fee-bot.service coin-fee-bot.timer /etc/systemd/system/ && systemctl daemon-reload
+```
+Give the public address to kiwi: he sets it as 100% fee recipient on pump.fun (one change, then locked)
+and sends ~0.1 SOL for the reserve.
+
+## Go live
+1. `"mode": "dry"`: `systemctl start coin-fee-bot.service; journalctl -u coin-fee-bot -n 50`. Check `distributable`,
+   `plan` and `dry_buy` lines.
+2. Smoke test: `"mode": "live"`, `max_per_run_lamports` `"20000000"` (0.02 SOL). Run once, check the signatures on Solscan
+   and `ledger.jsonl`.
+3. Full caps from `config.example.json`, then `systemctl enable --now coin-fee-bot.timer`.

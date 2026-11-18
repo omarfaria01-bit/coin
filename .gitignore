@@ -35,3 +35,6 @@ reports/sim/
 .aider*
 !tests/golden/**/state.json
 tests/golden/v033.new/
+
+# node
+node_modules/
