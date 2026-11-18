@@ -40,6 +40,11 @@ class Metrics:
     extensions: tuple[str, ...] | None = None  # Token-2022 mint extension names, () for legacy
     unique_traders: int | None = None
     volume_usd: float | None = None  # window total
+    # F9/F10 quality (#170, D33), from the swaps themselves
+    independent_traders: int | None = None  # wallets above min_trader_volume_sol, no creator
+    roundtrip_share: float | None = None  # share of SOL volume that is same-wallet round trips
+    volume_wallets: int | None = None
+    median_trade_sol: float | None = None
     sources: Mapping[str, str] = field(default_factory=dict)  # metric -> "<source>@<ISO time>"
 
 
@@ -89,6 +94,8 @@ _NUMERIC = (
     "bundle_pct",
     "dev_pct",
     "volume_usd",
+    "roundtrip_share",
+    "median_trade_sol",
 )
 
 
@@ -164,14 +171,25 @@ def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
         elif m.token_program != SPL_TOKEN:
             return "F8"
     if "F9" not in skip:
-        if m.unique_traders is None:
+        if m.independent_traders is None:
             return MISSING
-        if m.unique_traders < f.min_unique_traders:
+        if m.independent_traders < f.min_unique_traders:
             return "F9"
     if "F10" not in skip:
         if m.volume_usd is None or m.mc_usd is None or m.mc_usd <= 0:
             return MISSING
-        if not lo(f.min_turnover) <= m.volume_usd / m.mc_usd <= lo(f.max_turnover):
+        if m.roundtrip_share is None or m.volume_wallets is None:
+            return MISSING
+        if not 0 <= m.roundtrip_share <= 1:
+            return MISSING
+        clean = m.volume_usd * (1 - m.roundtrip_share)
+        if not lo(f.min_turnover) <= clean / m.mc_usd <= lo(f.max_turnover):
+            return "F10"
+        if m.volume_wallets < f.min_volume_wallets:
+            return "F10"
+        if m.median_trade_sol is None:
+            return MISSING
+        if Fraction(m.median_trade_sol) < frac(f.min_trade_sol):
             return "F10"
     if "F11" not in skip:
         if m.mc_usd is None or m.liquidity_usd is None or m.liquidity_usd <= 0:

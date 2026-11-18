@@ -58,6 +58,12 @@ class Filters(_Strict):
     min_unique_traders: int = Field(200, ge=0)
     min_turnover: Num = "1/20"
     max_turnover: Num = 3
+    # F9/F10 quality (#170, D33): a trader needs this much SOL volume to count; round trips by one
+    # wallet within `roundtrip_minutes` are removed from F10; the rest needs breadth and size.
+    min_trader_volume_sol: Num = "1/20"
+    roundtrip_minutes: int = Field(10, ge=1)
+    min_volume_wallets: int = Field(30, ge=1)
+    min_trade_sol: Num = "1/100"
     max_mc_liquidity_ratio: Num = 100  # F11 (#167, D29)
     # F8c (#171, D32): Token-2022 mint extensions allowed (jsonParsed names); all others fail.
     token2022_allowed_extensions: tuple[str, ...] = (
@@ -80,6 +86,8 @@ class Filters(_Strict):
             "min_turnover",
             "max_turnover",
             "max_mc_liquidity_ratio",
+            "min_trader_volume_sol",
+            "min_trade_sol",
         ):
             if frac(getattr(self, name)) < 0:
                 raise ValueError(f"{name} must be >= 0")

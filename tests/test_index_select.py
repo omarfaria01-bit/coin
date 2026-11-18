@@ -50,6 +50,10 @@ def coin(i: int, mc: float) -> Metrics:
         token_program="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
         extensions=(),
         unique_traders=500,
+        independent_traders=500,
+        roundtrip_share=0.0,
+        volume_wallets=100,
+        median_trade_sol=0.1,
         volume_usd=mc,
     )
 

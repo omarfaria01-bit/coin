@@ -6,6 +6,7 @@ has no name query. DexScreener is only the batched token endpoint.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable, Mapping, Sequence
 
 from adapters.helius_client import HeliusClient
@@ -19,6 +20,7 @@ from adapters.helius_parse import (
 )
 from adapters.index_observe import metrics_from, spot_quote
 from adapters.market_data import (
+    LAMPORTS_PER_SOL,
     Sample,
     authorities_revoked,
     bundle_pct,
@@ -26,8 +28,10 @@ from adapters.market_data import (
     fee_totals,
     pick_pair,
     top10_pct,
+    trade_quality,
 )
 from index.filters import Metrics
+from index.params import Filters, frac
 
 
 def _txs(raw: Iterable[Mapping[str, object]]) -> list[Mapping[str, object]]:
@@ -116,6 +120,17 @@ def chain_facts(
     skip = excluded_owners(hubs=hubs, curves=curves, owner_programs=programs, treasury=treasury)
     fees = fee_totals(txs, mint, window_start=window_start, window_end=as_of, truncated=truncated)
     supply_i = supply if isinstance(supply, int) else None
+    flt = Filters()  # D33: thresholds for the trade-quality facts are the published defaults
+    quality = trade_quality(
+        txs,
+        mint,
+        window_start=window_start,
+        window_end=as_of,
+        truncated=truncated,
+        creator=creator,
+        min_trader_lamports=math.ceil(frac(flt.min_trader_volume_sol) * LAMPORTS_PER_SOL),
+        roundtrip_seconds=flt.roundtrip_minutes * 60,
+    )
     launches = None
     if isinstance(creator, str):
         craw, ctrunc = client.history(creator, start=as_of - 7 * 86_400, end=as_of)
@@ -148,6 +163,10 @@ def chain_facts(
         "total_fees_sol": fees.total_fees_sol,
         "window_fees_sol": fees.window_fees_sol,
         "unique_traders": None if fees.traders is None else len(fees.traders),
+        "independent_traders": None if quality is None else quality.independent_traders,
+        "roundtrip_share": None if quality is None else quality.roundtrip_share,
+        "volume_wallets": None if quality is None else quality.volume_wallets,
+        "median_trade_sol": None if quality is None else quality.median_trade_sol,
         **quote,
     }
 

@@ -34,8 +34,8 @@ A token is a **candidate** if it is a Solana token and its name, ticker or descr
 | F6 | Dev holding | creator wallet holds ≤ 5% of supply at the rebalance |
 | F7 | Serial creator | the creator created ≤ 3 tokens (this one included) in the 7 days before the rebalance |
 | F8 | Authorities | mint authority and freeze authority both revoked |
-| F9 | Real traders | ≥ 200 unique wallets bought or sold in the window |
-| F10 | Turnover | 0.05 ≤ volume in the window / average market cap ≤ 3 |
+| F9 | Real traders | ≥ 200 wallets that each traded ≥ 0.05 SOL in the window; the creator wallet does not count (D33, #170) |
+| F10 | Turnover | 0.05 ≤ volume / average market cap ≤ 3 after removing same-wallet round trips (opposite side within 10 min); also ≥ 30 wallets with volume left and median trade ≥ 0.01 SOL (D33, #170) |
 | F11 | Market cap vs liquidity | average market cap ≤ 100 × average pool liquidity (D29, #167). A thin pool cannot carry a huge market cap |
 | F8c | Token program (part of F8) | legacy SPL Token, or Token-2022 with only allowlisted mint extensions (D32, #171); anything else fails, unknown = insufficient_data |
 
