@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 
-import { Keypair } from "@solana/web3.js";
+import { Keypair, SystemProgram, Transaction } from "@solana/web3.js";
 
 import { forwardedLamports, loadConfig, loadKeypair } from "./run.mjs";
 
@@ -81,3 +81,16 @@ test("fee_mode forwarded: needs forward_from; counts only transfers from it to t
   assert.deepEqual(forwardedLamports(txs, from, me), { total: 1_250n, sigs: ["a", "d"] });
 });
 
+
+test("loadKeypair returns a key that still signs (regression: zeroing wiped the secret)", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "kp-"));
+  const file = path.join(dir, "k.json");
+  const orig = Keypair.generate();
+  fs.writeFileSync(file, JSON.stringify(Array.from(orig.secretKey)), { mode: 0o600 });
+  const kp = loadKeypair(file);
+  assert.equal(kp.publicKey.toBase58(), orig.publicKey.toBase58());
+  const tx = new Transaction({ feePayer: kp.publicKey, recentBlockhash: orig.publicKey.toBase58() });
+  tx.add(SystemProgram.transfer({ fromPubkey: kp.publicKey, toPubkey: orig.publicKey, lamports: 1 }));
+  tx.sign(kp);
+  assert.equal(tx.verifySignatures(), true);
+});
