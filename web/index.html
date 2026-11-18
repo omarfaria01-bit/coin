@@ -190,16 +190,16 @@
     <div class="glass card">
       <h3>A draw every hour</h3>
       <ul class="ticks">
-        <li>Your odds scale with the square root of your holder score</li>
-        <li>Linked wallets are grouped and capped at 5%</li>
-        <li>Randomness you can verify on-chain</li>
-        <li>Pot too small? It rolls over to the next hour</li>
+        <li>Your odds are proportional to your holder score, so splitting into many wallets never helps</li>
+        <li>No holder can count more than 5% of supply; linked wallets are grouped</li>
+        <li>All draw inputs are committed before the randomness; anyone can re-check the winners</li>
+        <li>Pot too small, or fewer than 100 holders in? It rolls over to the next hour</li>
       </ul>
     </div>
     <div class="glass card">
       <h3>Who's in</h3>
       <ul class="ticks">
-        <li>Hold at least 1/1,000,000 of the supply</li>
+        <li>Hold at least 1/1,000,000 of the supply (0.01% for the hourly draw)</li>
         <li>Nothing accrues during your first hour</li>
         <li>Hold longer, earn a bigger multiplier — up to 5× after 4 hours</li>
         <li>Public dev wallet; every payout is reproducible from on-chain data</li>
@@ -251,7 +251,7 @@
   <div class="faq">
     <details class="glass"><summary>What is GTASP10?</summary><p>An index coin on Solana that tracks the top 10 memecoins of the GTA 6 narrative, picked every hour by public rules.</p></details>
     <details class="glass"><summary>How do holder rewards work?</summary><p>Hold at least 1/1,000,000 of the supply. 70% of creator fees is distributed to holders in the basket tokens, based on your holder score and holding multiplier.</p></details>
-    <details class="glass"><summary>How does the hourly draw work?</summary><p>Every hour, 30% of fees goes into a prize pot. Odds scale with the square root of your score, linked wallets are grouped with a 5% cap, and the randomness is verifiable. If the pot is too small, it rolls over to the next hour.</p></details>
+    <details class="glass"><summary>How does the hourly draw work?</summary><p>Every hour, 30% of fees goes into a prize pot. Odds are proportional to your score, so splitting into many wallets never helps. No holder can count more than 5% of supply, linked wallets are grouped, and you need at least 0.01% of the supply to enter. All inputs are committed before the randomness, so anyone can re-check the winners. If the pot is too small or fewer than 100 holders qualify, it rolls over to the next hour.</p></details>
     <details class="glass"><summary>Why is the official top 10 empty?</summary><p>The filters are strict and data for each coin is still being collected. Until the next hourly rebalance publishes official members, the ranking above shows a clearly labelled market-cap preview — not the live index.</p></details>
     <details class="glass"><summary>Where's the contract address?</summary><p>Not published yet. Be wary of anyone sharing one before the official announcement.</p></details>
     <details class="glass"><summary>Does the team take a cut of the fees?</summary><p>No. 100% of creator fees go back to the community: 70% rewards, 30% draw. No team share.</p></details>
