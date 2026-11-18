@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""Collect market data and compute one GTA 6 index rebalance (issue #161).
+"""Read-only GTASP10 index run. No signing, no sends.
 
-    uv run python tools/run_index.py --as-of 2026-11-18T18:00:00Z --out index/out
-    uv run python tools/run_index.py --as-of 2026-11-18T18:00:00Z --out index/out --offline
+    HELIUS_API_KEY=... uv run python tools/run_index.py \\
+        --as-of 2026-11-18T19:00:00+00:00 --out index/out --mode rebalance
 
-Read-only: DexScreener, Solana JSON-RPC (`SOLANA_RPC_URL`) and, when `HELIUS_API_KEY` is set,
-Helius Parsed Events. Keys are read from the environment and never printed or stored. Samples
-are appended to `data/index/samples/<date>.jsonl` (gitignored); the output is canonical JSON.
-F4 (total fees) is not wired yet, so dry runs skip it (INDEX_RULES §3, issue #161 step 6).
+The window is the trailing `window_hours` ending at `--as-of` (any hour, not a
+calendar day). Samples in `--samples` count when their timestamp is inside that
+window, including the previous UTC date. A token younger than the window is
+scored on its own life. A member whose new hour is missing keeps its last
+passing metrics. DexScreener is used only for liquidity and, when Helius has
+no price, for price and market cap. The key is never printed.
 """
 
 from __future__ import annotations
@@ -17,294 +19,274 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from adapters import market_data_legacy as market_data  # noqa: E402
-from index.filters import MISSING  # noqa: E402
-from index.params import DryRun, IndexParams, Overrides, frac  # noqa: E402
+import base58  # noqa: E402
+
+from adapters.helius_client import HeliusClient  # noqa: E402
+from adapters.hubs import load_hubs  # noqa: E402
+from adapters.index_collect import discover_mints, measure_mints  # noqa: E402
+from adapters.market_data import Sample  # noqa: E402
+from index.filters import Metrics, candidate_status, first_failed_filter  # noqa: E402
+from index.params import IndexParams, Overrides  # noqa: E402
 from index.select import canonical_json, run_index  # noqa: E402
 
-SAMPLES = ROOT / "data" / "index" / "samples"
-PARAMS = ROOT / "index" / "params.json"
-OVERRIDES = ROOT / "index" / "overrides.json"
+
+class OfficialRefusal(Exception):
+    """An official run was refused; nothing is written and the previous file stays (issue #166)."""
 
 
-class OfficialRefusal(RuntimeError):
-    """An official run was refused; nothing is written and the previous file stays."""
-
-
-def parse_iso(text: str) -> int:
-    """ISO-8601 timestamp, timezone-aware (a bare date means 00:00 UTC)."""
-    value = text.strip().replace("Z", "+00:00")
-    try:
-        parsed = datetime.fromisoformat(value)
-    except ValueError as exc:
-        raise ValueError(f"bad --as-of {text!r}: {exc}") from exc
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=UTC)
-    return int(parsed.timestamp())
-
-
-def _git_commit() -> str:
-    try:
-        out = subprocess.run(
-            ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=False,
-        )
-    except (OSError, subprocess.SubprocessError):
-        return "unknown"
-    return out.stdout.strip() or "unknown"
-
-
-def previous_members(out_dir: Path, current: str) -> list[str]:
-    """Members of the newest output file older than `current` (INDEX_RULES §5)."""
-    candidates = sorted(p for p in out_dir.glob("*.json") if p.name < current)
-    for path in reversed(candidates):
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
-        members = data.get("members") if isinstance(data, dict) else None
-        if isinstance(members, list):
-            return [m["mint"] for m in members if isinstance(m, dict) and "mint" in m]
-    return []
-
-
-def _passes_cheap_filters(m: Any, params: IndexParams) -> bool:
-    """F1 and F2 only: the Helius steps run for these coins (kiwi, 18 Nov)."""
-    return (
-        m.age_hours is not None
-        and m.age_hours >= float(frac(params.filters.min_age_hours))
-        and m.liquidity_usd is not None
-        and m.liquidity_usd >= float(frac(params.filters.min_liquidity_usd))
-    )
-
-
-def collect(
-    samples_path: Path,
-    as_of: int,
-    params: IndexParams,
-    overrides: Overrides,
+def main(
+    argv: list[str] | None = None,
     *,
-    rpc_url: str | None,
-    helius_key: str | None,
-    holders: bool,
-    fetch: market_data.Opener = market_data.get_json,
-    poster: market_data.Poster = market_data.post_json,
+    client: HeliusClient | None = None,
+    measure: Callable | None = None,
+    discover: Callable | None = None,
 ) -> int:
-    """Discover, sample and enrich; append JSONL records. Returns records written."""
-    existing = market_data.read_samples(str(samples_path))
-    known_launch = {r["mint"] for r in existing if r.get("kind") == "launch"}
-    last_hourly: dict[str, int] = {}
-    for rec in existing:
-        if rec.get("kind") in {"holders", "flow"}:
-            last_hourly[rec["mint"]] = max(last_hourly.get(rec["mint"], 0), int(rec["ts"]))
-    hourly_due = params.holder_sample_minutes * 60
-    pairs = market_data.discover(params, overrides, opener=fetch)
-    if not pairs:
-        return 0
-    refreshed = market_data.best_pairs(market_data.tokens(list(pairs), opener=fetch))
-    pairs.update({m: p for m, p in refreshed.items() if m in pairs})
-    records: list[dict] = [market_data.market_record(pair, as_of) for pair in pairs.values()]
-
-    for mint in pairs:
-        if rpc_url and mint not in known_launch:
-            try:  # authorities are best-effort: a public-RPC hiccup must not kill the run
-                facts = market_data.mint_facts(rpc_url, mint, as_of, poster=poster)
-            except (RuntimeError, OSError):
-                continue
-            if facts:
-                records.append(facts)
-
-    window_start = as_of - params.window_hours * 3600
-    metrics = market_data.aggregate([*existing, *records], window_start, as_of, params)
-    hubs = market_data.min_hubs() if holders else frozenset()
-    for m in metrics:
-        if not _passes_cheap_filters(m, params):
-            continue
-        if as_of - last_hourly.get(m.mint, 0) < hourly_due:
-            continue
-        launch = [r for r in records + existing if r["mint"] == m.mint and r["kind"] == "launch"]
-        supply = int(launch[-1].get("supply") or 0) if launch else 0
-        if holders and rpc_url and supply:
-            try:
-                top10 = market_data.top10_pct(rpc_url, m.mint, supply, hubs=hubs, poster=poster)
-            except (RuntimeError, OSError):
-                top10 = None
-            if top10 is not None:
-                records.append({"kind": "holders", "ts": as_of, "mint": m.mint, "top10_pct": top10})
-        if helius_key:
-            try:
-                history = market_data.helius_history(
-                    helius_key, m.mint, since_ts=window_start, until_ts=as_of, poster=poster
-                )
-                traders = market_data.unique_traders(history, since_ts=window_start, until_ts=as_of)
-            except (RuntimeError, OSError):
-                continue
-            records.append({"kind": "flow", "ts": as_of, "mint": m.mint, "unique_traders": traders})
-            creator = market_data.creator_from_history(history)
-            if creator and rpc_url and supply:
-                try:
-                    dev = market_data.dev_pct(rpc_url, m.mint, creator, supply, poster=poster)
-                except (RuntimeError, OSError):
-                    dev = None
-                if dev is not None:
-                    records.append({"kind": "holders", "ts": as_of, "mint": m.mint, "dev_pct": dev})
-    return market_data.append_samples(str(samples_path), records)
-
-
-def run(
-    *,
-    as_of: str,
-    out_dir: Path,
-    samples_path: Path,
-    params_path: Path = PARAMS,
-    overrides_path: Path = OVERRIDES,
-    offline: bool = False,
-    skip_filters: tuple[str, ...] | None = None,
-    rpc_url: str | None = None,
-    helius_key: str | None = None,
-    holders: bool = False,
-    code_commit: str | None = None,
-    collect_only: bool = False,
-    official: bool = False,
-) -> Path:
-    ts = parse_iso(as_of)
-    params = IndexParams.model_validate_json(params_path.read_text(encoding="utf-8"))
-    if skip_filters is None:  # F4 has no source yet: dry-run default; official never skips
-        skip_filters = () if official else ("F4",)
-    if official:  # refuse before any network call or file write (issue #166)
-        if skip_filters:
-            raise OfficialRefusal(f"official run cannot skip filters: {', '.join(skip_filters)}")
-        if params.self_mint is None:
-            raise OfficialRefusal("official run needs params.self_mint (the index coin mint)")
-    overrides = Overrides.model_validate_json(overrides_path.read_text(encoding="utf-8"))
-    if skip_filters:
-        params = params.model_copy(update={"dry_run": DryRun(skip_filters=skip_filters)})
-
-    if not offline:
-        collect(
-            samples_path,
-            ts,
+    args = _parser().parse_args(argv)
+    params = IndexParams.model_validate(json.loads(Path(args.params).read_text()))
+    overrides = Overrides.model_validate(json.loads(Path(args.overrides).read_text()))
+    as_of = _unix(args.as_of)
+    if client is None:
+        key = os.environ.get("HELIUS_API_KEY", "").strip()
+        if not key:
+            print("HELIUS_API_KEY is not set", file=sys.stderr)
+            return 2
+        client = HeliusClient(key, max_history_pages=args.max_history_pages)
+    try:
+        if args.mode != "rebalance":
+            raise RuntimeError("mode")
+        _rebalance(
+            args,
+            client,
             params,
             overrides,
-            rpc_url=rpc_url,
-            helius_key=helius_key,
-            holders=holders,
-        )
-    if collect_only:
-        print(f"sampled {as_of} -> {samples_path}")
-        return samples_path
-
-    window_start = ts - params.window_hours * 3600
-    candidates = market_data.aggregate(
-        market_data.read_samples(str(samples_path)), window_start, ts, params
-    )
-    if not candidates:
-        raise ValueError(f"no samples for {as_of} in {samples_path}")
-
-    as_of_iso = datetime.fromtimestamp(ts, UTC).isoformat().replace("+00:00", "Z")
-    date = as_of_iso[:10]
-    dry_run = bool(params.dry_run.skip_filters)
-    name = f"{date}.dryrun.json" if dry_run else f"{date}.json"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    output = run_index(
-        candidates,
-        previous_members(out_dir, name),
-        params,
-        overrides,
-        as_of_iso,
-        code_commit or _git_commit(),
-    )
-    if output["dry_run"] != dry_run:  # pragma: no cover - defensive
-        raise RuntimeError("dry_run flag mismatch")
-    if official:
-        missing = sorted(e["mint"] for e in output["excluded"] if e["reason"] == MISSING)
-        if missing:
-            raise OfficialRefusal(
-                f"official run has {len(missing)} candidate(s) with insufficient_data: "
-                + ", ".join(missing[:5])
-            )
-    path = out_dir / name
-    path.write_bytes(canonical_json(output) + b"\n")
-    print(
-        f"{date}: {len(candidates)} candidates, {len(output['members'])} members, "
-        f"{len(output['excluded'])} excluded -> {path}"
-    )
-    return path
-
-
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Compute one GTA 6 index rebalance.")
-    parser.add_argument("--as-of", required=True, help="rebalance time, ISO-8601 (default 18:00Z)")
-    parser.add_argument("--out", default=str(ROOT / "index" / "out"), help="output directory")
-    parser.add_argument(
-        "--samples", default=None, help="JSONL sample path (default data/index/...)"
-    )
-    parser.add_argument("--params", default=str(PARAMS))
-    parser.add_argument("--overrides", default=str(OVERRIDES))
-    parser.add_argument("--offline", action="store_true", help="aggregate existing samples only")
-    parser.add_argument(
-        "--skip-filters",
-        nargs="*",
-        default=None,
-        help="filters to skip, marking the output dry_run (default: F4 until its source is wired)",
-    )
-    parser.add_argument("--rpc-url", default=os.environ.get("SOLANA_RPC_URL") or None)
-    parser.add_argument("--holders", action="store_true", help="also collect F3 hourly samples")
-    parser.add_argument(
-        "--collect-only", action="store_true", help="append a sample, do not compute the index"
-    )
-    parser.add_argument("--code-commit", default=None)
-    parser.add_argument(
-        "--official",
-        action="store_true",
-        help="official run: no skipped filters, self_mint set, no insufficient_data; else exit 3",
-    )
-    args = parser.parse_args(argv)
-    if args.rpc_url:
-        try:
-            market_data.require_https(args.rpc_url)
-        except ValueError as exc:
-            print(f"error: {exc}", file=sys.stderr)
-            return 2
-
-    samples = Path(args.samples) if args.samples else SAMPLES / f"{args.as_of[:10]}.jsonl"
-    default_skip = () if args.official else ("F4",)
-    skip = default_skip if args.skip_filters is None else tuple(args.skip_filters)
-    try:
-        run(
-            as_of=args.as_of,
-            out_dir=Path(args.out),
-            samples_path=samples,
-            params_path=Path(args.params),
-            overrides_path=Path(args.overrides),
-            offline=args.offline,
-            skip_filters=skip,
-            rpc_url=args.rpc_url,
-            helius_key=os.environ.get("HELIUS_API_KEY") or None,
-            holders=args.holders,
-            code_commit=args.code_commit,
-            collect_only=args.collect_only,
-            official=args.official,
+            as_of,
+            measure or measure_mints,
+            discover or discover_mints,
         )
     except OfficialRefusal as exc:
-        print(f"refused: {exc}", file=sys.stderr)
+        print(f"official run refused: {exc}", file=sys.stderr)
         return 3
-    except (OSError, ValueError, RuntimeError) as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 2
+    except Exception as exc:  # leave any previous output file in place
+        print(f"index run failed: {type(exc).__name__}", file=sys.stderr)
+        return 1
+    counts = client.requests
+    known = 10 * (counts["das"] + counts["parsed"])
+    print(
+        f"helius_requests rpc={counts['rpc']} das={counts['das']} "
+        f"parsed={counts['parsed']} dex={counts['dex']} credits_known={known}"
+    )
     return 0
 
 
+def _rebalance(args, client, params, overrides, as_of, measure, discover) -> None:
+    if args.official and not params.self_mint:  # refuse before any network call or write
+        raise OfficialRefusal("official run needs params.self_mint (the index coin mint)")
+    mints = _mints(args, client, params, overrides, discover)
+    window = as_of - params.window_hours * 3600
+    if not mints and _latest(Path(args.out)) is not None:
+        raise RuntimeError("no mints")
+    rows = measure(
+        client,
+        mints,
+        as_of=as_of,
+        window_start=window,
+        hubs=load_hubs(),
+        treasury=None,
+        samples=[row for row in _load_samples(Path(args.samples)) if window <= row.t < as_of],
+        fetched_at=_iso(as_of),
+        sample_seconds=params.sample_minutes * 60,
+        holder_seconds=params.holder_sample_minutes * 60,
+    )
+    if not rows and _latest(Path(args.out)) is not None:
+        raise RuntimeError("no measurements")
+    previous = _latest_payload(Path(args.out))
+    rows, held = _hold_missing(rows, previous, params, overrides)
+    if args.official:
+        missing = [
+            row.mint
+            for row in rows
+            if (candidate_status(row, params, overrides) or first_failed_filter(row, params))
+            == "insufficient_data"
+        ]
+        if missing:
+            raise OfficialRefusal(f"{len(missing)} candidate(s) with insufficient_data")
+    prev = [row["mint"] for row in (previous or {}).get("members") or []]
+    payload = run_index(rows, prev, params, overrides, _iso(as_of), _commit(), ())
+    if held:
+        payload["data_hold"] = held
+    _atomic(Path(args.out) / _out_name(as_of, params, bool(payload["dry_run"])), payload)
+
+
+def _mints(args, client, params, overrides, discover) -> list[str]:
+    found = discover(client, args.discover_pages) if args.mode != "emergency" else []
+    extra = list(_prev_members(Path(args.out)))
+    extra.extend(entry.mint for entry in overrides.allow)
+    if args.mints_file:
+        for line in Path(args.mints_file).read_text().splitlines():
+            text = line.split("#", 1)[0].strip()
+            if text:
+                extra.append(text)
+    return _choose(params, overrides, found, extra)
+
+
+def _choose(
+    params: IndexParams, overrides: Overrides, found: list[dict], extra: list[str]
+) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for row in found:
+        mint = row.get("mint")
+        if not isinstance(mint, str) or mint in seen or not _valid(mint):
+            continue
+        name, symbol = str(row.get("name") or ""), str(row.get("symbol") or "")
+        status = candidate_status(Metrics(mint=mint, ticker=symbol, name=name), params, overrides)
+        if status == "no_keyword" or status == "self":
+            continue
+        seen.add(mint)
+        out.append(mint)
+    for mint in extra:
+        if _valid(mint) and mint not in seen and mint != params.self_mint:
+            seen.add(mint)
+            out.append(mint)
+    return out
+
+
+def _hold_missing(rows, previous, params, overrides) -> tuple[list[Metrics], list[str]]:
+    """Keep a member whose new hour is missing, using its last passing metrics."""
+    if not previous:
+        return list(rows), []
+    out = list(rows)
+    index = {row.mint: i for i, row in enumerate(out)}
+    held: list[str] = []
+    for member in previous.get("members") or []:
+        slot = index.get(member["mint"])
+        if slot is None:
+            continue
+        reason = candidate_status(out[slot], params, overrides) or first_failed_filter(
+            out[slot], params
+        )
+        if reason != "insufficient_data":
+            continue
+        raw = dict(member["metrics"])
+        raw["sources"] = dict(raw.get("sources") or {})
+        restored = Metrics(**raw)
+        if candidate_status(restored, params, overrides) or first_failed_filter(restored, params):
+            continue
+        out[slot] = restored
+        held.append(member["mint"])
+    return out, held
+
+
+def _out_name(as_of: int, params: IndexParams, dry: bool) -> str:
+    stamp = _iso(as_of)
+    stem = stamp[:13] if params.rebalance_hours == 1 else stamp[:10]
+    return stem + (".dryrun.json" if dry else ".json")
+
+
+def _latest_payload(out: Path) -> dict | None:
+    path = _latest(out)
+    if path is None:
+        return None
+    return json.loads(path.read_text())
+
+
+def _load_samples(directory: Path) -> list[Sample]:
+    rows: list[Sample] = []
+    if not directory.is_dir():
+        return rows
+    for path in sorted(directory.glob("*.jsonl")):
+        for line in path.read_text().splitlines():
+            if not line.strip():
+                continue
+            item = json.loads(line)
+            rows.append(
+                Sample(
+                    item["mint"],
+                    int(item["t"]),
+                    mc_usd=item.get("mc_usd"),
+                    liquidity_usd=item.get("liquidity_usd"),
+                    volume_usd=item.get("volume_usd"),
+                    top10_pct=item.get("top10_pct"),
+                )
+            )
+    return rows
+
+
+def _prev_members(out: Path) -> list[str]:
+    path = _latest(out)
+    if path is None:
+        return []
+    payload = json.loads(path.read_text())
+    return [row["mint"] for row in payload.get("members") or []]
+
+
+def _latest(out: Path) -> Path | None:
+    if not out.is_dir():
+        return None
+    files = [p for p in out.glob("*.json") if p.name != "emergency.json"]
+    return max(files, default=None)
+
+
+def _atomic(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_bytes(canonical_json(payload))
+    tmp.replace(path)
+
+
+def _valid(mint: str) -> bool:
+    try:
+        return len(base58.b58decode(mint)) == 32
+    except ValueError:
+        return False
+
+
+def _unix(text: str) -> int:
+    dt = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    if dt.tzinfo is None:
+        raise ValueError("as-of needs a timezone")
+    return int(dt.timestamp())
+
+
+def _iso(unix: int) -> str:
+    return datetime.fromtimestamp(unix, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _commit() -> str:
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True, stderr=subprocess.DEVNULL
+        ).strip()
+    except (subprocess.CalledProcessError, OSError):
+        return "unknown"
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Read-only GTASP10 index")
+    parser.add_argument("--as-of", required=True)
+    parser.add_argument("--out", default="index/out")
+    parser.add_argument("--params", default="index/params.json")
+    parser.add_argument("--overrides", default="index/overrides.json")
+    parser.add_argument("--samples", default="data/index/samples")
+    parser.add_argument("--mints-file")
+    parser.add_argument("--discover-pages", type=int, default=25)
+    parser.add_argument("--max-history-pages", type=int, default=30)
+    parser.add_argument(
+        "--official",
+        action="store_true",
+        help="official run: self_mint set and no insufficient_data candidate; else exit 3",
+    )
+    parser.add_argument("--mode", choices=("rebalance",), default="rebalance")
+    return parser
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
