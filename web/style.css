@@ -399,3 +399,7 @@ a.card{display:block;text-decoration:none;color:inherit}
 .caveat li{margin:.35rem 0}
 .coin-list{display:flex;flex-wrap:wrap;gap:.4rem;margin:.4rem 0 0}
 .coin-list span{padding:.25rem .6rem;border-radius:999px;border:1px solid var(--line);font-size:.8rem;font-weight:700}
+.dev-line{display:inline-block;margin-top:.4rem;font-size:.95rem;color:var(--muted)}
+.dev-card h2{margin-top:0}
+.dev-card .mono{font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all;color:var(--hot)}
+.copy-sw{margin-left:.5rem;padding:.15rem .6rem;border-radius:999px;border:1px solid var(--line);background:transparent;color:inherit;cursor:pointer;font-size:.75rem}
