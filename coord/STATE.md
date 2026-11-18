@@ -1,4 +1,5 @@
-last_tick: 2026-11-18 ~04:45 Rome (urgent seed PR verified on main: seed_mints.txt + test_index_seed; #172 D34 merged #208; index-data branch last push 02:51Z = seed NOT yet sampling on Hetzner)
+last_tick: 2026-11-18 ~05:15 Rome (seed PR was already on main -> no duplicate opened; merged #211 (F11/F8c Hypothesis) and #213 (fixed stale F9 assertion on branch, CI green); index-data STILL last push 02:51Z = Hetzner pull pending)
+prev_tick: 2026-11-18 ~04:45 (seed verified on main)
 prev_tick: 2026-11-18 ~06:30 (#172 D34 in PR); before: 05:30 Rome (seed universe #199 already merged; #202 merged; #170 F9/F10 = D33 in PR; next #172, #189)
 updated: 2026-11-17
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
