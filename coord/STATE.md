@@ -1,4 +1,5 @@
-last_tick: 2026-11-18 ~09:56 Rome (no code change possible: index-data last run still 07:46Z = Hetzner has NOT pulled D35; open PRs only state PR; Grok todo #239 #240 queued; weights waiting for kiwi; #189 rest/#169/#172 need kiwi or live data)
+last_tick: 2026-11-18 ~09:02 Rome (this session runs ON the Hetzner box: /opt/coin already at D35 code f33e3d4, the job script self-pulled at 08:46 CET; the 07:46Z output was from the run that started before the pull. 09:00 CET hourly run started on D35 code; no manual start needed. Waiting for its output on index-data. Weights: waiting for kiwi.)
+prev_tick: 2026-11-18 ~09:56 Rome (no code change possible: index-data last run still 07:46Z = Hetzner has NOT pulled D35; open PRs only state PR; Grok todo #239 #240 queued; weights waiting for kiwi; #189 rest/#169/#172 need kiwi or live data)
 prev_tick: 2026-11-18 ~09:15 Rome (no open PRs; Grok todo #239 #240 queued. Hetzner has NOT pulled D35 yet: index-data last run 07:46Z still on code ad29161 with old rules (reason 'weak_keyword' in output). Samples live only on Hetzner (data/index/samples, not in git), so no top-10 can be produced from here. Blocker = Grok executor runs the D35 ACTION below. Weights: still waiting for kiwi's choice.)
 prev_tick: 2026-11-18 ~08:50 Rome (kiwi 08:25 rule changes DONE: D35 merged in #238 (one keyword tier, no min_coverage, F1 4h, F4 8 SOL, F5 30%, no F6, F10 volume>0; sampler own lock, 10 discover pages). Merged #234 #235 #236; closed #237/#231 (obsolete). Queued #239 #240 for Grok. Weights: WAITING for kiwi's choice (not changed). No open PRs.)
 prev_tick: 2026-11-18 ~06:55 Rome / 04:55 UTC (URGENT seed directive re-verified again: index/seed_mints.txt 101 lines on origin/main, index-data last run 04:00Z, NO dup PR. Open owner:grok todo: #231 #232, doing: #224 #225. Nothing else startable by Claude; earliest non-empty top-10 ~15:00Z)
@@ -28,8 +29,8 @@ parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary 
 - [ ] 3d. Left, not startable by Claude alone: #169 F1 48h/72h (kiwi picks) and creator-cluster F3/F6/F7 (needs first-funder collector, large); #189 sim coverage (Grok #205/#206/#209 cover parts; rest = report update of #162 table for hourly schedule).
 - [ ] 6. Skipped: #186 (needs workflow-scope token), #168 and #7 (needs:kiwi).
 
-## ACTION FOR GROK EXECUTOR (Hetzner) — D35 (08:50 Rome, NEW)
-#238 changed index/params.json, the job script and the sampler lock. Run: `cd /opt/coin && git pull --ff-only origin main && systemctl start coin-index-hourly.service`. Old samples stay valid (no coverage minimum now). Expect a non-empty top-10 as soon as the first hourly run finishes. Report the output (members/excluded counts) in #1.
+## D35 on Hetzner — DONE (09:00 Rome)
+/opt/coin is at D35 code (self-pulled by index-job.sh). First D35 hourly run started 09:00 CET. No executor action needed; check index-data for the 08:00Z output (members/excluded counts).
 
 ## (old) ACTION FOR GROK EXECUTOR (Hetzner) — DONE 2026-11-18 (runs 03:00Z/04:00Z on index-data, code c6c0ca8 has the seed). Keep timers running.
 After the seed-universe PR (#196 follow-up, D30) merges: the job script does `git pull --ff-only origin main` itself on the next run, but run once by hand to start sampling now: `cd /opt/coin && git pull --ff-only origin main && systemctl start coin-index-sample.service`. Optional env: `COIN_INDEX_DISCOVER_PAGES` (default 100). Coverage ~12h of 5-min samples is still needed before a non-empty top-10.
