@@ -72,8 +72,9 @@ So a newcomer must reach the top 8 to enter, and a member is only replaced when 
 
 ## 6. Weights
 
-- `equal` (default): every member weighs `1/n`.
-- `score_capped` (option): proportional to S, capped at 20% per coin with water-filling. With fewer than 5 members the cap can't hold, so weights fall back to `equal`.
+- `mc_volume_capped` (default, D36, kiwi 18 Nov): `weight_i = 0.5 * MC_i / sum MC + 0.5 * Volume_i / sum Volume`, with MC the window-average market cap and Volume the raw Helius window volume (a half whose sum is 0 counts as equal). Then capped at 25% per coin with water-filling. With fewer than 4 members the cap can't hold, so weights fall back to `equal`.
+- `equal` (option): every member weighs `1/n`.
+- `score_capped` (option): proportional to S, capped at `cap_pct` with water-filling; same fallback rule.
 
 Weights are published as integer basis points summing to 10,000: floor each, then hand out the remaining points one by one by largest remainder, ties to the better rank.
 

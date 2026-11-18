@@ -109,10 +109,31 @@ def _largest_remainder(
     return floors
 
 
+def _mc_volume_shares(
+    members: Sequence[str], inputs: Mapping[str, tuple[float, float]]
+) -> list[float]:
+    """D36: 0.5 * MC_i / sum MC + 0.5 * Volume_i / sum Volume (a half with a zero sum is equal)."""
+    n = len(members)
+    out = [0.0] * n
+    for k in (0, 1):
+        vals = [max(float(inputs[m][k]), 0.0) for m in members]
+        tot = sum(vals)
+        for i, v in enumerate(vals):
+            out[i] += 0.5 * (v / tot if tot > 0 else 1 / n)
+    return out
+
+
 def weights_bps(
-    members: Sequence[str], log_s: Mapping[str, float], params: IndexParams
+    members: Sequence[str],
+    log_s: Mapping[str, float],
+    params: IndexParams,
+    mc_volume: Mapping[str, tuple[float, float]] | None = None,
 ) -> dict[str, int]:
-    """Integer basis points per member (members in rank order), summing to 10,000."""
+    """Integer basis points per member (members in rank order), summing to 10,000.
+
+    `mc_volume` maps mint -> (window-average market cap, window volume); required by mode
+    `mc_volume_capped` (D36).
+    """
     n = len(members)
     if n == 0:
         return {}
@@ -122,8 +143,13 @@ def weights_bps(
     if params.weights.mode == "equal" or n * cap_bps < BPS:
         exact = [BPS / n] * n
     else:
-        top = max(log_s[m] for m in members)
-        raw = [math.exp(log_s[m] - top) for m in members]
+        if params.weights.mode == "mc_volume_capped":
+            if mc_volume is None:
+                raise ValueError("mc_volume_capped needs market cap and volume per member")
+            raw = _mc_volume_shares(members, mc_volume)
+        else:
+            top = max(log_s[m] for m in members)
+            raw = [math.exp(log_s[m] - top) for m in members]
         capped = [False] * n
         while True:
             free = [i for i in range(n) if not capped[i]]
@@ -210,7 +236,7 @@ def run_index(
     ranked = rank(scored)
     pos = {mint: i + 1 for i, mint in enumerate(ranked)}
     members = select_members(ranked, prev_members, params)
-    bps = weights_bps(members, scored, params)
+    bps = weights_bps(members, scored, params, _mc_volume(by_mint, members))
 
     changes = {
         "entered": sorted(set(members) - set(prev_members), key=lambda x: pos[x]),
@@ -255,6 +281,25 @@ def run_index(
         "emergency": [dict(e) for e in emergency],
     }
     return out
+
+
+def _mc_volume(
+    by_mint: Mapping[str, Metrics], members: Sequence[str]
+) -> dict[str, tuple[float, float]]:
+    return {
+        m: (float(by_mint[m].mc_usd or 0.0), float(by_mint[m].volume_usd or 0.0)) for m in members
+    }
+
+
+def mc_volume_of(items: Sequence[Mapping]) -> dict[str, tuple[float, float]]:
+    """(mc, volume) per member from published member items (`metrics` dict); missing = 0."""
+    return {
+        it["mint"]: (
+            float((it.get("metrics") or {}).get("mc_usd") or 0.0),
+            float((it.get("metrics") or {}).get("volume_usd") or 0.0),
+        )
+        for it in items
+    }
 
 
 def _metrics_json(m: Metrics) -> dict:

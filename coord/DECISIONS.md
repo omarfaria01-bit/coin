@@ -294,3 +294,12 @@ Job speed (same PR): `coin-index-sample` uses its own lock (`$LOCK.sample`) and 
 while the hourly run holds the flock; hourly no longer repeats a sample pass (the 5-min timer owns sampling); default
 `COIN_INDEX_DISCOVER_PAGES` 100 -> 10 (the seed file is the universe, D30). `_load_samples` skips a torn last jsonl line.
 
+
+## D36 · 2026-11-18 · Index weights: market cap + volume, capped 25% (#156, kiwi chat 08:58 Rome relayed by Grok; Claude)
+Source: kiwi's choice in chat 18 Nov 08:58, relayed by the Grok executor. Closes item 7 of D35.
+`weight_i = 0.5 * MC_i / sum MC + 0.5 * Volume_i / sum Volume`, MC = window-average market cap, Volume = raw Helius window
+volume; then cap 25% per coin with water-filling; fewer than 4 members -> equal (cap cannot hold). Integer bps summing to
+10,000, largest remainder, ties to better rank. New `weights.mode = "mc_volume_capped"`, `cap_pct = 25` are the defaults
+(`equal`, `score_capped` stay as options). Rank/membership still use the score S (§4); only the weights changed.
+Risk, said plainly: volume is raw (no wash cleanup, D35), so a coin with inflated volume gets up to half-weight pull from
+it; the 25% cap and F9 (200 traders) are the only limits. A half whose total is 0 counts as equal. Hetzner: pull /opt/coin.

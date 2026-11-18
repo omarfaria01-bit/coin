@@ -24,7 +24,10 @@ from index.select import select_members, split_prize, weights_bps
 
 ROOT = Path(__file__).resolve().parents[1]
 P = IndexParams.model_validate(json.loads((ROOT / "index" / "params.json").read_text()))
-CAPPED = P.model_copy(update={"weights": P.weights.model_copy(update={"mode": "score_capped"})})
+EQUAL = P.model_copy(update={"weights": P.weights.model_copy(update={"mode": "equal"})})
+CAPPED = P.model_copy(
+    update={"weights": P.weights.model_copy(update={"mode": "score_capped", "cap_pct": 20})}
+)
 SMALL = P.model_copy(
     update={
         "membership": P.membership.model_copy(update={"size": 5, "enter_rank": 3, "exit_rank": 7})
@@ -83,7 +86,7 @@ def ranked_and_previous(draw):
 def test_weights_bps_conserve_10000(case: tuple[list[str], dict[str, float]]) -> None:
     members, log_s = case
     assert members  # the strategy is non-empty
-    for params in (P, CAPPED):
+    for params in (EQUAL, CAPPED):
         bps = weights_bps(members, log_s, params)
         cap_bps = int(frac(params.weights.cap_pct) * 100)
         assert set(bps) == set(members)
@@ -99,7 +102,7 @@ def test_weights_bps_deterministic_for_any_member_order(
 ) -> None:
     members, log_s = case
     order = data.draw(st.permutations(members), label="member order")
-    for params in (P, CAPPED):
+    for params in (EQUAL, CAPPED):
         first = weights_bps(members, log_s, params)
         assert first == weights_bps(list(members), dict(log_s), params)
         reordered = weights_bps(order, log_s, params)
@@ -116,7 +119,7 @@ def test_split_prize_conserves_lamports(
     lamports: int, case: tuple[list[str], dict[str, float]]
 ) -> None:
     members, log_s = case
-    for params in (P, CAPPED):
+    for params in (EQUAL, CAPPED):
         bps = weights_bps(members, log_s, params)
         parts = split_prize(lamports, members, bps)
         floors = {m: lamports * bps[m] // BPS for m in members}
