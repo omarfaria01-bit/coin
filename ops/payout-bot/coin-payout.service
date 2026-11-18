@@ -1,0 +1,17 @@
+[Unit]
+Description=GTASP10 daily holder payout (D46): inputs, plan, send
+After=network-online.target
+[Service]
+Type=oneshot
+User=coinbot
+Group=coinbot
+EnvironmentFile=/etc/coin/payout-bot/env
+WorkingDirectory=/opt/coin
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+TimeoutStartSec=2h
+ReadWritePaths=/var/lib/coin/payout-bot /var/www/gtasp10/data
+ReadOnlyPaths=/etc/coin/payout-bot /etc/coin/fee-bot /var/lib/coin/fee-bot
+ExecStart=/opt/coin/ops/payout-bot/run.sh

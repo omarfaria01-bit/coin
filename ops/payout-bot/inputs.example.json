@@ -1,0 +1,8 @@
+{
+  "mint": "<GTASP10 mint (CA)>",
+  "system_wallet": "<system wallet public address (the fee bot wallet)>",
+  "excluded": {},
+  "team_wallets": ["<kiwi's wallet(s)>"],
+  "fee_bot_ledger": "/var/lib/coin/fee-bot/ledger.jsonl",
+  "state_dir": "/var/lib/coin/payout-bot"
+}
