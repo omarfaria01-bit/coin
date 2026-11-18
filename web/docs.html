@@ -254,10 +254,11 @@
       <li><strong>You can lose everything.</strong> Memecoins can go to zero, and GTASP10 holds a basket of them. No return is promised.</li>
       <li><strong>The filters can be wrong.</strong> Every number comes from third-party data. A bad data point can put a bad coin in the index or drop a good one, and membership is not an endorsement.</li>
       <li><strong>Smart-contract and launchpad risk.</strong> Solana programs, pools, bonding curves and swap routes can fail or be exploited, and rewards depend on the swaps succeeding.</li>
+      <li><strong>The system wallet key is on our server.</strong> The bots need it to sign, so it lives on the server (file mode 600, never printed). If the server is hacked, an attacker could take the funds in the system wallet: the SOL pot, the reserve and the basket coins not yet paid out. What limits that: the bots move at most a fixed amount per run and per day; the wallet keeps a reserve and the bot stops if it is short; an emergency stop pauses everything; every transaction is public on Solscan and in the ledger on <a href="rewards.html">Rewards</a>, so any theft would be seen at once; and the bots publish the hash of the rules they run on (<a href="#who-changes-rules">D50</a>). These limits bind the bots, not an attacker who holds the key. Moving the funds to a multisig with an on-chain spending limit is being studied; it is not in place yet.</li>
       <li><strong>Automation can fail.</strong> A bot can pause, a day can be skipped, and the emergency stop can pause everything for everyone. Unpaid amounts are carried, not lost.</li>
       <li><strong>No advice.</strong> Nothing here is financial, legal or investment advice. GTASP10 is not affiliated with Rockstar Games or Take-Two Interactive.</li>
     </ul>
-    <p class="muted small">Sources: INDEX_RULES.md §9; DECISIONS D45, D46.</p>
+    <p class="muted small">Sources: INDEX_RULES.md §9; DECISIONS D45, D46, D50; ops/fee-bot/README.md; econ/params.json.</p>
   </div>
 </section>
 </main>
