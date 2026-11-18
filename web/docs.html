@@ -210,6 +210,14 @@
     </ul>
     <p class="muted small">Sources: docs/design/INDEX_OUTPUT_SCHEMA.md §1–§2; INDEX_RULES.md §8, §9.</p>
   </div>
+  <div class="glass card" id="who-changes-rules">
+    <h3>Who can change the rules</h3>
+    <p>Fees and rewards follow a public rules file. Any change is visible on GitHub and only takes effect 72 hours later, so holders always see it coming. The dev cannot change payouts on the spot.</p>
+    <p>The file is <a class="mono" href="https://github.com/omarfaria01-bit/coin/blob/main/econ/params.json" target="_blank" rel="noopener">econ/params.json</a>. The bots publish the sha256 of the rules they run on, so you can check it against GitHub.</p>
+    <div id="rules-lock"><p class="muted small">The rules hash appears here once the fee bot runs.</p></div>
+    <p>The bots run on our server; full on-chain enforcement (multisig with time lock) is planned.</p>
+    <p class="muted small">Sources: econ/README.md; DECISIONS D50.</p>
+  </div>
 </section>
 
 <section id="team" class="section">
@@ -262,5 +270,6 @@
   <p>This site is informational. Nothing here is financial advice. GTASP10 is a memecoin index: it is high risk and you can lose everything you put in. No returns are promised. GTASP10 is not affiliated with Rockstar Games or Take-Two Interactive. Grand Theft Auto and GTA are trademarks of their respective owners.</p>
 </footer>
 <script src="nav.js?v=20261118f"></script>
+<script src="rules-lock.js?v=20261118g"></script>
 </body>
 </html>

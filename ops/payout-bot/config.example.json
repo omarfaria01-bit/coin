@@ -1,9 +1,6 @@
 {
   "enabled": true,
   "mode": "dry",
-  "max_transfers_per_day": 500,
-  "max_transfers_per_tx": 3,
-  "min_reserve_lamports": "50000000",
   "fee_bot_state_path": "/var/lib/coin/fee-bot/state.json",
   "state_dir": "/var/lib/coin/payout-bot",
   "public_path": "/var/www/gtasp10/data/payouts.json"
