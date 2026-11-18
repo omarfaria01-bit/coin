@@ -445,3 +445,20 @@ so it was never a candidate (absent from `2026-11-18T15.json`, neither member no
 3. Not an allow entry: it still has to pass F1-F11 (D35/D37: no manual allow).
 4. Known limit: any search term crowded by 30+ copycats can hide a real coin. Reference coins must be seeded.
 Tests: `tests/test_index_discovery_dcty.py`.
+
+## D45 · 2026-11-18 · Automatic fee bot: system wallet, no per-transaction APPROVED (kiwi, project thread 18:49-18:56 Rome)
+kiwi: "voglio che il sistema compri le fees senza bisogno del mio permesso altrimenti la gente pensa che io me le possa
+tenere"; chose "Automatico subito" (no 24h dry-run period) and "Wallet di sistema + bot nostro" (not pump.fun's native
+holder-rewards coin, which would drop the basket, loyalty multiplier and prize).
+1. A system wallet is generated on the server (`ops/fee-bot/keygen.mjs`); the key never leaves `/etc/coin/fee-bot/`
+   (owner `coinbot`, 600). kiwi sets it as 100% creator-fee recipient on pump.fun (one post-launch change, then locked),
+   so the founder's wallet never holds the fees.
+2. `ops/fee-bot/run.mjs` runs hourly: collect fees (pump.fun SDK 4.3.1) -> 30% SOL pot (draw stays off, legal #8) ->
+   70% buys the index members via Jupiter Swap API v2 by `weight_bps`. Caps per swap/run/day, slippage <= 3%, price
+   impact gate, fresh non-dry-run index only, never its own mint, reserve check, kill switch (STOP file), dry mode.
+3. This is a standing approval for these transactions only (claim, basket buys). It replaces the per-transaction
+   `APPROVED <issue#>` for the fee bot. Anything else on mainnet (token creation by Claude, transfers out of the
+   system wallet, raising caps above `config.example.json`, holder payouts) still needs kiwi's explicit approval.
+4. One small live smoke test (0.02 SOL cap) before full caps; no backtest (kiwi: no time).
+5. Not yet built: paying the bought basket tokens out to holders (D43 daily rewards). Until then they stay in the
+   public system wallet.

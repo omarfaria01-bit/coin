@@ -1,0 +1,12 @@
+{
+  "name": "gtasp10-fee-bot",
+  "private": true,
+  "type": "module",
+  "description": "GTASP10 fee bot (D45): creator fees -> 30% SOL pot, 70% index basket via Jupiter",
+  "scripts": { "test": "node --test" },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@pump-fun/pump-sdk": "4.3.1",
+    "@solana/web3.js": "1.98.4"
+  }
+}

@@ -1,0 +1,8 @@
+[Unit]
+Description=Run the GTASP10 fee bot at minute 20 of every UTC hour (after the index run)
+[Timer]
+OnCalendar=*-*-* *:20:00
+TimeZone=UTC
+Persistent=true
+[Install]
+WantedBy=timers.target
