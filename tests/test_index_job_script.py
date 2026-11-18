@@ -83,3 +83,27 @@ def test_pushes_only_to_index_data() -> None:
 def test_script_parses_with_bash() -> None:
     result = subprocess.run(["bash", "-n", str(SCRIPT)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+
+def _first_line(pattern: str) -> int:
+    rx = re.compile(pattern)
+    return next(i for i, line in enumerate(_ACTIVE) if rx.search(line))
+
+
+def test_prune_runs_before_any_git_call_in_both_modes() -> None:
+    """#311: git died as root ("dubious ownership") before the prune, so the prune never ran."""
+    prune = _first_line(r"tools/prune_index_cache\.py")
+    first_git = _first_line(r"(?:^|[\s($])git\s")
+    sample_branch = _first_line(r'"\$MODE" == "sample" \]\]; then')
+    assert prune < first_git
+    assert prune < sample_branch  # not hourly-only: samples (every 5 min) prune too
+    assert sum("prune_index_cache.py" in line for line in _ACTIVE) == 1
+
+
+def test_git_trusts_repo_and_worktree_before_first_git_call() -> None:
+    first_git = _first_line(r"(?:^|[\s($])git\s")
+    head = "\n".join(_ACTIVE[:first_git])
+    assert "GIT_CONFIG_COUNT=2" in head
+    assert 'GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="$REPO"' in head
+    assert 'GIT_CONFIG_KEY_1=safe.directory GIT_CONFIG_VALUE_1="$WORK"' in head
+    assert "safe.directory '*'" not in SCRIPT.read_text()  # never trust every directory

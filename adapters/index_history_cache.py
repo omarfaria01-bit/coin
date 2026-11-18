@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import os
@@ -10,11 +11,13 @@ from pathlib import Path
 from typing import Any
 
 from adapters.helius_client import HeliusClient
+from adapters.helius_parse import slim_item
 
 log = logging.getLogger(__name__)
 DEFAULT_CACHE_DIR = Path("data/index/cache")
 SCHEMA_VERSION = 1
 DEFAULT_WINDOW_SECONDS = 7 * 86_400  # 7 days
+MIN_FREE_BYTES = 1_000_000_000  # #311: below 1 GB free, skip the write (cache is only a speed-up)
 
 
 def _cache_path(mint: str, cache_dir: Path | None = None) -> Path:
@@ -91,7 +94,15 @@ def save_cache(
         if isinstance(bt, int) and bt < cutoff and i >= KEEP_MIN:
             truncated = True  # older rows dropped: lifetime sums become lower bounds
             continue
-        pruned.append(tx)
+        pruned.append(slim_item(tx))  # #311: only the fields normalize_transaction reads
+
+    try:
+        free = shutil.disk_usage(d).free
+    except OSError:
+        free = None
+    if free is not None and free < MIN_FREE_BYTES:
+        log.warning("Low disk (%d bytes free): cache for mint %s not written", free, mint)
+        return
 
     payload = {
         "schema": SCHEMA_VERSION,
@@ -100,12 +111,16 @@ def save_cache(
         "transactions": pruned,
     }
     path = _cache_path(mint, cache_dir)
+    tmp = path.with_suffix(".tmp")
     try:
-        tmp = path.with_suffix(".tmp")
         tmp.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
         tmp.replace(path)
     except OSError as exc:
         log.warning("Failed to write cache for mint %s: %s", mint, exc)
+    finally:
+        # #311: a failed write (ENOSPC) must never leave a partial ~200 MB .tmp behind.
+        with contextlib.suppress(OSError):
+            tmp.unlink(missing_ok=True)
 
 
 def fetch_mint_history_incremental(
@@ -169,7 +184,7 @@ def fetch_mint_history_incremental(
 
 
 DEFAULT_MAX_AGE_SECONDS = 48 * 3600
-DEFAULT_MAX_TOTAL_BYTES = 1_500_000_000
+DEFAULT_MAX_TOTAL_BYTES = 1_000_000_000  # #311: was 1.5 GB
 DISK_WARN_PCT = 85.0
 
 

@@ -87,6 +87,71 @@ def normalize_transaction(item: Mapping[str, object]) -> dict[str, object] | Non
     }
 
 
+_SLIM_TOP = ("signature", "parserStatus", "block_time", "blockTime", "timestamp")
+_SLIM_PARSED = ("fee", "transactionStatus", "blockTime", "slot", "feePayer")
+_SLIM_NATIVE = ("fromUserAccount", "toUserAccount", "amount")
+_SLIM_TOKEN = ("mint", "fromUserAccount", "toUserAccount", "rawTokenAmount")
+
+
+def _pick(row: object, keys: Sequence[str]) -> object:
+    if not isinstance(row, Mapping):
+        return row
+    return {k: row[k] for k in keys if k in row}
+
+
+def slim_item(item: object) -> object:
+    """#311: drop what normalize_transaction never reads, so the history cache stays small.
+
+    Invariant (tested): normalize_transaction(slim_item(x)) == normalize_transaction(x).
+    Only pump.fun create instructions survive; account data, logs and other programs go.
+    """
+    if not isinstance(item, Mapping):
+        return item
+    out: dict[str, object] = {k: item[k] for k in _SLIM_TOP if k in item}
+    parsed = item.get("parsed")
+    if not isinstance(parsed, Mapping):
+        if "parsed" in item:
+            out["parsed"] = parsed
+        return out
+    p: dict[str, object] = {k: parsed[k] for k in _SLIM_PARSED if k in parsed}
+    summary = parsed.get("summary")
+    if isinstance(summary, Mapping):
+        p["summary"] = {"type": summary.get("type")}
+    elif "summary" in parsed:
+        p["summary"] = summary
+    for key, keys in (("nativeTransfers", _SLIM_NATIVE), ("tokenTransfers", _SLIM_TOKEN)):
+        if key in parsed:
+            rows = parsed[key]
+            p[key] = [_pick(r, keys) for r in rows] if isinstance(rows, list) else rows
+    ixs = parsed.get("instructions")
+    if isinstance(ixs, list):
+        keep = []
+        for ix in ixs:
+            if not isinstance(ix, Mapping) or ix.get("programId") != PUMP_PROGRAM:
+                continue
+            if ix.get("instructionName") not in PUMP_CREATE_NAMES:
+                continue
+            dec = ix.get("decoded")
+            slim_ix: dict[str, object] = {
+                "programId": ix["programId"],
+                "instructionName": ix["instructionName"],
+            }
+            if isinstance(dec, Mapping):
+                args = dec.get("args")
+                slim_ix["decoded"] = {
+                    "args": _pick(args, ("name", "symbol")),
+                    "accounts": dec.get("accounts"),
+                }
+            elif "decoded" in ix:
+                slim_ix["decoded"] = dec
+            keep.append(slim_ix)
+        p["instructions"] = keep
+    elif "instructions" in parsed:
+        p["instructions"] = ixs
+    out["parsed"] = p
+    return out
+
+
 def _tips(raw: object) -> int | None:
     if raw is None:
         return 0
