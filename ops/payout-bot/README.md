@@ -4,7 +4,7 @@ Automatic: nobody signs, picks or changes a payment by hand.
 
 | Timer (UTC) | Runs | Signs? |
 |---|---|---|
-| `coin-holder-snapshot` every hour at :40 | `tools/payout_inputs.py snapshot`: every holder of our mint, minus excluded wallets, into `holder_state.json` (holding clock restarts at 0; the day's **minimum** balance counts) | no |
+| `coin-holder-snapshot` every hour at :40 | `tools/payout_inputs.py snapshot`: every holder of our mint, minus excluded wallets, into `holder_state.json` (holding clock restarts at 0; D47 balance-hours: each hour earns the lower of its two snapshots × loyalty) | no |
 | `coin-payout` daily 00:10 | `run.sh`: 1. send what the last plan still owes; 2. `payout_inputs.py export` for the day that ended; 3. `tools/payout_plan.py` (#315) once per day, carry from the previous plan; 4. `send.mjs` (#316) | step 1 and 4 |
 
 Files in `/var/lib/coin/payout-bot`: `holder_state.json`, `inputs-<day>/`, `plan-<day>.json`, `ledger.jsonl`.
@@ -12,8 +12,8 @@ Public: `/var/www/gtasp10/data/payouts.json`, shown as "Latest payouts" on the R
 
 ## Never twice, never more than held
 - A plan is made once per day. `export` refuses while the previous plan has transfers the ledger
-  does not show as sent (the wallet still holds them), and on a day with fewer than 20 of 24 snapshots
-  (no plan that day; the budget waits and is split the next day).
+  does not show as sent (the wallet still holds them), and on a day with fewer than 2 snapshots
+  (no plan that day; the budget waits and is split the next day). A missed snapshot just earns nothing for that hour.
 - The sender (`send.mjs`) never sends a memo twice (ledger + on-chain), never more of a token than the
   wallet holds, keeps the fee bot's SOL, and has a per-day cap. See its header.
 - Exclusions: `team_wallets` → team, the system wallet → system, program-owned (off-curve) accounts →
@@ -45,7 +45,7 @@ systemctl enable --now coin-holder-snapshot.timer
 ```
 
 ## Go live
-1. Let snapshots run one full UTC day (`journalctl -u coin-holder-snapshot`: 24 runs).
+1. Let snapshots run until the next UTC midnight (`journalctl -u coin-holder-snapshot`: at least 2 runs that day).
 2. Keep `"mode": "dry"`, `systemctl start coin-payout`, read `plan-<day>.json` and the `dry` ledger lines.
 3. Smoke test: `"mode": "live"`, `"max_transfers_per_day": 1`; run once; check the tx and memo on Solscan.
 4. Normal caps, then `systemctl enable --now coin-payout.timer`.
