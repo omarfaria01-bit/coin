@@ -3,43 +3,84 @@
   const $ = (s) => document.querySelector(s);
   const DATA = "data/";
   const RELEASE = new Date(2026, 10, 19, 0, 0, 0); // 19 Nov 2026 00:00 local time
-  let lang = localStorage.getItem("gtasp10_lang") || "it";
+  let lang = localStorage.getItem("gtasp10_lang") || "en";
   let latest = null, cands = null, sortKey = "vol24h";
 
-  const EN = {
-    nav_index:"Index", nav_how:"How it works", nav_rules:"Rules",
-    kicker:"On-chain index · Solana · GTA 6 narrative",
-    sub:"The 10 best GTA 6 memecoins on Solana, in a single coin. Recalculated every hour by a public formula. 100% of creator fees go back to holders.",
-    cd_release:"GTA 6 release", cd_hour:"Next draw and rebalance", ca:"Contract address", soon:"Coming soon",
-    draft:"Draft · temporary name and ticker · live dry-run data",
-    idx_title:"Live index", coins:"coins", building:"Top 10 under construction",
-    building_p:"The index samples every coin every 5 minutes. As soon as coins pass every filter, they enter the top 10.",
-    next_update:"Next update in", cand_title:"Tracked GTA candidates",
-    cand_warn:"Preview: these are candidates, NOT index members. Not a buy recommendation.",
-    by_vol:"24h volume", by_mc:"Market cap", by_liq:"Liquidity",
-    cand_note:"Showing candidates with at least $1,000 of 24h volume. Status = first filter failed in the latest hourly run.",
-    how_title:"How it works", fees_t:"100% of fees go back",
-    fees_a:"Holder rewards, paid in the basket tokens (not in GTASP10)", fees_b:"Hourly draw prize pot",
-    fees_n:"No team share. No buyback.", draw_t:"A draw every hour",
-    draw_1:"Odds proportional to the square root of your holder score", draw_2:"Linked wallets grouped, capped at 5%",
-    draw_3:"Randomness verifiable on-chain", draw_4:"Pot too small? It rolls over to the next hour",
-    elig_t:"Who takes part", elig_1:"Hold at least 1/1,000,000 of the supply", elig_2:"Nothing accrues in the first hour of holding",
-    elig_3:"The longer you hold, the higher the multiplier, up to 5× after 4 hours", elig_4:"Public dev wallet, payouts reproducible from on-chain data",
-    curve_t:"Holding multiplier", rules_t:"Rules and transparency", rules_s:"Public formula, recalculated every hour over the previous 24 hours.",
-    r_universe:"1 · Universe", r_universe_p:"Every Solana coin with a GTA reference in its name, ticker or description: GTA, GTA 6, Grand Theft Auto, Vice City, Leonida, Lucia, Jason Duval, Rockstar, Vercetti and a broad series vocabulary. Manual exclusions only for scams.",
-    r_filters:"2 · Filters (all required)", f1:"Age ≥ 4h", f2:"Liquidity ≥ $50k", f3:"Top 10 holders 13–27%", f4:"Fees ≥ 8 SOL", f5:"Launch bundle ≤ 30%", f7:"Creator ≤ 3 tokens in 7 days", f8:"Authorities revoked", f9:"200+ traders", f10:"Volume > 0", f11:"Market cap ≤ 100× liquidity",
-    r_score:"3 · Score", r_score_p:"Log scale: one huge coin can't crush the others.",
-    r_member:"4 · Entry and exit", r_member_p:"A new coin enters if it reaches the top 8. A member exits if it falls below 12th or fails a filter (immediately). Emergency removal if liquidity drops 50% within an hour or authorities are re-enabled.",
-    r_weights:"5 · Weights", r_weights_p:"50% market-cap share + 50% volume share, capped at 25% per coin. With fewer than 4 members weights are equal.",
-    r_verify:"6 · Verifiable", r_verify_p:"Every hourly result publishes the hash of its parameters and inputs: anyone can recompute the index.",
-    q1:"What is GTASP10?", a1:"An index coin on Solana that tracks the 10 best memecoins of the GTA 6 narrative, picked every hour by public rules.",
-    q2:"How do I receive rewards?", a2:"By holding at least 1/1,000,000 of the supply. 70% of creator fees is distributed to holders in the basket tokens, based on score and holding multiplier.",
-    q3:"How does the draw work?", a3:"Every hour 30% of fees goes into a prize pot. Odds grow with the square root of the score, linked wallets are grouped with a 5% cap and randomness is verifiable. If the pot is too small it rolls over to the next hour.",
-    q4:"Why is the top 10 empty?", a4:"The filters are strict and each coin's data is still being collected. Coins enter only when they pass all of them.",
-    q5:"Where is the contract address?", a5:"Not published yet. Distrust anyone sharing one before the official announcement.",
-    q6:"Does the team keep part of the fees?", a6:"No. 100% of creator fees go back to the community: 70% rewards, 30% draw. No buyback.",
-    disc:"This site is an informational draft. It is not financial advice. No returns are promised or guaranteed: memecoins are extremely volatile and you can lose everything. GTASP10 is not affiliated with Rockstar Games or Take-Two Interactive. Grand Theft Auto and GTA are trademarks of their respective owners."
-  };
+  const IT = {
+"nav_index": "Indice",
+"nav_how": "Come funziona",
+"nav_rules": "Regole",
+"kicker": "Indice on-chain · Solana · Narrativa GTA 6",
+"sub": "Le 10 migliori memecoin GTA 6 su Solana, in un'unica coin. Ricalcolato ogni ora con una formula pubblica. Il 100% delle fee del creator torna agli holder.",
+"cd_release": "Uscita GTA 6",
+"cd_hour": "Prossima estrazione e ribilanciamento",
+"ca": "Contract address",
+"soon": "Coming soon",
+"draft": "Bozza · nome e ticker temporanei · dati live in dry-run",
+"idx_title": "Indice live",
+"coins": "coin",
+"building": "Top 10 in costruzione",
+"building_p": "L'indice raccoglie i dati di ogni coin ogni 5 minuti. Appena le coin superano tutti i filtri, entrano nella top 10.",
+"next_update": "Prossimo aggiornamento tra",
+"cand_title": "Candidate GTA monitorate",
+"cand_warn": "Anteprima: queste sono candidate, NON membri dell'indice. Nessun consiglio di acquisto.",
+"by_vol": "Volume 24h",
+"by_mc": "Market cap",
+"by_liq": "Liquidità",
+"cand_note": "Mostrate le candidate con almeno 1.000 $ di volume 24h e un market cap realistico rispetto alla liquidità. Stato = primo filtro non superato nell'ultimo calcolo orario.",
+"how_title": "Come funziona",
+"fees_t": "100% delle fee torna indietro",
+"fees_a": "Reward agli holder, pagati nei token del paniere (non in GTASP10)",
+"fees_b": "Montepremi dell'estrazione oraria",
+"fees_n": "Nessuna quota al team. Nessun buyback.",
+"draw_t": "Estrazione ogni ora",
+"draw_1": "Probabilità proporzionale alla radice quadrata del tuo punteggio holder",
+"draw_2": "Wallet collegati raggruppati, con un tetto del 5%",
+"draw_3": "Casualità verificabile on-chain",
+"draw_4": "Montepremi troppo piccolo? Passa all'ora successiva",
+"elig_t": "Chi partecipa",
+"elig_1": "Basta tenere almeno 1/1.000.000 della supply",
+"elig_2": "Nella prima ora di holding non si matura nulla",
+"elig_3": "Più tieni, più cresce il moltiplicatore, fino a 5× dopo 4 ore",
+"elig_4": "Wallet del dev pubblico, pagamenti riproducibili dai dati on-chain",
+"curve_t": "Moltiplicatore di holding",
+"rules_t": "Regole e trasparenza",
+"rules_s": "Formula pubblica, ricalcolata ogni ora sulle 24 ore precedenti.",
+"r_universe": "1 · Universo",
+"r_universe_p": "Ogni coin Solana con un riferimento a GTA nel nome, nel ticker o nella descrizione: GTA, GTA 6, Grand Theft Auto, Vice City, Leonida, Lucia, Jason Duval, Rockstar, Vercetti e un ampio vocabolario della serie. Esclusioni manuali solo per le truffe.",
+"r_filters": "2 · Filtri (tutti obbligatori)",
+"f1": "Età ≥ 4h",
+"f2": "Liquidità ≥ $50k",
+"f3": "Top 10 holder 13–27%",
+"f4": "Fee ≥ 8 SOL",
+"f5": "Bundle al lancio ≤ 30%",
+"f7": "Creator ≤ 3 token in 7 giorni",
+"f8": "Authority revocate",
+"f9": "200+ trader",
+"f10": "Volume &gt; 0",
+"f11": "Market cap ≤ 100× liquidità",
+"r_score": "3 · Punteggio",
+"r_score_p": "Scala logaritmica: una coin enorme non schiaccia le altre.",
+"r_member": "4 · Entrata e uscita",
+"r_member_p": "Una nuova coin entra se arriva tra le prime 8. Un membro esce se scende sotto il 12° posto o se fallisce un filtro (subito). Rimozione d'emergenza se la liquidità crolla del 50% in un'ora o le authority vengono riattivate.",
+"r_weights": "5 · Pesi",
+"r_weights_p": "50% quota di market cap + 50% quota di volume, con un massimo del 25% per coin. Con meno di 4 membri i pesi sono uguali.",
+"r_verify": "6 · Verificabile",
+"r_verify_p": "Ogni risultato orario pubblica l'hash dei parametri e degli input: chiunque può ricalcolare l'indice.",
+"q1": "Cos'è GTASP10?",
+"a1": "Una coin indice su Solana che segue le 10 migliori memecoin della narrativa GTA 6, scelte ogni ora da regole pubbliche.",
+"q2": "Come ricevo i reward?",
+"a2": "Tenendo almeno 1/1.000.000 della supply. Il 70% delle fee del creator viene distribuito agli holder nei token del paniere, in base al punteggio e al moltiplicatore di holding.",
+"q3": "Come funziona l'estrazione?",
+"a3": "Ogni ora il 30% delle fee va in un montepremi. Le probabilità crescono con la radice quadrata del punteggio, i wallet collegati sono raggruppati con un tetto del 5% e la casualità è verificabile. Se il montepremi è troppo piccolo passa all'ora dopo.",
+"q4": "Perché la top 10 è vuota?",
+"a4": "I filtri sono severi e i dati di ogni coin si stanno ancora raccogliendo. Le coin entrano solo quando li superano tutti.",
+"q5": "Dov'è il contract address?",
+"a5": "Non ancora pubblicato. Diffida di chiunque ne diffonda uno prima dell'annuncio ufficiale.",
+"q6": "Il team tiene una parte delle fee?",
+"a6": "No. Il 100% delle fee del creator torna alla community: 70% reward, 30% estrazione. Nessun buyback.",
+"disc": "Questo sito è una bozza a scopo informativo. Non è un consiglio finanziario. Nessun rendimento è promesso o garantito: le memecoin sono estremamente volatili e puoi perdere tutto. GTASP10 non è affiliato con Rockstar Games o Take-Two Interactive. Grand Theft Auto e GTA sono marchi dei rispettivi proprietari."
+};
   const T = {
     it:{asof:"Ultimo calcolo", days:"g", none:"Nessuna candidata con dati sufficienti", member:"membro", nodata:"dati in raccolta",
         cols:["#","Coin","Stato","Market cap","Liquidità","Vol 24h"], mcols:["#","Coin","Peso","Market cap","Liquidità","Volume","Δ"],
@@ -54,18 +95,20 @@
   };
 
   // i18n
-  const itText = {};
-  document.querySelectorAll("[data-i18n]").forEach((el) => (itText[el.dataset.i18n] = el.innerHTML));
+  const TITLE_EN = document.title;
+  const enText = {};
+  document.querySelectorAll("[data-i18n]").forEach((el) => (enText[el.dataset.i18n] = el.innerHTML));
   function applyLang() {
     document.documentElement.lang = lang;
     document.querySelectorAll("[data-i18n]").forEach((el) => {
       const k = el.dataset.i18n;
-      el.innerHTML = lang === "en" && EN[k] ? EN[k] : itText[k];
+      el.innerHTML = lang === "it" && IT[k] ? IT[k] : enText[k];
     });
-    $("#lang").textContent = lang === "it" ? "EN" : "IT";
+    $("#lang").textContent = lang === "en" ? "IT" : "EN";
+    document.title = lang === "it" ? "GTASP10 — Le top 10 memecoin GTA 6 su Solana in un indice" : TITLE_EN;
     render();
   }
-  $("#lang").addEventListener("click", () => { lang = lang === "it" ? "en" : "it"; localStorage.setItem("gtasp10_lang", lang); applyLang(); });
+  $("#lang").addEventListener("click", () => { lang = lang === "en" ? "it" : "en"; localStorage.setItem("gtasp10_lang", lang); applyLang(); });
 
   // formatting
   const usd = (v) => {
@@ -157,7 +200,7 @@
       }
     }
     if (cands) {
-      const list = (cands.candidates || []).filter((c) => (c.vol24h || 0) >= 1000)
+      const list = (cands.candidates || []).filter((c) => (c.vol24h || 0) >= 1000 && (c.liq || 0) >= 1000 && (c.mc || 0) <= 200 * c.liq)
         .sort((a, b) => (b[sortKey] || 0) - (a[sortKey] || 0)).slice(0, 25);
       const maxv = Math.max(1, ...list.map((c) => c[sortKey] || 0));
       let h = `<thead><tr>${t.cols.map((c, i) => `<th class="${i === 2 || i === 4 ? "hidemob" : ""}">${c}</th>`).join("")}</tr></thead><tbody>`;

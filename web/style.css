@@ -111,4 +111,7 @@ h3{margin:.1rem 0 .6rem;font-size:1.1rem}
 
 @media(max-width:520px){.tbl{font-size:.82rem}.tbl td,.tbl th{padding:.6rem .45rem}.pulse{display:none}.building{padding:1.1rem}.cands-head .seg{width:100%;justify-content:space-between}}
 .rules>*,.cards3>*,.members-grid>*{min-width:0}
-@media(max-width:700px){.palms{width:150%;left:-25%}}
+
+
+.palms-m{display:none;position:absolute;left:0;bottom:0;width:100%;height:auto;pointer-events:none}
+@media(max-width:700px){.palms{display:none}.palms-m{display:block}}
