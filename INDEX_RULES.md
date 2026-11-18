@@ -32,13 +32,13 @@ A token is a **candidate** if it is a Solana token and its name, ticker or descr
 |---|---|---|
 | F1 | Age | ≥ 4h since the token's first pool or curve |
 | F2 | Liquidity | average ≥ $50,000 (pool liquidity in USD; for coins on a bonding curve, the curve's quote reserve in USD) |
-| F3 | Top 10 holders | median between **13% and 27%** of total supply, excluding pool/curve vaults, the burn address, listed hubs (`data/hubs/solana_hubs.csv`) and the index treasury |
-| F4 | Total fees | **≥ 8 SOL** paid by the token's traders since launch: transaction fees + priority fees + tips |
+| F3 | Top 10 holders | median **at most 30%** of total supply, no minimum (D38, kiwi 18 Nov 12:34), excluding pool/curve vaults, the burn address, listed hubs (`data/hubs/solana_hubs.csv`) and the index treasury |
+| F4 | Trading fees | **≥ 8 SOL** of trading fees in the last 24h, estimated as DexScreener h24 volume of all the coin's pools × 0.25% (`dex_fee_rate`), converted at the DexScreener SOL price (D38; was lifetime network fees, unprovable for big coins) |
 | F5 | Bundle at launch | ≤ 30% of supply bought in the creation block by more than one wallet |
 | F6 | (removed, D35) | no dev filter |
-| F7 | Serial creator | the creator created ≤ 3 tokens (this one included) in the 7 days before the rebalance |
+| F7 | (removed, D38) | no serial-creator filter (kiwi 18 Nov 12:34) |
 | F8 | Authorities | mint authority and freeze authority both revoked |
-| F9 | Real traders | ≥ 200 wallets that each traded ≥ 0.05 SOL in the window; the creator wallet does not count (D33, #170) |
+| F9 | Real traders | ≥ **50** distinct wallets (fee payers) swapping in the window, any size; counted on the fetched swaps, so a lower bound for big coins (D38; was 200 wallets ≥ 0.05 SOL) |
 | F10 | Volume | window volume > 0, Helius raw volume as-is (D35). No round-trip cleanup, no turnover band, no wallet or median-trade minimum |
 | F11 | Market cap vs liquidity | average market cap ≤ 100 × average pool liquidity (D29, #167). A thin pool cannot carry a huge market cap |
 | F8c | Token program (part of F8) | legacy SPL Token, or Token-2022 with only allowlisted mint extensions (D32, #171); anything else fails, unknown = insufficient_data |

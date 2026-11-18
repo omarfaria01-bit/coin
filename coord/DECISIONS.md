@@ -327,3 +327,21 @@ Unchanged: F1 4h, F2 $50k, F3 13-27%, F4 8 SOL, F5 30%, no F6, F7, F8, F9 200, F
 Risk, said plainly: lower bounds can only make a coin pass a minimum it truly passes; scores of big coins use lower-bound
 window fees/traders when their window is longer than the page cap (they rank a bit low, never high). Hetzner: pull /opt/coin.
 
+## D38 · 2026-11-18 · Index filters calibrated on kiwi's reference coins (#156, kiwi chat 12:34-12:35 Rome relayed by Grok)
+Source: kiwi in chat 18 Nov: "F7: toglilo", "F3: solo massimo 30%" (12:34), and "ti ho mandato diverse coin in top basati su
+quelle e regola i filtri" (12:35): calibrate so his reference coins pass while fakes stay out. Reference set: DCI HCNhQC,
+AudaCity DKYcjo, Rocco HZbiEp, Macca AKotzk, BAWSAQ 4La95N, Dacity nxPqZ4, rockstar 9HFUEa, GTA memes BsbsB3. Fakes that must
+stay out: EcLbZ6 ($12B), 3kZoBR, VUduB4, EiLTVJ, EkDjHZ and the 0-trader copies (liquidity ~ market cap).
+1. F7 removed (the creator's 7-day history is no longer walked; `creator_launches_7d` stays null in the output).
+2. F3: top10 <= 30%, no minimum (`top10_min_pct` 0, `top10_max_pct` 30).
+3. F4 measure: `fees_measure = "dex_24h_trading"`: DexScreener h24 volume of all pools x `dex_fee_rate` 1/400 (0.25%) / SOL
+   price (DexScreener SOL-quoted pairs), threshold stays 8 SOL. Calibration 18 Nov ~12:45 Rome (SOL ~$74): reference coins
+   13.3-134.5 SOL (min GTA memes 13.3); fakes 0-0.2 SOL except VUduB4 10.4 and EkDjHZ 10.0 (13 and 50 txns of wash), which F9 stops.
+   Lifetime network fees (old F4) could not be proven for any big coin: 3000 swaps carry 0.05-0.3 SOL.
+4. F9 measure: `traders_measure = "window_wallets"`, `min_unique_traders` 200 -> 50: distinct fee payers of the window swaps
+   (lower bound when the 3000-swap page cap is hit). Reference coins 61-632 (min rockstar 61); fakes 0-16.
+Unchanged: F1 4h, F2 $50k (kiwi), F5 30%, F8, F10, F11, D36 weights. DCI HCNhQC is at ~$30k liquidity, so it fails F2; reported,
+not lowered.
+Risk, said plainly: F4 now trusts DexScreener volume (wash volume counts, as D35 already accepts), and F9 no longer needs 0.05 SOL
+per wallet, so ~50 dust wallets can satisfy it (red-team case updated: tests/test_index_hourly_attacks.py).
+

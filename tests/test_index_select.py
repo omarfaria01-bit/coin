@@ -45,6 +45,7 @@ def coin(i: int, mc: float) -> Metrics:
         mc_usd=mc,
         top10_pct=20.0,
         total_fees_sol=40.0,
+        trading_fees_24h_sol=40.0,
         window_fees_sol=12.0,
         bundle_pct=2.0,
         dev_pct=1.0,
@@ -163,7 +164,7 @@ def test_run_index_is_deterministic_and_complete() -> None:
 def test_exit_reasons_reported() -> None:
     coins = [coin(i, 1_000_000.0 + i * 10_000) for i in range(12)]
     prev = [mint(0), mint(99)]
-    coins[0] = replace(coins[0], total_fees_sol=1.0)  # fails F4
+    coins[0] = replace(coins[0], trading_fees_24h_sol=1.0)  # fails F4 (D38 measure)
     out = run_index(coins, prev, P, Overrides(), "2026-11-20T18:00:00Z", "abc")
     exited = {e["mint"]: e["reason"] for e in out["changes"]["exited"]}
     assert exited == {mint(0): "F4", mint(99): "not_measured"}

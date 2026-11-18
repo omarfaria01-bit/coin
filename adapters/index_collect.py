@@ -27,7 +27,6 @@ from adapters.market_data import (
     Sample,
     authorities_revoked,
     bundle_pct,
-    creator_launches,
     fee_totals,
     pick_pair,
     top10_pct,
@@ -164,11 +163,7 @@ def chain_facts(
             bounds.append("independent_traders")
         else:
             independent = None
-    launches = None
-    if isinstance(creator, str):
-        craw, ctrunc = client.history(creator, start=as_of - 7 * 86_400, end=as_of)
-        created = [row for tx in _txs(craw) for row in (tx.get("creates") or [])]  # type: ignore[union-attr]
-        launches = creator_launches(created, creator, as_of - 7 * 86_400, as_of, truncated=ctrunc)
+    launches = None  # D38: F7 removed, the creator's 7-day history is no longer walked
     balance = None
     if isinstance(creator, str):
         owned = client.rpc(
@@ -287,6 +282,7 @@ def measure_mints(
     sample_seconds: int,
     holder_seconds: int,
     prescreen_liquidity_usd: float | None = None,
+    dex_fee_rate: float = 0.0025,
 ) -> list[Metrics]:
     """One read-only pass. DexScreener is batched.
 
@@ -296,6 +292,7 @@ def measure_mints(
     scored from DexScreener alone and fails F2.
     """
     found = client.pairs(list(mints)) if mints else []
+    sol_usd = _sol_usd(found)
     out: list[Metrics] = []
     for mint in mints:
         pair = pick_pair(found, mint)
@@ -318,6 +315,7 @@ def measure_mints(
                 )
             except Exception as exc:  # noqa: BLE001 - one mint's failure is published, not fatal
                 facts = dict(dex, error=type(exc).__name__)
+        facts = dict(facts, trading_fees_24h_sol=_trading_fees(found, mint, sol_usd, dex_fee_rate))
         start = window_start
         age = facts.get("age_hours")
         if isinstance(age, (int, float)) and not isinstance(age, bool) and age >= 0:
@@ -335,6 +333,48 @@ def measure_mints(
             )
         )
     return out
+
+
+WSOL = "So11111111111111111111111111111111111111112"
+
+
+def _sol_usd(pairs: Sequence[Mapping[str, object]]) -> float | None:
+    """SOL/USD from DexScreener pairs quoted in SOL (priceUsd / priceNative), median."""
+    vals: list[float] = []
+    for p in pairs:
+        quote = p.get("quoteToken")
+        if not isinstance(quote, Mapping) or quote.get("address") != WSOL:
+            continue
+        try:
+            usd, native = float(p.get("priceUsd")), float(p.get("priceNative"))  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            continue
+        if native > 0 and usd > 0 and math.isfinite(usd / native):
+            vals.append(usd / native)
+    if not vals:
+        return None
+    vals.sort()
+    return vals[len(vals) // 2]
+
+
+def _trading_fees(
+    pairs: Sequence[Mapping[str, object]], mint: str, sol_usd: float | None, rate: float
+) -> float | None:
+    """D38 F4: h24 volume of every pool of `mint` x fee rate, in SOL. None if unknown."""
+    if not sol_usd:
+        return None
+    total = 0.0
+    seen = False
+    for p in pairs:
+        base = p.get("baseToken")
+        if not isinstance(base, Mapping) or base.get("address") != mint:
+            continue
+        vol = p.get("volume")
+        h24 = vol.get("h24") if isinstance(vol, Mapping) else None
+        if isinstance(h24, (int, float)) and not isinstance(h24, bool) and math.isfinite(h24):
+            total += max(float(h24), 0.0)
+            seen = True
+    return total * rate / sol_usd if seen else None
 
 
 def _dex_facts(pair: Mapping[str, object] | None, as_of: int) -> dict[str, object]:

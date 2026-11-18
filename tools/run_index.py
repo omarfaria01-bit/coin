@@ -121,6 +121,7 @@ def _rebalance(args, client, params, overrides, as_of, measure, discover) -> Non
             frac(params.filters.min_liquidity_usd)
             * frac(params.discovery.prescreen_liquidity_share)
         ),
+        dex_fee_rate=float(frac(params.filters.dex_fee_rate)),
     )
     if not rows and _latest(Path(args.out)) is not None:
         raise RuntimeError("no measurements")

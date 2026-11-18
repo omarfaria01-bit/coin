@@ -40,6 +40,8 @@ class Metrics:
     extensions: tuple[str, ...] | None = None  # Token-2022 mint extension names, () for legacy
     unique_traders: int | None = None
     volume_usd: float | None = None  # window total
+    # D38: est. trading fees paid in 24h = DexScreener h24 volume (all pools) x dex_fee_rate, in SOL
+    trading_fees_24h_sol: float | None = None
     # F9/F10 quality (#170, D33), from the swaps themselves
     independent_traders: int | None = None  # wallets above min_trader_volume_sol, no creator
     roundtrip_share: float | None = None  # share of SOL volume that is same-wallet round trips
@@ -96,6 +98,7 @@ _NUMERIC = (
     "bundle_pct",
     "dev_pct",
     "volume_usd",
+    "trading_fees_24h_sol",
     "roundtrip_share",
     "median_trade_sol",
 )
@@ -116,11 +119,18 @@ def missing_metrics(m: Metrics, params: IndexParams) -> list[str]:
         "F1": ("age_hours",),
         "F2": ("liquidity_usd",),
         "F3": ("top10_pct",),
-        "F4": ("total_fees_sol",),
+        "F4": (
+            "trading_fees_24h_sol"
+            if params.filters.fees_measure == "dex_24h_trading"
+            else "total_fees_sol",
+        ),
         "F5": ("bundle_pct",),
-        "F7": ("creator_launches_7d",),
         "F8": ("mint_authority_revoked", "freeze_authority_revoked", "token_program"),
-        "F9": ("independent_traders",),
+        "F9": (
+            "unique_traders"
+            if params.filters.traders_measure == "window_wallets"
+            else "independent_traders",
+        ),
         "F10": ("volume_usd",),
         "F11": ("mc_usd",),
     }
@@ -164,20 +174,16 @@ def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
         if not lo(f.top10_min_pct) <= m.top10_pct <= lo(f.top10_max_pct):
             return "F3"
     if "F4" not in skip:
-        if m.total_fees_sol is None:
+        fees = m.trading_fees_24h_sol if f.fees_measure == "dex_24h_trading" else m.total_fees_sol
+        if fees is None:
             return MISSING
-        if m.total_fees_sol < lo(f.min_total_fees_sol):
+        if fees < lo(f.min_total_fees_sol):
             return "F4"
     if "F5" not in skip:
         if m.bundle_pct is None:
             return MISSING
         if m.bundle_pct > lo(f.max_bundle_pct):
             return "F5"
-    if "F7" not in skip:
-        if m.creator_launches_7d is None:
-            return MISSING
-        if m.creator_launches_7d > f.max_creator_launches_7d:
-            return "F7"
     if "F8" not in skip and f.require_authorities_revoked:
         if m.mint_authority_revoked is None or m.freeze_authority_revoked is None:
             return MISSING
@@ -195,9 +201,11 @@ def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
         elif m.token_program != SPL_TOKEN:
             return "F8"
     if "F9" not in skip:
-        if m.independent_traders is None:
+        window_wallets = f.traders_measure == "window_wallets"
+        traders = m.unique_traders if window_wallets else m.independent_traders
+        if traders is None:
             return MISSING
-        if m.independent_traders < f.min_unique_traders:
+        if traders < f.min_unique_traders:
             return "F9"
     if "F10" not in skip:
         if m.volume_usd is None:

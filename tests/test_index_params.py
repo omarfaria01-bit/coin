@@ -20,7 +20,7 @@ def _shipped() -> dict:
 def test_shipped_params_and_overrides_load() -> None:
     p = IndexParams.model_validate(_shipped())
     o = Overrides.model_validate(json.loads((ROOT / "index" / "overrides.json").read_text()))
-    assert p.filters.top10_min_pct == 13 and p.filters.top10_max_pct == 27  # kiwi
+    assert p.filters.top10_min_pct == 0 and p.filters.top10_max_pct == 30  # kiwi, D38
     assert p.filters.min_total_fees_sol == 8  # kiwi, D35
     assert (p.membership.size, p.membership.enter_rank, p.membership.exit_rank) == (10, 8, 12)
     assert p.rebalance_hours == 1

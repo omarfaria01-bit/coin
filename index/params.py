@@ -10,7 +10,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-FILTER_CODES = ("F1", "F2", "F3", "F4", "F5", "F7", "F8", "F9", "F10", "F11")
+FILTER_CODES = ("F1", "F2", "F3", "F4", "F5", "F8", "F9", "F10", "F11")  # F6 D35, F7 D38
 
 Num = int | str
 
@@ -55,16 +55,23 @@ class Keywords(_Strict):
 class Filters(_Strict):
     min_age_hours: Num = 4
     min_liquidity_usd: Num = 50_000
-    top10_min_pct: Num = 13
-    top10_max_pct: Num = 27
+    top10_min_pct: Num = 0  # D38: no minimum
+    top10_max_pct: Num = 30  # D38: kiwi 18 Nov 12:34
     min_total_fees_sol: Num = 8
     max_bundle_pct: Num = 30
-    max_creator_launches_7d: int = Field(3, ge=1)
     require_authorities_revoked: bool = True
     min_unique_traders: int = Field(200, ge=0)
     # F9 (D33): a trader needs this much SOL volume to count. F10 is volume > 0 (D35).
     min_trader_volume_sol: Num = "1/20"
     max_mc_liquidity_ratio: Num = 100  # F11 (#167, D29)
+    # D38 (calibrated on kiwi's reference coins): how F4 and F9 are measured.
+    # F4 "lifetime_network": tx+priority+tips since launch (needs the whole history).
+    # F4 "dex_24h_trading": DexScreener h24 volume of all pools x dex_fee_rate, in SOL.
+    fees_measure: Literal["lifetime_network", "dex_24h_trading"] = "lifetime_network"
+    dex_fee_rate: Num = "1/400"
+    # F9 "independent": wallets >= min_trader_volume_sol in the window (D33).
+    # F9 "window_wallets": distinct fee payers of the window's swaps (lower bound if capped).
+    traders_measure: Literal["independent", "window_wallets"] = "independent"
     # F8c (#171, D32): Token-2022 mint extensions allowed (jsonParsed names); all others fail.
     token2022_allowed_extensions: tuple[str, ...] = (
         "metadataPointer",
