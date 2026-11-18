@@ -7,12 +7,12 @@ Character counts are plain characters (newlines count as 1). X counts every link
 so posts with a link show both numbers. Limits: bio 160, display name 50, post 280 (new account, no long posts).
 
 Sources checked: COIN_MATH.md §9 (draws, as updated by D39), INDEX_RULES.md §3/§5/§6/§7,
-coord/DECISIONS.md D26, D28, D35–D39. No numbers outside those files.
+coord/DECISIONS.md D26, D28, D35–D43 (18 Nov update: weights D40, one SOL prize + loyalty to 10× D43, ~2% disclosure). No numbers outside those files.
 
-## 1. Bio (151 / 160)
+## 1. Bio (153 / 160)
 
 ```
-GTA 6 memecoin index on Solana. Top 10 GTA coins, rebalanced hourly by a public formula. 0% of fees to the team. 100% to holders. Not financial advice.
+GTA 6 memecoin index on Solana. Top 10 GTA coins, rebalanced hourly by a public formula. 0% of fees to the team. 100% to holders. Founder holds ~2%. NFA.
 ```
 
 Website field: `https://desk.linkgox.com/gtasp10/`
@@ -57,9 +57,9 @@ Fail one and it's out.
 (2/6)
 ```
 
-**3/6** (229 chars)
+**3/6** (232 chars)
 ```
-Weights: 50% market cap + 50% volume, capped at 25% per coin.
+Weights: square root of market cap, between 5% and 18% per coin.
 
 A new coin must reach the top 8 to enter. A member leaves when it falls below 12th or fails a filter.
 
@@ -68,22 +68,24 @@ Same public rules every hour. Every result is published.
 (3/6)
 ```
 
-**4/6** (218 chars)
+**4/6** (230 chars)
 ```
 Fees: 0% of fees to the team. 100% to holders.
 
-Creator fees are split 70% holder rewards, 30% draw pot. Both are paid in the index basket (the top 10 coins). Nothing is promised: amounts depend on real trading.
+Creator fees: 70% holder rewards, paid daily in the index basket (the top 10 coins), 30% to a SOL prize pot. Nothing is promised.
+
+Disclosure: the founder holds ~2% of supply.
 
 (4/6)
 ```
 
-**5/6** (246 chars) — draw wording needs kiwi's approval (legal #8)
+**5/6** (260 chars) — the draw is off (`draw_status` coming_soon, legal #8), so it says "coming soon"
 ```
-Planned at launch: an hourly holder draw.
-- odds in proportion to your holdings
+Coming soon, pending legal review: one SOL prize for holders.
+- odds in proportion to holdings x hold time
+- hold time counts from 1h: 1x, up to 10x at 30 days
 - max 5% of supply counts per holder
-- 0.01% of supply minimum to enter
-- inputs sealed before the draw, randomness from ORAO on-chain VRF, checkable by anyone
+- inputs sealed before the draw, on-chain VRF randomness
 
 (5/6)
 ```
@@ -107,9 +109,11 @@ https://desk.linkgox.com/gtasp10/
 - No APR, yield, "guaranteed" or profit promises.
 - No "no buyback", no "no team share", no "zero team tokens". Fee line is exactly:
   "0% of fees to the team. 100% to holders."
-- The draw is described as "planned at launch", not as live.
+- The draw is described as "coming soon, pending legal review", not as live.
 
 ## Notes for kiwi
+
+**Aggiornamento 18 Nov ~18:40 Roma (Claude):** note 1, 2 e 5 sono già applicate al testo sopra (bio e post 4/6 con il ~2%, post 5/6 "coming soon, pending legal review", sito allineato con #302). Il testo era rimasto a D36/D39: ora i pesi sono D40 e il premio è uno solo in SOL (D43). Va riapprovato il testo esatto di questa versione.
 
 1. **~2% della supply del team: CONFERMATO da kiwi (18 Nov 14:45 Rome), va dichiarato.** Il sito lo dichiara già. Per X serve il tuo APPROVED sul testo esatto. Opzioni:
    - Bio (153 / 160), sostituisce la bio sopra:
