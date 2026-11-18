@@ -9,6 +9,7 @@ import {
   emptyState,
   planBuys,
   quoteAcceptable,
+  rentTopUp,
   splitIncoming,
   stateFromJson,
   stateToJson,
@@ -118,4 +119,16 @@ test("quote gate", () => {
   assert.equal(quoteAcceptable({ ...ok, priceImpact: -3.5 }, 300, 3), false);
   assert.equal(quoteAcceptable({ ...ok, transaction: "" }, 300, 3), false);
   assert.equal(quoteAcceptable(null, 300, 3), false);
+});
+
+test("payout rent top-up: up to target, never more than basket or the day's cap", () => {
+  assert.equal(rentTopUp(10n ** 9n, 0n, 500_000_000n, 10n ** 10n), 500_000_000n);
+  assert.equal(rentTopUp(10n ** 9n, 400_000_000n, 500_000_000n, 10n ** 10n), 100_000_000n);
+  assert.equal(rentTopUp(10n ** 9n, 600_000_000n, 500_000_000n, 10n ** 10n), 0n); // already enough
+  assert.equal(rentTopUp(30n, 0n, 500_000_000n, 10n ** 10n), 30n); // basket is the limit
+  assert.equal(rentTopUp(10n ** 9n, 0n, 500_000_000n, 7n), 7n); // day cap is the limit
+  let s = applyIncoming(emptyState(), 10n ** 9n, 3000n);
+  s = applySpent(s, rentTopUp(s.basketLamports, 0n, 500_000_000n, 10n ** 10n), "d");
+  assert.ok(conserved(s));
+  assert.equal(s.basketLamports, 200_000_000n);
 });

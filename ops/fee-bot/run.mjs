@@ -30,6 +30,7 @@ import {
   emptyState,
   planBuys,
   quoteAcceptable,
+  rentTopUp,
   stateFromJson,
   stateToJson,
 } from "./plan.mjs";
@@ -52,6 +53,7 @@ const CONFIG_KEYS = {
   max_per_run_lamports: "string",
   max_per_day_lamports: "string",
   min_reserve_lamports: "string",
+  payout_rent_target_lamports: "string", // D46: free SOL kept for holders' new token accounts
   index_max_age_hours: "number",
   index_out_dir: "string",
   state_dir: "string",
@@ -237,6 +239,19 @@ export async function main(argv = process.argv.slice(2)) {
       state = applyIncoming(state, got.received, BigInt(cfg.pot_bps));
       saveState(cfg.state_dir, state);
       ledger(cfg.state_dir, { t: Date.now(), event: "collected", sig: got.sig, lamports: String(got.received) });
+    }
+
+    // D46: holders' new token accounts are paid from the basket budget, before buying, within
+    // the day cap; the payout sender only spends SOL above pot + basket + reserve.
+    const free = balance - owed - BigInt(cfg.min_reserve_lamports);
+    const spentToday = state.dayKey === day ? state.spentTodayLamports : 0n;
+    const maxDay = BigInt(cfg.max_per_day_lamports);
+    const topUp = rentTopUp(state.basketLamports, free, BigInt(cfg.payout_rent_target_lamports), maxDay > spentToday ? maxDay - spentToday : 0n);
+    if (topUp > 0n && cfg.mode === "live") {
+      state = applySpent(state, topUp, day);
+      saveState(cfg.state_dir, state);
+      ledger(cfg.state_dir, { t: Date.now(), event: "payout_rent", lamports: String(topUp) });
+      log("payout_rent", { lamports: String(topUp), free_before: String(free) });
     }
 
     const basket = basketFromIndex(

@@ -17,6 +17,8 @@ Bought basket tokens stay in the system wallet (public). Paying them out to hold
 - Caps: `max_per_swap_lamports`, `max_per_run_lamports`, `max_per_day_lamports`; slippage at most 3%;
   price impact gate; buys only from a fresh, non-dry-run index whose weights sum to 10000; never buys its own mint.
 - The wallet must hold pot + basket + `min_reserve_lamports` (tx fees and token-account rent) or the bot stops.
+- D46: before buying, up to `payout_rent_target_lamports` of free SOL is set aside from the basket budget
+  (within the day cap) so the payout bot can open holders' token accounts (`payout_rent` in the ledger).
 - Kill switch: `touch /etc/coin/fee-bot/STOP` or `"enabled": false`. One run at a time (lock file).
 - `"mode": "dry"` does everything except sign and send.
 
