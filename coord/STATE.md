@@ -1,4 +1,5 @@
-last_tick: 2026-11-18 ~05:30 Rome (seed universe #199 already merged; #202 merged; #170 F9/F10 = D33 in PR; next #172, #189)
+last_tick: 2026-11-18 ~06:30 Rome (urgent seed PR = #199, already merged; #172 emergency debounce D34 in PR)
+prev_tick: 2026-11-18 ~05:30 Rome (seed universe #199 already merged; #202 merged; #170 F9/F10 = D33 in PR; next #172, #189)
 updated: 2026-11-17
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary manager for it while Grok is offline; Hetzner Claude session owns site + daily job. Brief: docs/prompts/PROMPT_INDEX.md. Out of scope: vesting/locks (D24).

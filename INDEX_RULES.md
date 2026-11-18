@@ -69,7 +69,7 @@ log S = 0.4·ln(MC) + 0.3·ln(Liquidity) + 0.2·ln(Fees) + 0.1·ln(Traders)
 
 So a newcomer must reach the top 8 to enter, and a member is only replaced when it falls below 12th or is beaten for its place. On the hourly cadence a rank exit waits one more hour (`exit_notice`); a filter failure still removes the coin immediately.
 
-**Emergency removal** (at any time, not only at rebalance): pool liquidity down ≥ 50% within 1h, mint or freeze authority re-enabled, or the token flagged as a rug by the data source. The member is removed with the reason logged; weights are recomputed among the remaining members; no replacement until the next rebalance.
+**Emergency removal** (at any time, not only at rebalance): pool liquidity down ≥ 50% within 1h on two samples 15 min apart (D34), mint or freeze authority re-enabled, or the token flagged as a rug by the data source. The member is removed with the reason logged; weights are recomputed among the remaining members; no replacement until the next rebalance.
 
 ## 6. Weights
 

@@ -134,6 +134,7 @@ class Membership(_Strict):
 
 class Emergency(_Strict):
     liquidity_drop_pct_1h: Num = 50
+    confirm_gap_s: int = 900  # previous sample the drop must also show on (#172)
 
 
 class Weights(_Strict):
