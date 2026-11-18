@@ -11,7 +11,14 @@ import sys
 import time
 from pathlib import Path
 
-from adapters.index_history_cache import (
+# Run as a script ("python tools/prune_index_cache.py"), sys.path[0] is tools/, so the repo
+# root must be added or "import adapters" fails. That made the hourly prune a no-op inside
+# `|| true`: the cache grew past the cap and the disk filled (#308).
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from adapters.index_history_cache import (  # noqa: E402
     DEFAULT_CACHE_DIR,
     DEFAULT_MAX_AGE_SECONDS,
     DEFAULT_MAX_TOTAL_BYTES,
