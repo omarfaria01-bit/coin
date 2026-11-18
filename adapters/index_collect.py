@@ -81,7 +81,10 @@ def chain_facts(
     supply = mint_acc["supply"] if mint_acc else None
     decimals = mint_acc["decimals"] if mint_acc else None
     revoked = authorities_revoked(mint_acc["info"] if mint_acc else None)  # type: ignore[arg-type]
-    largest = client.rpc("getTokenLargestAccounts", [mint])
+    try:  # D37: Helius refuses this for some mints; then top10 is named as missing, not fatal
+        largest = client.rpc("getTokenLargestAccounts", [mint])
+    except RuntimeError:
+        largest = None
     rows = largest.get("value") if isinstance(largest, dict) else None
     holders = None
     programs: dict[str, str | None] = {}
@@ -144,6 +147,7 @@ def chain_facts(
         creator=creator,
         min_trader_lamports=math.ceil(frac(flt.min_trader_volume_sol) * LAMPORTS_PER_SOL),
         roundtrip_seconds=600,
+        skip_unknown=True,  # D37: F9 is a minimum, so an uncounted odd swap only lowers the count
     )
     bounds: list[str] = []
     total_fees = fees.total_fees_sol

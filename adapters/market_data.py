@@ -244,6 +244,7 @@ def trade_quality(
     creator: str | None,
     min_trader_lamports: int,
     roundtrip_seconds: int,
+    skip_unknown: bool = False,
 ) -> TradeQuality | None:
     """Per-wallet SOL volume and round trips. None when the walk is incomplete or any counted
     swap has an unknown wallet, side or SOL amount (fail closed: never a flattering count).
@@ -262,12 +263,16 @@ def trade_quality(
             continue
         seen.add(sig)
         if not isinstance(when, int):
+            if skip_unknown:  # D37: lower bound, an unreadable swap is simply not counted
+                continue
             return None
         if not window_start <= when < window_end:
             continue
         payer = tx.get("fee_payer")
         out, got = tx.get("sol_out"), tx.get("sol_in")
         if not isinstance(payer, str) or not isinstance(out, int) or not isinstance(got, int):
+            if skip_unknown:
+                continue
             return None
         moves = [
             r for r in tx.get("transfers") or [] if isinstance(r, Mapping) and r.get("mint") == mint
@@ -275,6 +280,8 @@ def trade_quality(
         bought = any(r.get("to") == payer for r in moves)
         sold = any(r.get("from") == payer for r in moves)
         if bought == sold:
+            if skip_unknown:
+                continue
             return None
         side, lamports = (1, out) if bought else (-1, got)
         if lamports > 0:
