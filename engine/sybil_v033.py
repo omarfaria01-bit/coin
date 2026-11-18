@@ -41,6 +41,11 @@ class Kind(StrEnum):
 
 
 STRONG = frozenset({Kind.S1_COSIGNED, Kind.S2_FUNDED_BUY, Kind.S3_OVERRIDE})
+# D39 (audit #271 M2): one-way funding can be faked by anyone sending SOL to a victim. With
+# ``cluster(..., s2_two_sided=True)`` S2 merges only with bidirectional evidence (an L1/L2 link
+# on the same pair); otherwise the pair goes to ``Clusters.funding_review`` and stays separate.
+# Default False keeps the v0.3.3 daily epoch, its §14 acceptance rows and goldens unchanged.
+FUNDING = frozenset({Kind.S2_FUNDED_BUY})
 TWO_SIDED = frozenset({Kind.L1_TOKEN_BOTH_WAYS, Kind.L2_SOL_BOTH_WAYS})
 WEIGHTS: Mapping[Kind, Fraction] = {
     Kind.L1_TOKEN_BOTH_WAYS: Fraction(3, 5),
@@ -67,6 +72,7 @@ class Clusters:
     link_only: tuple[tuple[WalletId, WalletId], ...]  # merges resting only on links (review)
     review: tuple[ClusterId, ...]  # clusters with > REVIEW_CLUSTER_SIZE wallets
     shared_payers: tuple[WalletId, ...]  # informational: fee payer of ≥ 5 holders
+    funding_review: tuple[tuple[WalletId, WalletId], ...] = ()  # S2 without two-sided evidence
 
 
 def _pair(a: WalletId, b: WalletId) -> tuple[WalletId, WalletId]:
@@ -175,22 +181,32 @@ def cluster(
     edges: Sequence[Edge],
     hubs: frozenset[WalletId] = frozenset(),
     events: Sequence[TokenEvent] = (),
+    *,
+    s2_two_sided: bool = False,
 ) -> Clusters:
     """Merge rule (§7): any strong edge, or links summing to ≥ 1 incl. an L1/L2 signal.
 
-    Nodes are the holders plus every non-hub wallet on a strong edge (e.g. an S2
-    funder). ``events`` only feed the informational shared-fee-payer review list.
+    D39: with ``s2_two_sided`` an S2 edge merges only if the same pair also has an L1/L2
+    link; S2 alone goes to ``funding_review`` and does not merge.
+
+    Nodes are the holders plus every non-hub wallet on a strong or funding edge (e.g. an S2
+    funder); a funder that ends up merged with no holder is dropped. ``events`` only feed the
+    informational shared-fee-payer review list.
     """
     holder_set = set(holders) - hubs
     nodes = set(holder_set)
     for e in edges:
-        if e.kind in STRONG and e.a not in hubs and e.b not in hubs:
+        if e.kind in STRONG | FUNDING and e.a not in hubs and e.b not in hubs:
             nodes.update((e.a, e.b))
     uf = UnionFind(sorted(nodes))
     links: dict[tuple[WalletId, WalletId], Fraction] = defaultdict(Fraction)
     sided: set[tuple[WalletId, WalletId]] = set()
+    funded: set[tuple[WalletId, WalletId]] = set()
     for e in sorted(edges, key=lambda e: (e.a, e.b, e.kind, e.ref)):
         if e.a not in nodes or e.b not in nodes:
+            continue
+        if e.kind in FUNDING and s2_two_sided:
+            funded.add((e.a, e.b))
             continue
         if e.kind in STRONG:
             uf.union(e.a, e.b)
@@ -198,6 +214,12 @@ def cluster(
         links[(e.a, e.b)] += WEIGHTS[e.kind]
         if e.kind in TWO_SIDED:
             sided.add((e.a, e.b))
+    funding_review = []
+    for pair in sorted(funded):
+        if pair in sided:
+            uf.union(*pair)
+        else:
+            funding_review.append(pair)
     link_only = []
     for pair in sorted(links):
         if links[pair] >= MERGE_SUM and pair in sided:
@@ -207,6 +229,13 @@ def cluster(
     groups: dict[WalletId, list[WalletId]] = defaultdict(list)
     for w in sorted(nodes):
         groups[uf[w]].append(w)
+    hard = STRONG - FUNDING if s2_two_sided else STRONG
+    strong_nodes = {x for e in edges if e.kind in hard for x in (e.a, e.b)}
+    groups = {
+        k: m
+        for k, m in groups.items()
+        if any(w in holder_set or w in strong_nodes for w in m)  # drop lone unmerged funders
+    }
     cluster_of: dict[WalletId, ClusterId] = {}
     members: dict[ClusterId, tuple[WalletId, ...]] = {}
     for mems in sorted((tuple(m) for m in groups.values()), key=lambda m: m[0]):
@@ -221,7 +250,7 @@ def cluster(
             if w is not None and w in nodes and e.fee_payer != w:
                 payer_count[e.fee_payer].add(w)
     shared = tuple(sorted(p for p, hs in payer_count.items() if len(hs) >= REVIEW_SHARED_PAYER))
-    return Clusters(cluster_of, members, tuple(link_only), review, shared)
+    return Clusters(cluster_of, members, tuple(link_only), review, shared, tuple(funding_review))
 
 
 # ---------------------------------------------------------------- one-sided links L4–L6

@@ -42,6 +42,7 @@ from adapters.ingest import (  # noqa: E402
     format_validation_error,
     solana_id,
 )
+from adapters.solana_keys import excluded_document, rewards_excluded  # noqa: E402
 from adapters.token2022 import parse_mint_account, plan_payouts  # noqa: E402
 from engine.epoch import EpochInputs, EpochResult, EpochState, VestingEntry, run_epoch  # noqa: E402
 from engine.merkle import MerkleTree, build, leaf  # noqa: E402
@@ -153,6 +154,11 @@ class Fixture(_Strict):
     total_supply: int = Field(gt=0, description="Token base units (v0.3.3 §2)")
     sol_usd: float = Field(gt=0, allow_inf_nan=False)
     excluded: list[str] = []
+    dev_wallets: list[str] = Field([], description="D39: dev wallets never count or win")
+    treasury: list[str] = Field([], description="D39: treasury / payout wallets never count or win")
+    exclude_off_curve: bool = Field(
+        True, description="D39 (#271 M3): program-owned (off-curve, PDA) owners never count"
+    )
     hubs: list[str] = []
     vesting: list[VestingIn] = Field([], description="Seeds epoch 0 only (no state.json yet)")
     mint: str | None = Field(None, description="Project token mint; event mints must match it")
@@ -232,6 +238,14 @@ def load_state(path: Path, fx: Fixture) -> EpochState:
     return EpochState(**{**st.model_dump(), "vesting": vest})
 
 
+def excluded_map(fx: Fixture) -> dict[str, str]:
+    """D39 (#271 M3): configured list + dev + treasury + every off-curve (PDA) wallet seen."""
+    seen = {w for e in fx.events for w in (e.src, e.dst) if w} if fx.exclude_off_curve else set()
+    return rewards_excluded(
+        seen, configured=fx.excluded, dev_wallets=fx.dev_wallets, treasury=fx.treasury
+    )
+
+
 def build_inputs(fx: Fixture, w: WindowIn) -> EpochInputs:
     return EpochInputs(
         t0=w.t0,
@@ -248,7 +262,7 @@ def build_inputs(fx: Fixture, w: WindowIn) -> EpochInputs:
         decimals=fx.decimals,
         sol_usd=fx.sol_usd,
         pot_inflow=w.pot_inflow,
-        excluded=frozenset(fx.excluded),
+        excluded=frozenset(excluded_map(fx)),
         hubs=frozenset(fx.hubs),
         total_supply=fx.total_supply,
         reserves=tuple(ReservePoint(**r.model_dump()) for r in fx.reserves if r.ts < w.t1),
@@ -334,6 +348,9 @@ def run(
                     expected_decimals=fx.decimals,
                 )
             dest = write_epoch(out, res, nxt, claims_tree(res), push_plan=push_plan)
+            (dest / "excluded.json").write_text(
+                json.dumps(excluded_document(excluded_map(fx)), indent=2, sort_keys=True) + "\n"
+            )
             tmp = state_path.parent / (state_path.name + ".tmp")
             tmp.parent.mkdir(parents=True, exist_ok=True)
             tmp.write_bytes((dest / "state.json").read_bytes())

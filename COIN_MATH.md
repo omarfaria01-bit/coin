@@ -228,6 +228,8 @@ All wallets funded this way by the same `X` end up in `X`'s cluster, whether or 
 - A farm funded from one wallet is caught.
 - An attacker who sends dust to a victim is not: to force a merge he would have to pay for more than half of everything the victim buys, and the victim would have to spend it.
 
+**S2 two-sided option (D39, audit #271 M2).** `cluster(..., s2_two_sided=True)` merges an S2 pair only if the same pair also has an L1/L2 link; otherwise it goes to `funding_review` and stays separate, so nobody can be pulled into a group by SOL sent to them. Default off for the daily epoch (keeps the §14 sybil-recall rows). With linear draw odds a forced merge no longer changes a victim's expected rank-1 prize (group odds are the sum, the prize is split by score), so the remaining effect is only through the caps.
+
 **S2 uses totals, not a trace of each coin.** Tracking which SOL paid for which buy would need every movement of every wallet since its creation, and SOL is fungible anyway. The two 50% conditions give the guarantee that matters: forcing a merge costs at least half of what the victim spends. A wallet that already had its own money is not merged by a small top-up, because the sender fails at least one of the two conditions.
 
 **A shared fee payer is informational only.** Two wallets whose fees are paid by the same third party (a trading app, a relayer, a gasless service) get **no** link weight from it. It can't satisfy the two-sided requirement and can't contribute to a merge. It is only reported in the review list. Nobody can get a holder grouped just by paying that holder's fees.
@@ -283,7 +285,7 @@ R_e = α · Pot_e        α = 1/10 per day
 
 ## 9. Draws (luck component)
 
-This is the part built for small holders: one entry per person, odds that grow with the square root of the score, and prizes large enough to matter to a small position.
+One entry per group, odds **proportional to the score** (D39; was the square root, which paid splitting: audit #271 C1), and prizes large enough to matter to a small position.
 
 A separate draw pot (section 10). **A draw closes every hour** (`DRAW_PERIOD` = 1 hour, kiwi 2026-11-18, D28; was 7 epochs). The hourly plan is `engine/hourly_draw.py`.
 
@@ -296,12 +298,41 @@ A separate draw pot (section 10). **A draw closes every hour** (`DRAW_PERIOD` = 
 
 These are time-weighted conditions. Dust sent to a wallet can't remove them, and a last-day entry can't meet them. There is **no separate prize for small wallets**: that would pay people to split.
 
-**Weight (integer):** `w_c = isqrt( floor( Σ s_c over the n epochs ) )`.
-- `s_c` is in token base units × multiplier, so `floor` already fixes the integer unit. `isqrt` is the exact integer square root.
-- One entry per cluster (linked wallets are already merged by the cluster rule, section 7). A cluster with 100× the score gets 10× the odds.
-- **Cap (D28):** no cluster may hold more than 5% of the total odds. Weights above the cap are cut to it and the rest keep their exact ratios (water-filling, exact integers). With fewer than 20 eligible clusters the cap cannot hold, so odds become equal.
-- Domain: clusters with weight 0 are dropped, and `1 ≤ W = Σ w_c < 2¹²⁸` (asserted). If no cluster is eligible, there is no draw and the pot carries over.
+**Weight (integer, D39):** `w_c = s'_c · D`, linear in the score, where
+`s'_c = s_c · min(1, SUPPLY_CAP · S / B_c)` (the score computed on `min(B_c, 5% of supply)`) and
+`D` = lcm of the denominators of the `s'_c` (one common integer, so the ratios are exact). If
+`Σ w_c` would reach 2¹²⁸, `w_c = floor(s'_c · 2¹²⁰ / Σ s')` (relative error < 2⁻¹²⁰).
+- **Minimum holding (D39):** a group enters only with `B_c ≥ MIN_HOLDING_SHARE · S` (default
+  1/10,000 = 0.01% of supply), via `is_draw_eligible`. Dust wallets get nothing.
+- **Supply cap (D39):** no group counts more than `SUPPLY_CAP` = 5% of supply.
+- **Odds cap (D28):** no group above 5% of the odds (exact water-filling; uncapped groups keep
+  their exact ratios).
+- **Group gate (D39, §16):** fewer than `max(MIN_GROUPS, ⌊1/cap⌋ + 1)` eligible groups
+  (default 100) → **no draw, the whole pot rolls over**. The old "fewer than 20 → equal odds"
+  branch is unreachable from the plan.
+- Domain: groups with weight 0 are dropped; `1 ≤ W < 2¹²⁸` (asserted). No eligible group → no draw, the pot carries over.
 - **Minimum pot (D28):** if the draw pot is below 0.01 SOL (10,000,000 lamports) at the snapshot, there is no draw and the whole pot rolls over to the next hour. Σ prizes + rollover = pot always.
+
+**Why linear (proofs, tested in `tests/test_rewards_d39_math.py`; table in
+`reports/rewards_d39_sybil_2026-11.md`).**
+1. *Split invariance.* With one common `D`, N pieces with `Σ s_i = s` have `Σ w_i = w`, and the
+   total `W` is unchanged, so their total odds `Σ w_i / W = w / W` are exactly the unsplit odds
+   (while no piece or group touches a cap and every piece is above the minimum).
+2. *Merging never helps.* `min(Σ b_i, C) ≤ Σ min(b_i, C)` for the supply cap, and the odds cap
+   is also a `min`, so a merged group's weight is ≤ the sum of its pieces' weights.
+3. *Splitting to dodge a cap is bounded.* Each piece weighs at most its uncapped linear weight,
+   so a split holding never gets more than its proportional share `s / Σ s`. The caps can be
+   escaped by splitting, but never beyond proportional. (sqrt broke this: N pieces gave √N×.)
+4. *Dust spam* costs 0.01% of supply per wallet; smaller pieces have weight 0.
+
+**Commit → reveal (D39, audit #271 H3; `engine/draw_commit.py`).** `snapshot_hash =
+SHA-256("GTASP10_DRAW_COMMIT_V1" ‖ canonical JSON)` of every input: group scores, balances and
+wallet parts, manual overrides, hub/exchange list, excluded list, cut-off slot and time, pot,
+prize split and all draw params. The job (1) publishes the JSON and commits the hash on-chain,
+(2) makes **exactly one** ORAO VRF request with seed = `snapshot_hash`, (3) on failure or
+timeout makes **no retry**: the pot rolls over. `tools/draw_verify.py` recomputes the hash,
+the winners, the prizes and the rollover from the public record; the payout path
+(`engine/payout_guard.py`) refuses to pay on any mismatch.
 
 **Draw payout.**
 ```
@@ -427,6 +458,8 @@ Each epoch writes `epochs/<n>/{inputs.json, clusters.json, scores.json, balances
 - Below that it simply stays in `pending` and keeps growing. It never expires and is never taken back, even if the wallet stops being eligible.
 - Draw prizes are added to `earned_total` and follow the same rule.
 
+**Idempotent sends (D39, audit #271 M4).** Every transfer carries the memo `GTASP10:e<epoch>:d<draw>:<wallet>` (`draw` = −1 for holder rewards). Before sending, keys already done in the local ledger or found on-chain are skipped; an intent logged without a result blocks the batch until the chain check resolves it (`engine/payout_guard.py`).
+
 **Small holder count (< 500 eligible): push payouts.** A direct transfer of `pending` in Q (a native SOL transfer when Q is SOL) to every wallet above `MIN_PAYOUT_Q`. The holder pays nothing and does nothing.
 
 **Larger holder count: claims.** Use an existing audited Merkle distributor (jup-ag/distributor or the Solana Merkle-airdrop template). Don't write a custom program. The leaf format is fixed by the audited program and is not modified. The program chosen in P1 must provide all of the following, verified and recorded in DECISIONS.md:
@@ -538,7 +571,7 @@ Everything above is built and tested, but not everything is switched on at launc
 | Dev tokens hard-locked (11) | **on** | — |
 | Public rules page with every wallet, `hubs.json` and overrides; holder view (17) | **on** | — |
 | Underwater boost (5) | off | after 7 days of clean epochs |
-| Draws (9) | off | ≥ 100 eligible clusters and the VRF flow tested on devnet. Until then the draw pot keeps accumulating, so the first draw is a large one |
+| Draws (9) | off | ≥ 100 eligible groups (enforced in `plan_hourly_draw`, D39) and the commit → VRF → verify flow tested on devnet. Until then the draw pot keeps accumulating, so the first draw is a large one |
 | Early-buy vesting (11) | depends on the pad | `native` if the pad supports it; `soft` only if kiwi approves |
 | Liquid staking of the pot (8) | off | pot large enough to matter, kiwi approves |
 | Treasury bot (12) | off | section 14 backtest passed and kiwi approves |

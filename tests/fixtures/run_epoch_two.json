@@ -1,4 +1,5 @@
 {
+ "exclude_off_curve": false,
  "params": "../../config/coin.json",
  "decimals": 9,
  "total_supply": 1000000000000000,
