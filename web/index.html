@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>GTASP10 — L'indice delle top 10 coin GTA 6 su Solana</title>
+<meta name="description" content="GTASP10: indice delle 10 migliori memecoin GTA 6 su Solana, ricalcolato ogni ora con una formula pubblica.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1a0b2e">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Monoton&family=Bungee&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%231a0b2e%22/%3E%3Ctext x=%2232%22 y=%2244%22 font-size=%2230%22 text-anchor=%22middle%22 fill=%22%23ff2d95%22 font-family=%22Arial Black%22%3E10%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="#top"><span class="logo">GTASP<b>10</b></span></a>
+  <nav class="links">
+    <a href="#index" data-i18n="nav_index">Indice</a>
+    <a href="#how" data-i18n="nav_how">Come funziona</a>
+    <a href="#rules" data-i18n="nav_rules">Regole</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+  <button id="lang" class="lang" aria-label="Language">EN</button>
+</header>
+
+<section class="hero" id="top">
+  <div class="sky"></div>
+  <div class="sun"></div>
+  <div class="grid"></div>
+  <svg class="palms" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+    <defs><linearGradient id="pg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#14051f"/><stop offset="1" stop-color="#05010a"/></linearGradient></defs>
+    <g fill="url(#pg)">
+      <path d="M120 300 C125 220 128 170 140 110 L146 112 C136 170 134 230 134 300Z"/>
+      <path d="M142 108 c-40-10-80 0-110 30 c35-18 70-22 108-14z M142 108 c-20-35-55-55-95-55 c40 12 68 30 92 60z M142 108 c15-38 45-60 85-62 c-38 14-62 36-80 66z M142 108 c38-8 78 4 104 34 c-34-16-68-20-102-12z M142 108 c-5-30 5-60 25-80 c-12 25-16 50-18 80z"/>
+      <path d="M1040 300 C1036 230 1030 170 1012 96 L1018 94 C1036 160 1046 230 1052 300Z"/>
+      <path d="M1014 94 c-42-6-82 8-108 40 c34-20 70-26 106-20z M1014 94 c-24-34-60-50-100-48 c40 10 70 26 96 54z M1014 94 c12-40 40-64 80-70 c-36 16-58 40-74 72z M1014 94 c40-6 78 10 102 42 c-34-18-68-24-100-18z"/>
+      <path d="M1130 300 C1128 250 1124 210 1112 170 L1117 169 C1130 210 1136 250 1140 300Z"/>
+      <path d="M1113 168 c-30-6-58 4-78 26 c26-14 50-18 76-14z M1113 168 c10-28 32-44 60-48 c-26 12-42 28-56 50z M1113 168 c28-2 54 10 70 32 c-24-14-46-18-68-16z"/>
+      <rect x="0" y="286" width="1200" height="14"/>
+    </g>
+  </svg>
+  <div class="hero-inner">
+    <p class="kicker" data-i18n="kicker">Indice on-chain · Solana · Narrativa GTA 6</p>
+    <h1 class="title"><span class="neon">GTASP</span><span class="neon ten">10</span></h1>
+    <p class="sub" data-i18n="sub">Le 10 migliori memecoin GTA 6 su Solana, in un'unica coin. Ricalcolato ogni ora con una formula pubblica. Il 100% delle fee del creator torna agli holder.</p>
+    <div class="counters">
+      <div class="counter glass">
+        <span class="lbl" data-i18n="cd_release">Uscita GTA 6</span>
+        <span class="val" id="cd-release">--</span>
+      </div>
+      <div class="counter glass">
+        <span class="lbl" data-i18n="cd_hour">Prossima estrazione e ribilanciamento</span>
+        <span class="val" id="cd-hour">--:--</span>
+      </div>
+    </div>
+    <div class="ca glass"><span data-i18n="ca">Contract address</span> <b data-i18n="soon">Coming soon</b></div>
+    <p class="draft-tag" data-i18n="draft">Bozza · nome e ticker temporanei · dati live in dry-run</p>
+  </div>
+</section>
+
+<main>
+<section id="index" class="section">
+  <div class="sec-head">
+    <h2 data-i18n="idx_title">Indice live</h2>
+    <p class="muted" id="asof"></p>
+  </div>
+
+  <div id="members-wrap" hidden>
+    <div class="members-grid">
+      <div class="glass donut-card"><svg id="donut" viewBox="0 0 220 220"></svg><div class="donut-center"><b id="donut-n">10</b><span data-i18n="coins">coin</span></div></div>
+      <div class="glass table-card"><table class="tbl" id="members"></table></div>
+    </div>
+  </div>
+
+  <div id="building" class="glass building" hidden>
+    <div class="pulse"></div>
+    <div>
+      <h3 data-i18n="building">Top 10 in costruzione</h3>
+      <p data-i18n="building_p">L'indice raccoglie i dati di ogni coin ogni 5 minuti. Appena le coin superano tutti i filtri, entrano nella top 10.</p>
+      <p class="muted"><span data-i18n="next_update">Prossimo aggiornamento tra</span> <b id="cd-hour2">--:--</b> · <span id="excl-summary"></span></p>
+    </div>
+  </div>
+
+  <div class="cands">
+    <div class="cands-head">
+      <div>
+        <h3 data-i18n="cand_title">Candidate GTA monitorate</h3>
+        <p class="warn" data-i18n="cand_warn">Anteprima: queste sono candidate, NON membri dell'indice. Nessun consiglio di acquisto.</p>
+      </div>
+      <div class="seg" role="tablist">
+        <button class="on" data-sort="vol24h" data-i18n="by_vol">Volume 24h</button>
+        <button data-sort="mc" data-i18n="by_mc">Market cap</button>
+        <button data-sort="liq" data-i18n="by_liq">Liquidità</button>
+      </div>
+    </div>
+    <div class="glass table-card"><table class="tbl" id="cands"></table></div>
+    <p class="muted small" data-i18n="cand_note">Mostrate le candidate con almeno 1.000 $ di volume 24h. Stato = primo filtro non superato nell'ultimo calcolo orario.</p>
+  </div>
+</section>
+
+<section id="how" class="section">
+  <div class="sec-head"><h2 data-i18n="how_title">Come funziona</h2></div>
+  <div class="cards3">
+    <div class="glass card">
+      <h3 data-i18n="fees_t">100% delle fee torna indietro</h3>
+      <div class="split">
+        <div class="bar"><span class="a" style="width:70%">70%</span><span class="b" style="width:30%">30%</span></div>
+        <ul class="legend">
+          <li><i class="dot a"></i><span data-i18n="fees_a">Reward agli holder, pagati nei token del paniere (non in GTASP10)</span></li>
+          <li><i class="dot b"></i><span data-i18n="fees_b">Montepremi dell'estrazione oraria</span></li>
+        </ul>
+        <p class="muted small" data-i18n="fees_n">Nessuna quota al team. Nessun buyback.</p>
+      </div>
+    </div>
+    <div class="glass card">
+      <h3 data-i18n="draw_t">Estrazione ogni ora</h3>
+      <ul class="ticks">
+        <li data-i18n="draw_1">Probabilità proporzionale alla radice quadrata del tuo punteggio holder</li>
+        <li data-i18n="draw_2">Wallet collegati raggruppati, con un tetto del 5%</li>
+        <li data-i18n="draw_3">Casualità verificabile on-chain</li>
+        <li data-i18n="draw_4">Montepremi troppo piccolo? Passa all'ora successiva</li>
+      </ul>
+    </div>
+    <div class="glass card">
+      <h3 data-i18n="elig_t">Chi partecipa</h3>
+      <ul class="ticks">
+        <li data-i18n="elig_1">Basta tenere almeno 1/1.000.000 della supply</li>
+        <li data-i18n="elig_2">Nella prima ora di holding non si matura nulla</li>
+        <li data-i18n="elig_3">Più tieni, più cresce il moltiplicatore, fino a 5× dopo 4 ore</li>
+        <li data-i18n="elig_4">Wallet del dev pubblico, pagamenti riproducibili dai dati on-chain</li>
+      </ul>
+    </div>
+  </div>
+  <div class="glass card curve-card">
+    <h3 data-i18n="curve_t">Moltiplicatore di holding</h3>
+    <svg id="curve" viewBox="0 0 640 260" role="img" aria-label="Holding multiplier curve"></svg>
+  </div>
+</section>
+
+<section id="rules" class="section">
+  <div class="sec-head"><h2 data-i18n="rules_t">Regole e trasparenza</h2><p class="muted" data-i18n="rules_s">Formula pubblica, ricalcolata ogni ora sulle 24 ore precedenti.</p></div>
+  <div class="rules">
+    <div class="glass card">
+      <h3 data-i18n="r_universe">1 · Universo</h3>
+      <p data-i18n="r_universe_p">Ogni coin Solana con un riferimento a GTA nel nome, nel ticker o nella descrizione: GTA, GTA 6, Grand Theft Auto, Vice City, Leonida, Lucia, Jason Duval, Rockstar, Vercetti e un ampio vocabolario della serie. Esclusioni manuali solo per le truffe.</p>
+    </div>
+    <div class="glass card">
+      <h3 data-i18n="r_filters">2 · Filtri (tutti obbligatori)</h3>
+      <div class="chips">
+        <span data-i18n="f1">Età ≥ 4h</span><span data-i18n="f2">Liquidità ≥ $50k</span><span data-i18n="f3">Top 10 holder 13–27%</span><span data-i18n="f4">Fee ≥ 8 SOL</span><span data-i18n="f5">Bundle al lancio ≤ 30%</span><span data-i18n="f7">Creator ≤ 3 token in 7 giorni</span><span data-i18n="f8">Authority revocate</span><span data-i18n="f9">200+ trader</span><span data-i18n="f10">Volume &gt; 0</span><span data-i18n="f11">Market cap ≤ 100× liquidità</span>
+      </div>
+    </div>
+    <div class="glass card">
+      <h3 data-i18n="r_score">3 · Punteggio</h3>
+      <code class="formula">log S = 0.4·ln(MC) + 0.3·ln(Liq) + 0.2·ln(Fee) + 0.1·ln(Trader)</code>
+      <p class="muted small" data-i18n="r_score_p">Scala logaritmica: una coin enorme non schiaccia le altre.</p>
+    </div>
+    <div class="glass card">
+      <h3 data-i18n="r_member">4 · Entrata e uscita</h3>
+      <p data-i18n="r_member_p">Una nuova coin entra se arriva tra le prime 8. Un membro esce se scende sotto il 12° posto o se fallisce un filtro (subito). Rimozione d'emergenza se la liquidità crolla del 50% in un'ora o le authority vengono riattivate.</p>
+    </div>
+    <div class="glass card">
+      <h3 data-i18n="r_weights">5 · Pesi</h3>
+      <p data-i18n="r_weights_p">50% quota di market cap + 50% quota di volume, con un massimo del 25% per coin. Con meno di 4 membri i pesi sono uguali.</p>
+    </div>
+    <div class="glass card">
+      <h3 data-i18n="r_verify">6 · Verificabile</h3>
+      <p data-i18n="r_verify_p">Ogni risultato orario pubblica l'hash dei parametri e degli input: chiunque può ricalcolare l'indice.</p>
+      <p class="muted small mono" id="hashes"></p>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="section">
+  <div class="sec-head"><h2>FAQ</h2></div>
+  <div class="faq">
+    <details class="glass"><summary data-i18n="q1">Cos'è GTASP10?</summary><p data-i18n="a1">Una coin indice su Solana che segue le 10 migliori memecoin della narrativa GTA 6, scelte ogni ora da regole pubbliche.</p></details>
+    <details class="glass"><summary data-i18n="q2">Come ricevo i reward?</summary><p data-i18n="a2">Tenendo almeno 1/1.000.000 della supply. Il 70% delle fee del creator viene distribuito agli holder nei token del paniere, in base al punteggio e al moltiplicatore di holding.</p></details>
+    <details class="glass"><summary data-i18n="q3">Come funziona l'estrazione?</summary><p data-i18n="a3">Ogni ora il 30% delle fee va in un montepremi. Le probabilità crescono con la radice quadrata del punteggio, i wallet collegati sono raggruppati con un tetto del 5% e la casualità è verificabile. Se il montepremi è troppo piccolo passa all'ora dopo.</p></details>
+    <details class="glass"><summary data-i18n="q4">Perché la top 10 è vuota?</summary><p data-i18n="a4">I filtri sono severi e i dati di ogni coin si stanno ancora raccogliendo. Le coin entrano solo quando li superano tutti.</p></details>
+    <details class="glass"><summary data-i18n="q5">Dov'è il contract address?</summary><p data-i18n="a5">Non ancora pubblicato. Diffida di chiunque ne diffonda uno prima dell'annuncio ufficiale.</p></details>
+    <details class="glass"><summary data-i18n="q6">Il team tiene una parte delle fee?</summary><p data-i18n="a6">No. Il 100% delle fee del creator torna alla community: 70% reward, 30% estrazione. Nessun buyback.</p></details>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="logo small">GTASP<b>10</b></div>
+  <p data-i18n="disc">Questo sito è una bozza a scopo informativo. Non è un consiglio finanziario. Nessun rendimento è promesso o garantito: le memecoin sono estremamente volatili e puoi perdere tutto. GTASP10 non è affiliato con Rockstar Games o Take-Two Interactive. Grand Theft Auto e GTA sono marchi dei rispettivi proprietari.</p>
+</footer>
+<script src="app.js"></script>
+</body>
+</html>
