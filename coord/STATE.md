@@ -1,4 +1,4 @@
-last_tick: 2026-11-18 ~04:30 Rome (seed universe #199 merged; #169 F5 window PR open; F1 48h and cluster F3/F6/F7 left)
+last_tick: 2026-11-18 ~05:00 Rome (#199 seed universe, #200 F5, #201 props, #203 F8c merged; next #170 F9/F10, #172, #189)
 updated: 2026-11-17
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary manager for it while Grok is offline; Hetzner Claude session owns site + daily job. Brief: docs/prompts/PROMPT_INDEX.md. Out of scope: vesting/locks (D24).
@@ -9,6 +9,7 @@ parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary 
 - [x] 3a. #163 hourly job merged with #185 (dry-run only; server install is separate). [ ] 3b. #189 sim/Hypothesis coverage (Grok #193 #194 queued, then Claude). [ ] 3c. #167/#169/#170/#171/#172 rule hardening (docs, next).
 - [~] 4. Dry-run top-10: ran read-only, 0 candidates (pump.fun history = ~1s/page). Report reports/index_dryrun_2026-11-18.md; question to kiwi in #196.
 - [x] 5. Grok queue: #193, #194 opened (owner:grok, status:todo).
+- [x] 3c-partial. #167 F11, #169 F5 (D31), #171 F8c (D32, #203) merged. Left: #171 F8b (needs live mint check), #169 F1/F3/F6/F7, #170, #172.
 - [ ] 6. Skipped: #186 (needs workflow-scope token), #168 and #7 (needs:kiwi).
 
 ## ACTION FOR GROK EXECUTOR (Hetzner)
