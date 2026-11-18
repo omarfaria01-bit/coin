@@ -172,10 +172,6 @@ export function forwardedLamports(txs, from, to) {
 async function collectForwarded(cfg, connection, wallet, cursor) {
   const me = wallet.publicKey.toBase58();
   const list = await connection.getSignaturesForAddress(wallet.publicKey, { until: cursor && cursor !== "START" ? cursor : undefined, limit: 1000 }, "confirmed");
-  if (!cursor) {
-    log("forward_cursor_set", { cursor: list[0]?.signature ?? "START" });
-    return { received: 0n, cursor: cfg.mode === "live" ? list[0]?.signature ?? "START" : undefined };
-  }
   const txs = [];
   for (const s of [...list].reverse()) {
     if (s.err) continue;
@@ -184,7 +180,8 @@ async function collectForwarded(cfg, connection, wallet, cursor) {
   const { total, sigs } = forwardedLamports(txs, cfg.forward_from, me);
   log("forwarded", { lamports: String(total), sigs });
   if (cfg.mode === "dry") return { received: 0n };
-  return { received: total, sig: sigs.join(","), cursor: list[0]?.signature ?? cursor };
+  // First run (no cursor) counts the whole history: forwards sent before the bot started are owed too.
+  return { received: total, sig: sigs.join(","), cursor: list[0]?.signature ?? cursor ?? "START" };
 }
 
 async function collect(cfg, connection, sdk, wallet, cursor) {
