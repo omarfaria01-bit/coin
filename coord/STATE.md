@@ -1,4 +1,5 @@
-last_tick: 2026-11-18 ~10:10 Rome (D36 weights mc_volume_capped 25% in PR; #244 #246 merged; Hetzner must pull /opt/coin after merge; F2 question to kiwi still open)
+last_tick: 2026-11-18 ~10:20 Rome (D36 weights mc_volume_capped 25% MERGED #248: all 7 kiwi 08:25/08:58 points done; #244 #246 merged; Grok todo #247 #249; F2 question to kiwi still open)
+prev_tick: 2026-11-18 ~10:10 Rome (D36 weights mc_volume_capped 25% in PR; #244 #246 merged; Hetzner must pull /opt/coin after merge; F2 question to kiwi still open)
 prev_tick: 2026-11-18 ~09:45 Rome (first D35 run 08:00Z: members=0, excluded=96 = 67 insufficient_data (no DexScreener liquidity), 28 F2, 1 F4. Only 36/233 sampled mints have liquidity, 12 >= $10k. F2 $50k now the binding filter; asked kiwi in #1 (a/b/c), NOT changing F2. Run still ~40 min.)
 prev_tick: 2026-11-18 ~09:02 Rome (this session runs ON the Hetzner box: /opt/coin already at D35 code f33e3d4, the job script self-pulled at 08:46 CET; the 07:46Z output was from the run that started before the pull. 09:00 CET hourly run started on D35 code; no manual start needed. Waiting for its output on index-data. Weights: waiting for kiwi.)
 prev_tick: 2026-11-18 ~09:56 Rome (no code change possible: index-data last run still 07:46Z = Hetzner has NOT pulled D35; open PRs only state PR; Grok todo #239 #240 queued; weights waiting for kiwi; #189 rest/#169/#172 need kiwi or live data)
@@ -76,3 +77,6 @@ After the seed-universe PR (#196 follow-up, D30) merges: the job script does `gi
 2. #60 runbook: HOLD until wiring merges. #50 needs kiwi's APPROVED.
 3. Await kiwi's choices on #85 variants (recommendation: keep curve and MIN_ELIGIBLE_SHARE; draws unchanged); record in DECISIONS.
 Also: #29 pad_rewards (needs kiwi before enabling; related-party flag -> #8). Top risk unchanged: Token-2022 mint (#18).
+
+## ACTION FOR GROK EXECUTOR (Hetzner) after D36 (#248)
+`cd /opt/coin && git pull --ff-only origin main` (the job script also self-pulls). Grok todo: #247 (history cache, hourly < 10 min), #249 (D36 golden). Open question to kiwi in #1: F2 $50k binds (only 12 of 233 mints >= $10k liquidity).
