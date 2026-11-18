@@ -81,6 +81,8 @@ def normalize_transaction(item: Mapping[str, object]) -> dict[str, object] | Non
         "fee_payer": parsed.get("feePayer") if isinstance(parsed.get("feePayer"), str) else None,
         "summary": kind if isinstance(kind, str) else None,
         "transfers": _transfers(parsed.get("tokenTransfers")),
+        "sol_out": _payer_sol(parsed.get("nativeTransfers"), parsed.get("feePayer"), "out"),
+        "sol_in": _payer_sol(parsed.get("nativeTransfers"), parsed.get("feePayer"), "in"),
         "creates": _creates(parsed.get("instructions"), when, slot),
     }
 
@@ -93,6 +95,30 @@ def _tips(raw: object) -> int | None:
     total = 0
     for row in raw:
         if not isinstance(row, Mapping) or row.get("toUserAccount") not in JITO_TIP_ACCOUNTS:
+            continue
+        amount = _int(row.get("amount"))
+        if amount is None:
+            return None
+        total += amount
+    return total
+
+
+def _payer_sol(raw: object, payer: object, way: str) -> int | None:
+    """Lamports the fee payer sent ("out", tips excluded) or received ("in") in native transfers."""
+    if not isinstance(raw, list) or not isinstance(payer, str):
+        return None
+    src, dst = (
+        ("fromUserAccount", "toUserAccount")
+        if way == "out"
+        else ("toUserAccount", "fromUserAccount")
+    )
+    total = 0
+    for row in raw:
+        if (
+            not isinstance(row, Mapping)
+            or row.get(src) != payer
+            or row.get(dst) in JITO_TIP_ACCOUNTS
+        ):
             continue
         amount = _int(row.get("amount"))
         if amount is None:

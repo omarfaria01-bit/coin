@@ -53,6 +53,11 @@ def select_members(ranked: Sequence[str], prev: Iterable[str], params: IndexPara
     return members
 
 
+def _dropped(pair: tuple[float | None, float | None], limit_pct: float) -> bool:
+    now, ago = pair
+    return now is not None and bool(ago) and (ago - now) / ago * 100 >= limit_pct
+
+
 def emergency_reason(
     liquidity_now: float | None,
     liquidity_1h_ago: float | None,
@@ -60,15 +65,22 @@ def emergency_reason(
     freeze_authority_revoked: bool | None,
     rug_flag: bool,
     params: IndexParams,
+    earlier: tuple[float | None, float | None] | None = None,
 ) -> str | None:
-    """Reason to remove a member between rebalances (§5), or None."""
+    """Reason to remove a member between rebalances (§5), or None.
+
+    `earlier` = (liquidity then, liquidity 1h before then) at the previous sample
+    (#172). When given, a liquidity drop must show on both samples; a single print
+    or missing earlier data does not remove a member.
+    """
     if rug_flag:
         return "rug_flag"
     if mint_authority_revoked is False or freeze_authority_revoked is False:
         return "authority_enabled"
     if liquidity_now is not None and liquidity_1h_ago:
         drop_pct = (liquidity_1h_ago - liquidity_now) / liquidity_1h_ago * 100
-        if drop_pct >= float(frac(params.emergency.liquidity_drop_pct_1h)):
+        limit = float(frac(params.emergency.liquidity_drop_pct_1h))
+        if drop_pct >= limit and (earlier is None or _dropped(earlier, limit)):
             return "liquidity_drop"
     return None
 

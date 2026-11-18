@@ -50,6 +50,10 @@ def coin(i: int, mc: float) -> Metrics:
         token_program="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
         extensions=(),
         unique_traders=500,
+        independent_traders=500,
+        roundtrip_share=0.0,
+        volume_wallets=100,
+        median_trade_sol=0.1,
         volume_usd=mc,
     )
 
@@ -92,6 +96,18 @@ def test_emergency_reasons() -> None:
     assert emergency_reason(51.0, 100.0, True, True, False, P) is None
     assert emergency_reason(100.0, 100.0, True, False, False, P) == "authority_enabled"
     assert emergency_reason(None, None, None, None, True, P) == "rug_flag"
+
+
+def test_liquidity_drop_needs_two_samples() -> None:
+    args = (50.0, 100.0, True, True, False, P)
+    assert emergency_reason(*args, earlier=(100.0, 100.0)) is None  # single print
+    assert emergency_reason(*args, earlier=(None, None)) is None  # no earlier data
+    assert emergency_reason(*args, earlier=(60.0, 100.0)) is None  # earlier drop only 40%
+    assert emergency_reason(*args, earlier=(45.0, 100.0)) == "liquidity_drop"
+    # authority/rug stay immediate
+    assert emergency_reason(100.0, 100.0, True, False, False, P, earlier=(1.0, 1.0)) == (
+        "authority_enabled"
+    )
 
 
 # ------------------------------------------------------------------ §6–§7

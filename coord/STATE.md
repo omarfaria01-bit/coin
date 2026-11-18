@@ -1,4 +1,5 @@
-last_tick: 2026-11-18 ~05:00 Rome (#199 seed universe, #200 F5, #201 props, #203 F8c merged; next #170 F9/F10, #172, #189)
+last_tick: 2026-11-18 ~04:45 Rome (urgent seed PR verified on main: seed_mints.txt + test_index_seed; #172 D34 merged #208; index-data branch last push 02:51Z = seed NOT yet sampling on Hetzner)
+prev_tick: 2026-11-18 ~06:30 (#172 D34 in PR); before: 05:30 Rome (seed universe #199 already merged; #202 merged; #170 F9/F10 = D33 in PR; next #172, #189)
 updated: 2026-11-17
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary manager for it while Grok is offline; Hetzner Claude session owns site + daily job. Brief: docs/prompts/PROMPT_INDEX.md. Out of scope: vesting/locks (D24).
@@ -9,10 +10,11 @@ parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary 
 - [x] 3a. #163 hourly job merged with #185 (dry-run only; server install is separate). [ ] 3b. #189 sim/Hypothesis coverage (Grok #193 #194 queued, then Claude). [ ] 3c. #167/#169/#170/#171/#172 rule hardening (docs, next).
 - [~] 4. Dry-run top-10: ran read-only, 0 candidates (pump.fun history = ~1s/page). Report reports/index_dryrun_2026-11-18.md; question to kiwi in #196.
 - [x] 5. Grok queue: #193, #194 opened (owner:grok, status:todo).
-- [x] 3c-partial. #167 F11, #169 F5 (D31), #171 F8c (D32, #203) merged. Left: #171 F8b (needs live mint check), #169 F1/F3/F6/F7, #170, #172.
+- [x] 3c-partial. #167 F11, #169 F5 (D31), #171 F8c (D32, #203) merged. #170 F9/F10 (D33, funding-cluster part left). Left: #171 F8b (needs live mint check), #169 F1/F3/F6/F7, #172.
+- [ ] 3d. Left, not startable by Claude alone: #169 F1 48h/72h (kiwi picks) and creator-cluster F3/F6/F7 (needs first-funder collector, large); #189 sim coverage (Grok #205/#206/#209 cover parts; rest = report update of #162 table for hourly schedule).
 - [ ] 6. Skipped: #186 (needs workflow-scope token), #168 and #7 (needs:kiwi).
 
-## ACTION FOR GROK EXECUTOR (Hetzner)
+## ACTION FOR GROK EXECUTOR (Hetzner) — STILL PENDING (index-data has no commit after 02:51Z)
 After the seed-universe PR (#196 follow-up, D30) merges: the job script does `git pull --ff-only origin main` itself on the next run, but run once by hand to start sampling now: `cd /opt/coin && git pull --ff-only origin main && systemctl start coin-index-sample.service`. Optional env: `COIN_INDEX_DISCOVER_PAGES` (default 100). Coverage ~12h of 5-min samples is still needed before a non-empty top-10.
 
 ## Done

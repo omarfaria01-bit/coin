@@ -50,6 +50,10 @@ def good(i: int = 1, **kw: object) -> Metrics:
         token_program="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
         extensions=(),
         unique_traders=900,
+        independent_traders=900,
+        roundtrip_share=0.0,
+        volume_wallets=100,
+        median_trade_sol=0.1,
         volume_usd=600_000.0,
     )
     return replace(base, **kw)  # type: ignore[arg-type]
@@ -110,7 +114,12 @@ def test_good_coin_passes() -> None:
         ({"dev_pct": 5.01}, "F6"),
         ({"creator_launches_7d": 4}, "F7"),
         ({"freeze_authority_revoked": False}, "F8"),
-        ({"unique_traders": 199}, "F9"),
+        ({"independent_traders": 199}, "F9"),
+        ({"independent_traders": None}, "insufficient_data"),
+        ({"roundtrip_share": 0.95}, "F10"),
+        ({"roundtrip_share": None}, "insufficient_data"),
+        ({"volume_wallets": 29}, "F10"),
+        ({"median_trade_sol": 0.0099}, "F10"),
         ({"volume_usd": 1_500_000.0 * 0.049}, "F10"),
         ({"volume_usd": 1_500_000.0 * 3.01}, "F10"),
         ({"total_fees_sol": None}, "insufficient_data"),
@@ -127,7 +136,10 @@ def test_each_filter_fails(change: dict, code: str) -> None:
         {"top10_pct": 27.0},
         {"total_fees_sol": 10.0},
         {"liquidity_usd": 50_000.0},
-        {"unique_traders": 200},
+        {"independent_traders": 200},
+        {"volume_wallets": 30},
+        {"median_trade_sol": 0.01},
+        {"roundtrip_share": 0.5, "volume_usd": 1_500_000.0 * 6},
         {"volume_usd": 1_500_000.0 * 3},
     ],
 )
@@ -161,7 +173,14 @@ def test_score_needs_positive_inputs() -> None:
 )
 def test_ranking_unchanged_by_unit_scaling(rows: list, k: float) -> None:
     coins = [
-        good(i, mc_usd=mc, liquidity_usd=liq, window_fees_sol=fe, unique_traders=tr)
+        good(
+            i,
+            mc_usd=mc,
+            liquidity_usd=liq,
+            window_fees_sol=fe,
+            unique_traders=tr,
+            independent_traders=tr,
+        )
         for i, (mc, liq, fe, tr) in enumerate(rows)
     ]
     a = {c.mint: log_score(c, P) for c in coins}

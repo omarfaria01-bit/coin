@@ -34,8 +34,8 @@ A token is a **candidate** if it is a Solana token and its name, ticker or descr
 | F6 | Dev holding | creator wallet holds ≤ 5% of supply at the rebalance |
 | F7 | Serial creator | the creator created ≤ 3 tokens (this one included) in the 7 days before the rebalance |
 | F8 | Authorities | mint authority and freeze authority both revoked |
-| F9 | Real traders | ≥ 200 unique wallets bought or sold in the window |
-| F10 | Turnover | 0.05 ≤ volume in the window / average market cap ≤ 3 |
+| F9 | Real traders | ≥ 200 wallets that each traded ≥ 0.05 SOL in the window; the creator wallet does not count (D33, #170) |
+| F10 | Turnover | 0.05 ≤ volume / average market cap ≤ 3 after removing same-wallet round trips (opposite side within 10 min); also ≥ 30 wallets with volume left and median trade ≥ 0.01 SOL (D33, #170) |
 | F11 | Market cap vs liquidity | average market cap ≤ 100 × average pool liquidity (D29, #167). A thin pool cannot carry a huge market cap |
 | F8c | Token program (part of F8) | legacy SPL Token, or Token-2022 with only allowlisted mint extensions (D32, #171); anything else fails, unknown = insufficient_data |
 
@@ -69,7 +69,7 @@ log S = 0.4·ln(MC) + 0.3·ln(Liquidity) + 0.2·ln(Fees) + 0.1·ln(Traders)
 
 So a newcomer must reach the top 8 to enter, and a member is only replaced when it falls below 12th or is beaten for its place. On the hourly cadence a rank exit waits one more hour (`exit_notice`); a filter failure still removes the coin immediately.
 
-**Emergency removal** (at any time, not only at rebalance): pool liquidity down ≥ 50% within 1h, mint or freeze authority re-enabled, or the token flagged as a rug by the data source. The member is removed with the reason logged; weights are recomputed among the remaining members; no replacement until the next rebalance.
+**Emergency removal** (at any time, not only at rebalance): pool liquidity down ≥ 50% within 1h on two samples 15 min apart (D34), mint or freeze authority re-enabled, or the token flagged as a rug by the data source. The member is removed with the reason logged; weights are recomputed among the remaining members; no replacement until the next rebalance.
 
 ## 6. Weights
 

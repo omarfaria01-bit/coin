@@ -224,6 +224,93 @@ def fee_totals(
     return FeeTotals(lifetime, window, frozenset(payers))
 
 
+@dataclass(frozen=True)
+class TradeQuality:
+    """F9/F10 inputs from the swaps in the window (#170, D33). Lamports in, ratios out."""
+
+    independent_traders: int
+    roundtrip_share: float  # 0..1 of window SOL volume matched as same-wallet round trips
+    volume_wallets: int  # wallets with volume left after removing round trips
+    median_trade_sol: float | None  # median remaining trade, None when nothing remains
+
+
+def trade_quality(
+    txs: Sequence[Mapping[str, object]],
+    mint: str,
+    *,
+    window_start: int,
+    window_end: int,
+    truncated: bool,
+    creator: str | None,
+    min_trader_lamports: int,
+    roundtrip_seconds: int,
+) -> TradeQuality | None:
+    """Per-wallet SOL volume and round trips. None when the walk is incomplete or any counted
+    swap has an unknown wallet, side or SOL amount (fail closed: never a flattering count).
+
+    Side: the fee payer receives the mint = buy (SOL out), sends it = sell (SOL in).
+    The creator wallet never counts as an independent trader.
+    """
+    if truncated:
+        return None
+    seen: set[str] = set()
+    trades: dict[str, list[tuple[int, int, int]]] = {}  # wallet -> (time, side, lamports)
+    for tx in txs:
+        sig = tx.get("signature")
+        when = tx.get("block_time")
+        if not isinstance(sig, str) or sig in seen or not trades_mint(tx, mint):
+            continue
+        seen.add(sig)
+        if not isinstance(when, int):
+            return None
+        if not window_start <= when < window_end:
+            continue
+        payer = tx.get("fee_payer")
+        out, got = tx.get("sol_out"), tx.get("sol_in")
+        if not isinstance(payer, str) or not isinstance(out, int) or not isinstance(got, int):
+            return None
+        moves = [
+            r for r in tx.get("transfers") or [] if isinstance(r, Mapping) and r.get("mint") == mint
+        ]  # type: ignore[union-attr]
+        bought = any(r.get("to") == payer for r in moves)
+        sold = any(r.get("from") == payer for r in moves)
+        if bought == sold:
+            return None
+        side, lamports = (1, out) if bought else (-1, got)
+        if lamports > 0:
+            trades.setdefault(payer, []).append((when, side, lamports))
+    total = 0
+    matched = 0
+    independent = 0
+    left: list[int] = []
+    wallets_left = 0
+    for wallet, rows in trades.items():
+        volume = sum(r[2] for r in rows)
+        total += volume
+        if wallet != creator and volume >= min_trader_lamports:
+            independent += 1
+        open_: list[list[int]] = []  # unmatched [time, side, remaining]
+        for when, side, lamports in sorted(rows):
+            for prev in open_:
+                if lamports == 0:
+                    break
+                if prev[1] == -side and prev[2] > 0 and when - prev[0] <= roundtrip_seconds:
+                    take = min(prev[2], lamports)
+                    prev[2] -= take
+                    lamports -= take
+                    matched += 2 * take
+            if lamports > 0:
+                open_.append([when, side, lamports])
+        rest = [r[2] for r in open_ if r[2] > 0]
+        if rest:
+            wallets_left += 1
+            left.extend(rest)
+    left.sort()
+    median = lamports_to_sol(left[(len(left) - 1) // 2]) if left else None
+    share = matched / total if total else 0.0
+    return TradeQuality(independent, share, wallets_left, median)
+
+
 def top10_pct(
     holders: Sequence[tuple[str | None, int]],
     supply: int | None,

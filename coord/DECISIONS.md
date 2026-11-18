@@ -258,3 +258,22 @@ mint extension is in `filters.token2022_allowed_extensions` (default `metadataPo
 Confidential*, unknown) or any other program fails F8. Unknown program/extensions → `insufficient_data` (fail-safe). The adapter
 reads the owner program and `info.extensions` from the parsed mint account (no new RPC call). Not done: F8b metadata-authority
 check (step 0 needs a live pump.fun mint check first; metadata mutability is UNVERIFIED) and creator-cluster deny; kept in #171.
+
+## D33 · 2026-11-18 · F9/F10 measure independent activity (#170, Claude)
+Red team #162: 200 wallets x 0.01 SOL passed F9, and F10 counted round-trip volume. Now, from the parsed swaps in the window
+(buy = fee payer receives the mint, SOL out; sell = reverse; tips excluded): **F9** counts wallets with volume >=
+`min_trader_volume_sol` (0.05), creator wallet excluded, against `min_unique_traders` (200). **F10** removes same-wallet
+opposite-side matches within `roundtrip_minutes` (10) from the DexScreener window volume (`volume_usd * (1 - roundtrip_share)`),
+keeps the 0.05-3 turnover band on that, and also needs `min_volume_wallets` (30) wallets with volume left and a median remaining
+trade >= `min_trade_sol` (0.01). Missing/ambiguous swap data (truncated history, unknown side or SOL) -> `insufficient_data`.
+`unique_traders` (fee payers) still feeds the score. Published per member: `independent_traders`, `roundtrip_share`,
+`volume_wallets`, `median_trade_sol` (source helius-parsed-events). Not done: creator/LP funding-cluster exclusion (needs
+first-funder collection, left in #170); collector uses the default thresholds for these facts. Stricter than before, so
+some coins that passed F9/F10 now fail.
+
+## D34 · 2026-11-18 · Emergency liquidity removal needs two samples (#172, Claude)
+Red team #162: one 1h print at -50% could remove a member (a big holder can fake it by pulling liquidity, or one bad
+sample). Now `emergency_reason` removes for `liquidity_drop` only if the previous sample (`emergency.confirm_gap_s`, 900 s
+earlier, vs its own 1h-ago value) also shows >= 50%; missing earlier data = no removal. Authority re-enabled and rug flag stay
+immediate. New param default 900 (no params.json change, no golden change). Not done (in #172): second data source,
+price-recovery check, manual confirm above a size, basket-buy TWAP/private path (mainnet, needs kiwi).

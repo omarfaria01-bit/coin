@@ -41,6 +41,12 @@ CHAIN_FACTS = {
     "mint_authority_revoked": True,
     "freeze_authority_revoked": True,
     "unique_traders": 500,
+    "independent_traders": 500,
+    "token_program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "extensions": (),
+    "roundtrip_share": 0.0,
+    "volume_wallets": 100,
+    "median_trade_sol": 0.1,
 }
 
 FAKE_KEY = "fake-key-123"  # never a real key
