@@ -366,3 +366,14 @@ not lowered.
 Risk, said plainly: F4 now trusts DexScreener volume (wash volume counts, as D35 already accepts), and F9 no longer needs 0.05 SOL
 per wallet, so ~50 dust wallets can satisfy it (red-team case updated: tests/test_index_hourly_attacks.py).
 
+## D40 · 2026-11-18 · Index weights: sqrt(market cap), cap 18%, floor 5% (#156, kiwi delegated "scelgo tu in base alla matematica" 14:20 Rome, relayed by Grok)
+Replaces D36 (50% MC share + 50% volume share, cap 25%).
+1. `weights.mode = "sqrt_mc_capped"`, `cap_pct = 18`, `floor_pct = 5`: `w_i = clip(lam * sqrt(MC_i), 5%, 18%)`, `lam` by
+   bisection so the sum is exactly 100%; integer bp by largest remainder with capped/floored members pinned at 1800/500.
+2. Why sqrt: MC-proportional weights put ~60% in the two biggest coins (GTA VI $14.8M, AudaCity $7.5M); sqrt keeps the
+   order but spreads exposure; volume is dropped from weights (it is already in the score and is the easiest to wash).
+3. Infeasible bounds relax gracefully: n <= 5 (18% x n < 100%) or n > 20 (5% x n > 100%) -> equal weights `1/n`.
+   A zero/unknown MC weighs like the smallest member (never below the floor).
+4. 18 Nov 12:00Z dry run: GTA VI 18.00, AudaCity 18.00, Leonida 10.22, WASTED 10.13, Grand Trench 9.92, Macca 8.80,
+   GTA memes 7.18, Lucia 6.45, Rocco 6.08, DacityCoin 5.22 (%).
+5. Tests: tests/test_index_d40_weights.py (golden, hypothesis sweep n=1..25 incl. zero MC, emergency recompute).
