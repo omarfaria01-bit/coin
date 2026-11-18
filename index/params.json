@@ -234,7 +234,7 @@
     "draw_min_pot_lamports": 100000000,
     "min_reward_lamports": 1513840
   },
-  "self_mint": null,
+  "self_mint": "Hveq15BA7YXh6DxAh2gDpjrH25BVM84wNqT99HKXpump",
   "dry_run": {
     "skip_filters": []
   }
