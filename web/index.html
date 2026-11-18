@@ -77,14 +77,14 @@
     </div>
   </div>
   <div class="glass card" id="fee-proof">
-    <h3>Proof: the dev cannot take the fees</h3>
+    <h3>Where the fees go, and how to check</h3>
     <ul class="ticks">
-      <li>100% of the coin's creator fees go to the public <strong>system wallet</strong> <a class="mono" href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">3ann…hJkd</a>. Its key was generated on our server by the fee bot and is held only there.</li>
-      <li>Fee setting on pump.fun: <span id="fee-sharing-tx">transaction link added right after launch</span>.</li>
-      <li>A bot spends the fees by fixed public rules (<a href="docs.html#who-changes-rules">rules file, 72h timelock</a>). The 5% for buyback &amp; burn is held in the system wallet until the burn starts.</li>
-      <li>Every move is public: <a href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">system wallet on Solscan</a> and the bot's log <a class="mono" href="data/fee-bot.json" target="_blank" rel="noopener">fee-bot.json</a>.</li>
-      <li>Team wallets earn no rewards and receive 0% of fees.</li>
-      <li>Honest limit: the bots run on our server; full on-chain enforcement (multisig with time lock) is planned.</li>
+      <li>pump.fun pays this coin's creator fees to the creator wallet (<a class="mono" href="https://solscan.io/account/E8JgzMnBJU5Mwbsmw88SyivaDiUYJNjkupU53UEG4uXJ" target="_blank" rel="noopener">E8Jg…4uXJ</a>). For this coin pump.fun does not allow sending them straight to another wallet.</li>
+      <li>So the creator claims the fees and forwards <strong>100%</strong> to the public <strong>system wallet</strong> <a class="mono" href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">3ann…hJkd</a>, at least once a day. Every claim and every forward is public on Solscan, so anyone can check that the amounts match.</li>
+      <li>From the system wallet, a bot spends the fees by fixed public rules (<a href="docs.html#who-changes-rules">rules file, 72h timelock</a>): 67% holder rewards, 28% prize pot, 5% held for buyback &amp; burn until the burn starts. The system wallet's key was generated on our server and is held only there.</li>
+      <li>The bot's log is public: <a class="mono" href="data/fee-bot.json" target="_blank" rel="noopener">fee-bot.json</a>. <span id="fee-sharing-tx"></span></li>
+      <li>Team wallets earn no rewards and keep 0% of fees.</li>
+      <li>Honest limit: the claim and forward step is done by the creator, and the bots run on our server. Full on-chain enforcement (multisig with time lock) is planned.</li>
     </ul>
     <div id="rules-lock"></div>
   </div>
