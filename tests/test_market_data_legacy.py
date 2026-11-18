@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from adapters import market_data_legacy as market_data as md
+from adapters import market_data_legacy as md
 from index.params import IndexParams, OverrideEntry, Overrides
 from index.select import canonical_json
 from tools.run_index import OfficialRefusal, collect, main, parse_iso, previous_members, run
