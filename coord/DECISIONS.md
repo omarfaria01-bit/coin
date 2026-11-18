@@ -500,3 +500,11 @@ nobody would earn anything on launch day.
    pro-rata on these weights; conservation (`paid + carried == accrued`) and the D43 dust floor unchanged.
 4. Site text (Rewards/FAQ/Docs): "You earn for every full hour you hold, starting after your first hour. Rewards are
    paid once a day at 00:10 UTC for the day that just ended."
+## D48 · 2026-11-18 · Index: market cap and liquidity capped by the latest reading (kiwi, chat 21:10–21:12 Rome)
+kiwi flagged two members that had crashed: DacityCoin `4rYsDH…` (liquidity $76k in the 20:00Z file, $21.8k live) and
+AudaCity/DacityCoin `DKYc…` (rank 3, 13.7%, with a $4.4M window-average MC while live MC was $0.69M, −90% in 6h).
+Cause: `adapters/market_data.aggregate_samples` used the window **mean** of MC and liquidity, so a crash kept the
+old average for hours.
+1. MC and liquidity are now `min(window mean, latest reading)`: a crash counts at the next run, a sudden pump only
+   counts gradually (anti-manipulation unchanged). F2 (liquidity floor), ranking and weights all use these values.
+2. No threshold changed; no sim re-run needed beyond the test suite. Tests: `tests/test_d48_latest_cap.py`.
