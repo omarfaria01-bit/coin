@@ -227,7 +227,10 @@ def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
 def log_score(m: Metrics, params: IndexParams) -> float | None:
     """log S rounded to `round_decimals`; None if an input is missing or not > 0."""
     s = params.score
-    fees = m.window_fees_sol if s.score_fees_window == "window" else m.total_fees_sol
+    if s.score_fees_window == "dex_24h":  # D38: same 24h all-pools measure as F4
+        fees = m.trading_fees_24h_sol
+    else:
+        fees = m.window_fees_sol if s.score_fees_window == "window" else m.total_fees_sol
     vals = (m.mc_usd, m.liquidity_usd, fees, m.unique_traders)
     if any(v is None or not math.isfinite(v) or v <= 0 for v in vals):
         return None

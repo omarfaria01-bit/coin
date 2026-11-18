@@ -166,7 +166,7 @@
     "w_liquidity": "3/10",
     "w_fees": "1/5",
     "w_traders": "1/10",
-    "score_fees_window": "window",
+    "score_fees_window": "dex_24h",
     "round_decimals": 12
   },
   "membership": {

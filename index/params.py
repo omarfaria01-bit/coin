@@ -110,7 +110,7 @@ class Score(_Strict):
     w_liquidity: Num = "3/10"
     w_fees: Num = "1/5"
     w_traders: Num = "1/10"
-    score_fees_window: Literal["window", "lifetime"] = "window"
+    score_fees_window: Literal["window", "lifetime", "dex_24h"] = "window"  # dex_24h: D38
     round_decimals: int = Field(12, ge=6, le=15)
 
     @model_validator(mode="after")

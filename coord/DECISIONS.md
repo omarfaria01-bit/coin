@@ -350,7 +350,12 @@ not lowered.
 7. Coverage fix: a sample in the last partial 5-min bucket of a young coin's window was dropped (coverage 0 ->
    insufficient_data for GTA Vice Inu 6wiaCq, Leonida 9rbKkz and others); it now counts.
 8. Deny list: GTA Vice Inu 6wiaCq8oQiupFfeDU4ouAuYnCKXCch581HAmpvrxpump added to `overrides.deny` (kiwi in chat 13:19 Rome:
-   "GTA VICE INU E UNO SCAM"). 9. A coin's on-chain read is retried once before its error is published.
+   "GTA VICE INU E UNO SCAM").
+9. A coin's on-chain read is retried once before its error is published.
+10. Score fees: `score.score_fees_window = "dex_24h"`, the same 24h all-pools DexScreener measure as F4. The old score used
+   network fees from at most 3000 recent swaps, a lower bound that shrinks the busier a coin is: GTA VI (6.8M$ 24h volume)
+   scored 0.08 SOL vs AudaCity 0.20 SOL, which put GTA VI below AudaCity despite 2.3x the market cap. Traders in the score
+   are still window wallets from the fetched swaps (lower bound for the busiest coins).
 Risk, said plainly: F4 now trusts DexScreener volume (wash volume counts, as D35 already accepts), and F9 no longer needs 0.05 SOL
 per wallet, so ~50 dust wallets can satisfy it (red-team case updated: tests/test_index_hourly_attacks.py).
 

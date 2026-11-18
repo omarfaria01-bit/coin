@@ -160,7 +160,7 @@ def test_dry_run_skip_lets_missing_fees_through() -> None:
 
 
 def test_score_needs_positive_inputs() -> None:
-    assert log_score(good(window_fees_sol=None), P) is None
+    assert log_score(good(trading_fees_24h_sol=None), P) is None  # D38: dex_24h fee measure
     assert log_score(good(), P) is not None
 
 
@@ -214,10 +214,10 @@ def test_lifetime_fee_measure_is_global() -> None:
     life = P.model_copy(
         update={"score": P.score.model_copy(update={"score_fees_window": "lifetime"})}
     )
-    m = good(window_fees_sol=None)
-    assert log_score(m, P) is None  # window measure chosen, missing -> excluded
+    m = good(trading_fees_24h_sol=None)
+    assert log_score(m, P) is None  # dex_24h measure chosen (D38), missing -> excluded
     assert log_score(m, life) is not None
-    assert log_score(good(window_fees_sol=float("nan")), P) is None
+    assert log_score(good(trading_fees_24h_sol=float("nan")), P) is None
 
 
 # ------------------------------------------------------------------ F11 (#167, D29)
