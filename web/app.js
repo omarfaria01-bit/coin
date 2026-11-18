@@ -153,7 +153,7 @@
         mint: m.mint,
         ticker: m.ticker || mt.ticker,
         name: mt.name,
-        weight: (m.weight_bps || 0) / 100,
+        weight: m.weight_bps != null && isFinite(+m.weight_bps) ? +m.weight_bps / 100 : (m.weight != null && isFinite(+m.weight) ? +m.weight * (+m.weight <= 1 ? 100 : 1) : null),
         mc: mt.mc_usd,
         liq: mt.liquidity_usd,
         vol24h: mt.volume_usd,
@@ -235,18 +235,20 @@
     $("#building").hidden = true;
     if (official) donut(rows);
 
-    const head = ["#","Coin","Weight","Market cap","Liquidity","24h volume","24h","Chart"];
+    const head = ["#","Coin","Buy weight","Market cap","Liquidity","24h volume","24h","Chart"];
     let table = `<div class="board-tbl-wrap"><table class="board-tbl"><thead><tr>${head.map((c) => `<th>${c}</th>`).join("")}</tr></thead><tbody>`;
     let cards = `<div class="board-cards">`;
+    const maxW = Math.max(1e-9, ...rows.map((x) => (x.weight != null && isFinite(x.weight) ? x.weight : 0)));
     rows.forEach((r, i) => {
       const color = COLORS[i % 10];
       const w = r.weight != null && isFinite(r.weight) ? r.weight.toFixed(1) + "%" : "—";
       const bar = r.weight != null ? `<span class="vbar" style="width:${Math.max(4, r.weight * 1.6)}px"></span>` : "";
+      const wbar = r.weight != null && isFinite(r.weight) ? Math.max(2, Math.min(100, r.weight / Math.max(maxW, 20) * 100)).toFixed(1) : 0;
       const href = DEX_URL(r.mint);
       table += `<tr>
         <td class="rk" style="color:${color}">#${r.rank}</td>
         <td>${coinCell(r)}</td>
-        <td><span class="wcell"><b>${w}</b>${bar}</span></td>
+        <td><span class="wcell"><b class="wpct">${w}</b><span class="wtrack" aria-hidden="true"><i style="width:${wbar}%"></i></span></span></td>
         <td>${usd(r.mc)}</td>
         <td>${usd(r.liq)}</td>
         <td>${usd(r.vol24h)}</td>
@@ -254,12 +256,13 @@
         <td><a class="dex-link" href="${href}" target="_blank" rel="noopener noreferrer">Dex ↗</a></td>
       </tr>`;
       cards += `<a class="bcard" href="${href}" target="_blank" rel="noopener noreferrer">
-        <div class="bcard-top"><span class="rk" style="color:${color}">#${r.rank}</span>${coinCell(r)}<span class="chg-wrap">${chgCell(r.chg24h)}</span></div>
+        <div class="bcard-top"><span class="rk" style="color:${color}">#${r.rank}</span>${coinCell(r)}</div>
+        <div class="bweight" title="Share of every basket buy spent on this coin"><span class="bw-lbl">${official ? "Buy weight" : "Preview buy weight"}</span><b class="bw-val">${w}</b><span class="wtrack" aria-hidden="true"><i style="width:${wbar}%"></i></span></div>
         <div class="bcard-grid">
-          <span><span class="k">${official ? "Index weight" : "Preview weight"}</span><span class="v">${w}</span></span>
           <span><span class="k">Market cap</span><span class="v">${usd(r.mc)}</span></span>
           <span><span class="k">Liquidity</span><span class="v">${usd(r.liq)}</span></span>
           <span><span class="k">24h volume</span><span class="v">${usd(r.vol24h)}</span></span>
+          <span><span class="k">24h change</span><span class="v">${chgCell(r.chg24h)}</span></span>
         </div>
         <div class="bcard-foot"><span class="mono small muted">${short(r.mint)}</span><span class="dex-link">DexScreener ↗</span></div>
       </a>`;
@@ -302,7 +305,7 @@
       list.forEach((c, i) => {
         const st = c.status === "member" ? `<span class="tag ok">${t.member}</span>` : `<span class="tag f">${esc(REASON[c.status] || c.status || t.nodata)}</span>`;
         const v = (k) => k === sortKey ? `<b>${usd(c[k])}</b><span class="vbar" style="width:${Math.max(4, ((c[k] || 0) / maxv) * 60)}px"></span>` : usd(c[k]);
-        h += `<tr><td class="rk">${i + 1}</td><td class="tk"><b>${esc(c.ticker || short(c.mint))}</b><small>${short(c.mint)}</small></td><td class="hidemob">${st}</td><td>${v("mc")}</td><td class="hidemob">${v("liq")}</td><td>${v("vol24h")}</td></tr>`;
+        h += `<tr><td class="rk">${i + 1}</td><td class="tk"><b>${esc(c.ticker || short(c.mint))}</b><small>${short(c.mint)}</small></td><td class="hidemob st">${st}</td><td data-l="Mkt cap">${v("mc")}</td><td class="hidemob" data-l="Liquidity">${v("liq")}</td><td data-l="Vol 24h">${v("vol24h")}</td></tr>`;
       });
       $("#cands").innerHTML = h + "</tbody>";
     }
