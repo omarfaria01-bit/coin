@@ -126,8 +126,8 @@ class Emergency(_Strict):
 
 
 class Weights(_Strict):
-    mode: Literal["equal", "score_capped"] = "equal"
-    cap_pct: Num = 20
+    mode: Literal["equal", "score_capped", "mc_volume_capped"] = "mc_volume_capped"  # D36
+    cap_pct: Num = 25
 
     @field_validator("cap_pct")
     @classmethod

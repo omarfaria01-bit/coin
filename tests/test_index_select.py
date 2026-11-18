@@ -7,6 +7,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import base58
+import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -23,7 +24,10 @@ from index.select import (
 
 ROOT = Path(__file__).resolve().parents[1]
 P = IndexParams.model_validate(json.loads((ROOT / "index" / "params.json").read_text()))
-CAPPED = P.model_copy(update={"weights": P.weights.model_copy(update={"mode": "score_capped"})})
+EQUAL = P.model_copy(update={"weights": P.weights.model_copy(update={"mode": "equal"})})
+CAPPED = P.model_copy(
+    update={"weights": P.weights.model_copy(update={"mode": "score_capped", "cap_pct": 20})}
+)
 
 
 def mint(i: int) -> str:
@@ -117,19 +121,19 @@ def test_liquidity_drop_needs_two_samples() -> None:
 def test_weights_sum_and_cap(n: int, scores: list[float]) -> None:
     members = [mint(i) for i in range(n)]
     log_s = {m: round(scores[i], 12) for i, m in enumerate(members)}
-    for params in (P, CAPPED):
+    for params in (EQUAL, CAPPED):
         bps = weights_bps(members, log_s, params)
         assert sum(bps.values()) == 10_000 and all(v >= 0 for v in bps.values())
         if params is CAPPED and n >= 5:
             assert max(bps.values()) <= 2_000
-        if params is P or n < 5:
+        if params is EQUAL or n < 5:
             assert max(bps.values()) - min(bps.values()) <= 1  # equal (or fallback)
 
 
 @given(st.integers(0, 10**15), st.integers(1, 10))
 def test_prize_split_conserves_lamports(lamports: int, n: int) -> None:
     members = [mint(i) for i in range(n)]
-    bps = weights_bps(members, dict.fromkeys(members, 0.0), P)
+    bps = weights_bps(members, dict.fromkeys(members, 0.0), EQUAL)
     parts = split_prize(lamports, members, bps)
     assert sum(parts.values()) == lamports and all(v >= 0 for v in parts.values())
     floors = {m: lamports * bps[m] // 10_000 for m in members}
@@ -163,3 +167,49 @@ def test_exit_reasons_reported() -> None:
     out = run_index(coins, prev, P, Overrides(), "2026-11-20T18:00:00Z", "abc")
     exited = {e["mint"]: e["reason"] for e in out["changes"]["exited"]}
     assert exited == {mint(0): "F4", mint(99): "not_measured"}
+
+
+# ------------------------------------------------------------------ D36 mc_volume_capped
+
+
+def test_default_weights_mode_is_mc_volume_capped_25() -> None:
+    assert P.weights.mode == "mc_volume_capped" and P.weights.cap_pct == 25
+
+
+def test_mc_volume_weights_example() -> None:
+    members = [mint(i) for i in range(5)]
+    mcv = {
+        members[0]: (400.0, 100.0),
+        members[1]: (200.0, 100.0),
+        members[2]: (200.0, 100.0),
+        members[3]: (100.0, 100.0),
+        members[4]: (100.0, 100.0),
+    }
+    bps = weights_bps(members, dict.fromkeys(members, 0.0), P, mcv)
+    # raw: 0.5*mc + 0.5*0.2 -> .4, .3, .3, .2, .2 ... mc shares .4 .2 .2 .1 .1, vol .2 each
+    # = .3 .2 .2 .15 .15 (all under the 25% cap except rank 1 at 30%)
+    assert sum(bps.values()) == 10_000
+    assert bps[members[0]] == 2_500  # capped, excess water-filled to the rest
+    assert bps[members[1]] == bps[members[2]] > bps[members[3]] == bps[members[4]]
+    assert max(bps.values()) <= 2_500
+
+
+@given(
+    st.integers(1, 12),
+    st.lists(st.tuples(st.floats(0, 1e9), st.floats(0, 1e9)), min_size=12, max_size=12),
+)
+def test_mc_volume_weights_conserve_and_cap(n: int, vals: list[tuple[float, float]]) -> None:
+    members = [mint(i) for i in range(n)]
+    mcv = {m: vals[i] for i, m in enumerate(members)}
+    bps = weights_bps(members, dict.fromkeys(members, 0.0), P, mcv)
+    assert sum(bps.values()) == 10_000 and all(v >= 0 for v in bps.values())
+    if n >= 4:
+        assert max(bps.values()) <= 2_500
+    else:
+        assert max(bps.values()) - min(bps.values()) <= 1  # equal fallback
+
+
+def test_mc_volume_requires_inputs() -> None:
+    members = [mint(i) for i in range(5)]
+    with pytest.raises(ValueError):
+        weights_bps(members, dict.fromkeys(members, 0.0), P)

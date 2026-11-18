@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 
 from index.params import IndexParams
-from index.select import weights_bps
+from index.select import mc_volume_of, weights_bps
 
 
 def apply_emergency(output: dict, mint: str, reason: str, at: str, params: IndexParams) -> dict:
@@ -22,7 +22,9 @@ def apply_emergency(output: dict, mint: str, reason: str, at: str, params: Index
     out = copy.deepcopy(output)
     out["members"] = [m for m in out["members"] if m["mint"] != mint]
     order = [m["mint"] for m in out["members"]]  # still in rank order
-    bps = weights_bps(order, {m["mint"]: m["log_s"] for m in out["members"]}, params)
+    bps = weights_bps(
+        order, {m["mint"]: m["log_s"] for m in out["members"]}, params, mc_volume_of(out["members"])
+    )
     for m in out["members"]:
         m["weight_bps"] = bps[m["mint"]]
     out["emergency"] = [*out.get("emergency", []), {"at": at, "mint": mint, "reason": reason}]

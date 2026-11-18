@@ -18,7 +18,7 @@ from adapters.index_observe import spot_quote
 from adapters.market_data import Sample, authorities_revoked, pick_pair, top10_pct
 from index.emergency import apply_emergency
 from index.params import IndexParams
-from index.select import emergency_reason, weights_bps
+from index.select import emergency_reason, mc_volume_of, weights_bps
 from tools.run_index import (
     _atomic,
     _iso,
@@ -88,7 +88,7 @@ def defer_exit(payload: dict, previous: dict | None, params: IndexParams) -> dic
         item["rank"] = rank
     order = [item["mint"] for item in payload["members"]]
     scores = {item["mint"]: item["log_s"] for item in payload["members"]}
-    bps = weights_bps(order, scores, params)
+    bps = weights_bps(order, scores, params, mc_volume_of(payload["members"]))
     for item in payload["members"]:
         item["weight_bps"] = bps[item["mint"]]
     gone = set(stay)
