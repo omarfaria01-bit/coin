@@ -2,7 +2,7 @@ import json
 from fractions import Fraction
 
 from adapters.wallet_export import WalletInput, build_wallet_records, write_wallet_files
-from engine.scoring import h_of_age
+from engine.loyalty import loyalty_multiplier
 
 SUPPLY = 1_000_000
 A, B, C, D = "A" * 32, "B" * 32, "C" * 32, "D" * 32
@@ -31,7 +31,7 @@ def _records():
 def test_multiplier_is_engine_value():
     r = _records()
     for addr, secs in ((A, 3 * 3600), (B, 1800), (C, 7200), (D, 5400)):
-        h = h_of_age(secs)
+        h = loyalty_multiplier(secs)
         assert r[addr]["multiplier"]["exact"] == f"{h.numerator}/{h.denominator}"
     assert r[A]["multiplier"]["decimal"] == "4.0000"
     assert r[B]["multiplier"]["decimal"] == "0.0000"
@@ -54,6 +54,22 @@ def test_write_atomic(tmp_path):
     data = json.loads((tmp_path / "w" / f"{A}.json").read_text())
     assert data["address"] == A and data["schema"] == 1
     assert not list((tmp_path / "w").glob(".tmp-*"))
+
+
+def test_long_hold_uses_the_ten_x_cap():
+    wallets = [WalletInput(A, "ca", 10_000, 30 * 86_400)]
+    r = build_wallet_records(
+        wallets,
+        scores={"ca": 1},
+        cluster_balances={"ca": 10_000},
+        total_supply=SUPPLY,
+        excluded={},
+        as_of="2026-11-19T06:00:00Z",
+        cap=Fraction(1),
+        min_holding_share=Fraction(1, 10**9),
+    )
+    assert r[A]["multiplier"]["exact"] == "10/1"
+    assert r[A]["multiplier"]["decimal"] == "10.0000"
 
 
 def test_unsafe_name_refused(tmp_path):
