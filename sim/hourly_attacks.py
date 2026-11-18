@@ -58,7 +58,7 @@ def simulate_wash_volume() -> dict:
         "stopped_by": str(failed),
         "cost": "0.04-0.20 SOL + protocol fee share",
         "notes": (
-            "Fake traders caught by F9 (200 independent traders); "
+            "Fake traders caught by F9 (min unique traders, D38); "
             "round-trip volume accepted risk after D35."
         ),
     }
@@ -73,12 +73,12 @@ def simulate_sybil_supply() -> dict:
         "works_hourly": False,
         "stopped_by": str(failed),
         "cost": "0.055 SOL rent",
-        "notes": f"Blocked by {failed} (independent/unique trader counts < 200/50).",
+        "notes": f"Blocked by {failed} (unique trader count below F9 minimum).",
     }
 
 
 def simulate_basket_sandwich() -> dict:
-    """Attack 4: Prize-basket sandwiching around an hourly draw buy / rebalance (3% cap)."""
+    """Attack 4: Prize-basket sandwiching around an hourly buy (weight cap + 5% draw cap)."""
     mints = [rt.mint(i) for i in range(1, 31)]
     log_scores = {m: 5.0 for m in mints}
     log_scores[mints[0]] = 20.0
@@ -97,7 +97,7 @@ def simulate_basket_sandwich() -> dict:
     works = max_weight <= max_allowed and max_draw_share <= CAP_DEFAULT + Fraction(1, 1000)
     return {
         "attack": "Prize-basket sandwiching / weight domination",
-        "works_hourly": not works if max_weight > max_allowed else False,
+        "works_hourly": not works,
         "stopped_by": f"weights.cap_pct ({max_allowed} bps) & 5% draw cap",
         "cost": "Capital + slippage",
         "notes": (
