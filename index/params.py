@@ -10,7 +10,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-FILTER_CODES = ("F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11")
+FILTER_CODES = ("F1", "F2", "F3", "F4", "F5", "F7", "F8", "F9", "F10", "F11")
 
 Num = int | str
 
@@ -34,10 +34,11 @@ class _Strict(BaseModel):
 
 
 class Keywords(_Strict):
-    strong: tuple[str, ...]
-    weak: tuple[str, ...] = ()
+    """One single tier (D35): any coin matching any word is a candidate."""
 
-    @field_validator("strong", "weak")
+    strong: tuple[str, ...]
+
+    @field_validator("strong")
     @classmethod
     def _non_empty_words(cls, v: tuple[str, ...]) -> tuple[str, ...]:
         if any(not w.strip() for w in v):
@@ -46,24 +47,17 @@ class Keywords(_Strict):
 
 
 class Filters(_Strict):
-    min_age_hours: Num = 6
+    min_age_hours: Num = 4
     min_liquidity_usd: Num = 50_000
     top10_min_pct: Num = 13
     top10_max_pct: Num = 27
-    min_total_fees_sol: Num = 10
-    max_bundle_pct: Num = 10
-    max_dev_pct: Num = 5
+    min_total_fees_sol: Num = 8
+    max_bundle_pct: Num = 30
     max_creator_launches_7d: int = Field(3, ge=1)
     require_authorities_revoked: bool = True
     min_unique_traders: int = Field(200, ge=0)
-    min_turnover: Num = "1/20"
-    max_turnover: Num = 3
-    # F9/F10 quality (#170, D33): a trader needs this much SOL volume to count; round trips by one
-    # wallet within `roundtrip_minutes` are removed from F10; the rest needs breadth and size.
+    # F9 (D33): a trader needs this much SOL volume to count. F10 is volume > 0 (D35).
     min_trader_volume_sol: Num = "1/20"
-    roundtrip_minutes: int = Field(10, ge=1)
-    min_volume_wallets: int = Field(30, ge=1)
-    min_trade_sol: Num = "1/100"
     max_mc_liquidity_ratio: Num = 100  # F11 (#167, D29)
     # F8c (#171, D32): Token-2022 mint extensions allowed (jsonParsed names); all others fail.
     token2022_allowed_extensions: tuple[str, ...] = (
@@ -82,19 +76,13 @@ class Filters(_Strict):
             "top10_max_pct",
             "min_total_fees_sol",
             "max_bundle_pct",
-            "max_dev_pct",
-            "min_turnover",
-            "max_turnover",
             "max_mc_liquidity_ratio",
             "min_trader_volume_sol",
-            "min_trade_sol",
         ):
             if frac(getattr(self, name)) < 0:
                 raise ValueError(f"{name} must be >= 0")
         if not frac(self.top10_min_pct) < frac(self.top10_max_pct) <= 100:
             raise ValueError("need top10_min_pct < top10_max_pct <= 100")
-        if not 0 < frac(self.min_turnover) < frac(self.max_turnover):
-            raise ValueError("need 0 < min_turnover < max_turnover")
         if frac(self.max_mc_liquidity_ratio) <= 0:
             raise ValueError("max_mc_liquidity_ratio must be > 0")
         if frac(self.min_liquidity_usd) <= 0 or frac(self.min_total_fees_sol) <= 0:
@@ -193,7 +181,6 @@ class IndexParams(_Strict):
     window_hours: int = Field(24, ge=1)
     sample_minutes: int = Field(5, ge=1)
     holder_sample_minutes: int = Field(60, ge=1)
-    min_coverage: Num = "1/2"
     keywords: Keywords
     filters: Filters = Filters()
     score: Score = Score()
@@ -205,13 +192,6 @@ class IndexParams(_Strict):
     self_mint: str | None = None
     dry_run: DryRun = DryRun()
 
-    @field_validator("min_coverage")
-    @classmethod
-    def _coverage(cls, v: Num) -> Num:
-        if not 0 <= frac(v) <= 1:
-            raise ValueError("min_coverage must be in [0, 1]")
-        return v
-
 
 class OverrideEntry(_Strict):
     mint: str
@@ -220,5 +200,6 @@ class OverrideEntry(_Strict):
 
 
 class Overrides(_Strict):
-    allow: tuple[OverrideEntry, ...] = ()
+    """Deny list for scams only (D35). The allow mechanism is gone."""
+
     deny: tuple[OverrideEntry, ...] = ()

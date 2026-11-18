@@ -8,38 +8,37 @@ Holder rewards and draw prizes are both paid in the index basket (section 7). Ou
 
 A token is a **candidate** if it is a Solana token and its name, ticker or description matches the keyword list (case-insensitive):
 
-- **Strong keywords** (automatic candidate): `GTA`, `GTA6`, `GTAVI`, `GTA VI`, `Grand Theft`, `Vice City`, `Leonida`.
-- **Weak keywords** (candidate only with an `allow` entry): `Lucia`, `Jason`, `Rockstar`, `VI`.
-- A keyword matches only when no letter touches it on either side (so `GTA` matches `GTA6` and `$GTA`, but not `AGTAB`; `VI` does not match `VIBE`).
+- **One tier (D35).** Any match is a candidate: `GTA`, `GTA6`, `GTA 6`, `GTAVI`, `GTA VI`, `GTA5`, `GTAV`, `Grand Theft`, `Grand Theft Auto`, `Vice City`, `ViceCity`, `Leonida`, `Leonida Keys`, `Port Gellhorn`, `Ambrosia`, `Grassrivers`, `Mount Kalaga`, `Lucia`, `Lucia Caminos`, `Jason Duval`, `Cal Hampton`, `Boobie Ike`, `DreQuan`, `Real Dimez`, `Raul Bautista`, `Brian Heder`, `Rockstar`, `Rockstar Games`, `Take-Two`, `TTWO`, `Wasted`, `Mission Passed`, `Wanted Level`, `Tommy Vercetti`, `Vercetti`. Bare `VI` and bare `Jason` are not keywords (they match unrelated coins).
+- A keyword matches only when no letter touches it on either side (so `GTA` matches `GTA6` and `$GTA`, but not `AGTAB`).
 
-`index/overrides.json` holds `allow` and `deny` entries, each with a mint, a reason and the issue where kiwi approved it. `deny` always wins. An `allow` entry can also add a GTA 6 coin that matches no keyword. The index coin itself (`self_mint`) is never a candidate.
+`index/overrides.json` holds only `deny` entries (scams), each with a mint, a reason and the issue where kiwi approved it. There is no allow list. The index coin itself (`self_mint`) is never a candidate.
 
 ## 2. Measurement
 
 - **Rebalance time:** every hour (`rebalance_hours` = 1). `rebalance_hour_utc` is unused while that is 1.
 - **Window:** the 24 hours before that hour, or the token's whole life if it is younger. An hourly run does not shrink the window to one hour.
 - **Sampling:** the adapter samples every candidate every 5 minutes (holder data every hour). Averages are arithmetic means of the samples in the window; "median" is the median of the hourly holder samples. One sample per hour cannot fill a 5-minute window, so the 5-minute sampler has to be running.
-- **Coverage:** a candidate needs samples covering at least 50% of its window. Otherwise it is excluded as `insufficient_data` (fail-safe: missing data never helps a coin enter). A current member whose new hour is `insufficient_data` keeps its last passing metrics for that hour. A run that errors does not replace the published file.
+- **Coverage (D35):** no minimum. Whatever samples exist in the window are used; a coin with zero samples is `insufficient_data` (fail-safe). A current member whose new hour is `insufficient_data` keeps its last passing metrics for that hour. A run that errors does not replace the published file.
 - **Sources:** each metric's source and definition are listed in `reports/research_index_data_2026-11.md` and fixed in DECISIONS.md. Only officially allowed access is used, no scraping against terms.
 
 ## 3. Hard filters (all must pass)
 
 | # | Filter | Rule |
 |---|---|---|
-| F1 | Age | ≥ 6h since the token's first pool or curve |
+| F1 | Age | ≥ 4h since the token's first pool or curve |
 | F2 | Liquidity | average ≥ $50,000 (pool liquidity in USD; for coins on a bonding curve, the curve's quote reserve in USD) |
 | F3 | Top 10 holders | median between **13% and 27%** of total supply, excluding pool/curve vaults, the burn address, listed hubs (`data/hubs/solana_hubs.csv`) and the index treasury |
-| F4 | Total fees | **≥ 10 SOL** paid by the token's traders since launch: transaction fees + priority fees + tips |
-| F5 | Bundle at launch | ≤ 10% of supply bought in the creation block by more than one wallet |
-| F6 | Dev holding | creator wallet holds ≤ 5% of supply at the rebalance |
+| F4 | Total fees | **≥ 8 SOL** paid by the token's traders since launch: transaction fees + priority fees + tips |
+| F5 | Bundle at launch | ≤ 30% of supply bought in the creation block by more than one wallet |
+| F6 | (removed, D35) | no dev filter |
 | F7 | Serial creator | the creator created ≤ 3 tokens (this one included) in the 7 days before the rebalance |
 | F8 | Authorities | mint authority and freeze authority both revoked |
 | F9 | Real traders | ≥ 200 wallets that each traded ≥ 0.05 SOL in the window; the creator wallet does not count (D33, #170) |
-| F10 | Turnover | 0.05 ≤ volume / average market cap ≤ 3 after removing same-wallet round trips (opposite side within 10 min); also ≥ 30 wallets with volume left and median trade ≥ 0.01 SOL (D33, #170) |
+| F10 | Volume | window volume > 0, Helius raw volume as-is (D35). No round-trip cleanup, no turnover band, no wallet or median-trade minimum |
 | F11 | Market cap vs liquidity | average market cap ≤ 100 × average pool liquidity (D29, #167). A thin pool cannot carry a huge market cap |
 | F8c | Token program (part of F8) | legacy SPL Token, or Token-2022 with only allowlisted mint extensions (D32, #171); anything else fails, unknown = insufficient_data |
 
-F3 and F4 are kiwi's parameters. A coin that fails any filter is listed in the output with the first filter it failed. A missing metric counts as a failure (`insufficient_data`).
+F1, F4, F5, F6, F10 and coverage follow kiwi's 18 Nov decisions (D35). F3 and F4 are kiwi's parameters. A coin that fails any filter is listed in the output with the first filter it failed. A missing metric counts as a failure (`insufficient_data`).
 
 **Dry runs only:** `dry_run.skip_filters` can skip filters whose data source isn't wired yet (e.g. F4). Any output computed with a skipped filter is marked `"dry_run": true` and is never the official index.
 

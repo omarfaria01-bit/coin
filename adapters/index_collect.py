@@ -129,7 +129,7 @@ def chain_facts(
         truncated=truncated,
         creator=creator,
         min_trader_lamports=math.ceil(frac(flt.min_trader_volume_sol) * LAMPORTS_PER_SOL),
-        roundtrip_seconds=flt.roundtrip_minutes * 60,
+        roundtrip_seconds=600,
     )
     launches = None
     if isinstance(creator, str):

@@ -81,10 +81,13 @@ def test_keyword_boundaries(text: str, kw: str, hit: bool) -> None:
 def test_candidate_status() -> None:
     m = good()
     assert candidate_status(m, P, NO) is None
-    weak = replace(m, ticker="LUCIA", name="Lucia", description="")
-    assert candidate_status(weak, P, NO) == "weak_keyword"
-    allow = Overrides(allow=(OverrideEntry(mint=weak.mint, reason="GTA 6 heroine", issue=156),))
-    assert candidate_status(weak, P, allow) is None
+    # D35: one tier. Former weak words and the new lore words are candidates; bare VI/Jason are not.
+    for word in ("Lucia", "Rockstar", "Take-Two", "Vercetti", "Port Gellhorn", "Wasted"):
+        hit = replace(m, ticker="X", name=word, description="")
+        assert candidate_status(hit, P, NO) is None, word
+    for word in ("VI", "Jason", "Lucian"):
+        miss = replace(m, ticker="X", name=word, description="")
+        assert candidate_status(miss, P, NO) == "no_keyword", word
     deny = Overrides(deny=(OverrideEntry(mint=m.mint, reason="impersonator", issue=156),))
     assert candidate_status(m, P, deny) == "denied"
     me = P.model_copy(update={"self_mint": m.mint})
@@ -104,24 +107,20 @@ def test_good_coin_passes() -> None:
 @pytest.mark.parametrize(
     ("change", "code"),
     [
-        ({"coverage": 0.49}, "insufficient_data"),
-        ({"age_hours": 5.9}, "F1"),
+        ({"coverage": 0.0}, "insufficient_data"),
+        ({"coverage": None}, "insufficient_data"),
+        ({"age_hours": 3.9}, "F1"),
         ({"liquidity_usd": 49_999.0}, "F2"),
         ({"top10_pct": 12.99}, "F3"),
         ({"top10_pct": 27.01}, "F3"),
-        ({"total_fees_sol": 9.99}, "F4"),
-        ({"bundle_pct": 10.01}, "F5"),
-        ({"dev_pct": 5.01}, "F6"),
+        ({"total_fees_sol": 7.99}, "F4"),
+        ({"bundle_pct": 30.01}, "F5"),
         ({"creator_launches_7d": 4}, "F7"),
         ({"freeze_authority_revoked": False}, "F8"),
         ({"independent_traders": 199}, "F9"),
         ({"independent_traders": None}, "insufficient_data"),
-        ({"roundtrip_share": 0.95}, "F10"),
-        ({"roundtrip_share": None}, "insufficient_data"),
-        ({"volume_wallets": 29}, "F10"),
-        ({"median_trade_sol": 0.0099}, "F10"),
-        ({"volume_usd": 1_500_000.0 * 0.049}, "F10"),
-        ({"volume_usd": 1_500_000.0 * 3.01}, "F10"),
+        ({"volume_usd": 0.0}, "F10"),
+        ({"volume_usd": None}, "insufficient_data"),
         ({"total_fees_sol": None}, "insufficient_data"),
     ],
 )
@@ -137,10 +136,13 @@ def test_each_filter_fails(change: dict, code: str) -> None:
         {"total_fees_sol": 10.0},
         {"liquidity_usd": 50_000.0},
         {"independent_traders": 200},
-        {"volume_wallets": 30},
-        {"median_trade_sol": 0.01},
-        {"roundtrip_share": 0.5, "volume_usd": 1_500_000.0 * 6},
-        {"volume_usd": 1_500_000.0 * 3},
+        {"coverage": 0.01},
+        {"age_hours": 4.0},
+        {"total_fees_sol": 8.0},
+        {"bundle_pct": 30.0},
+        {"dev_pct": 99.0},  # F6 removed (D35)
+        {"roundtrip_share": 0.95, "volume_wallets": 1, "median_trade_sol": 0.0001},
+        {"volume_usd": 1.0},
     ],
 )
 def test_boundaries_pass(change: dict) -> None:

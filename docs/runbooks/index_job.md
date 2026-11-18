@@ -85,15 +85,14 @@ the live index.
    ```
 2. **No candidates.** If `excluded` is also empty, discovery found nothing. Seed
    mints (section 5) are the intended source; raising `COIN_INDEX_DISCOVER_PAGES`
-   (default `100`) is not a fix by itself.
-3. **Other reasons.** `F1`…`F11`, `denied`, and `weak_keyword` are real filter
+   (default `10`) is not a fix by itself.
+3. **Other reasons.** `F1`…`F11`, and `denied` are real filter
    results (`INDEX_RULES.md` §3); `dry_run: true` is never an official index.
 
 ## 5. Add mints to the seed file
 
 `index/seed_mints.txt` lists mints to measure, one base58 mint per line; `#`
-starts a comment and blank lines are ignored. Every filter and the 50% coverage
-rule still apply, and `deny` in `index/overrides.json` still wins. Never put
+starts a comment and blank lines are ignored. Every filter still applies, and `deny` in `index/overrides.json` still wins. Never put
 `params.self_mint` (the index coin) in it. Add lines on a branch and open a PR:
 the next hourly run picks the merged file up with `git pull --ff-only`, while a
 hot edit in `/opt/coin` makes the tree dirty and stops publishing. Verify with:
@@ -143,7 +142,7 @@ sudo grep -q '^HELIUS_API_KEY=.' /etc/coin/index.env && echo 'HELIUS_API_KEY set
 
 Variables: `HELIUS_API_KEY` (required), `COIN_REPO`, `COIN_INDEX_WORKTREE`,
 `COIN_INDEX_ENV`, `COIN_INDEX_LOCK`, `COIN_INDEX_MINTS` (default
-`$COIN_REPO/index/seed_mints.txt`) and `COIN_INDEX_DISCOVER_PAGES` (default `100`).
+`$COIN_REPO/index/seed_mints.txt`) and `COIN_INDEX_DISCOVER_PAGES` (default `10`).
 Their defaults are in the first table. No DexScreener key. Never paste the key
 into a command, issue, or PR; the script writes neither the key nor the env file
 to git or the journal.
