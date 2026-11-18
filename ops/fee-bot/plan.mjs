@@ -112,6 +112,7 @@ export function emptyState() {
     totalInLamports: 0n,
     totalSpentLamports: 0n,
     dayKey: "",
+    forwardCursor: "", // fee_mode "forwarded": last signature seen on the system wallet
     spentTodayLamports: 0n,
   };
 }
@@ -123,7 +124,7 @@ export function stateToJson(s) {
 export function stateFromJson(o) {
   const base = emptyState();
   for (const k of Object.keys(base)) {
-    if (k === "burnLamports" && !(k in o)) continue; // state from before D49: nothing held for burn yet
+    if ((k === "burnLamports" || k === "forwardCursor") && !(k in o)) continue; // older state files
     if (!(k in o)) throw new Error(`state missing ${k}`);
     base[k] = typeof base[k] === "bigint" ? BigInt(o[k]) : String(o[k]);
   }
