@@ -20,6 +20,7 @@ from index.filters import (
     first_failed_filter,
     log_score,
     mint_key,
+    missing_metrics,
     rank,
 )
 from index.params import IndexParams, Overrides, frac
@@ -222,16 +223,28 @@ def run_index(
         reason = candidate_status(m, params, overrides)
         if reason is None:
             reason = first_failed_filter(m, params)
+        missing: list[str] = []
         if reason is None:
             ls = log_score(m, params)
             if ls is None:
                 reason = MISSING
+                missing = ["score_inputs"]
             else:
                 scored[mint] = ls
+        elif reason == MISSING:
+            missing = missing_metrics(m, params) or ["unknown"]
+            for tag in ("error", "onchain"):
+                if tag in m.sources:
+                    missing.insert(0, m.sources[tag].rsplit("@", 1)[0])
         if reason is not None:
             status[mint] = reason
             if reason != "no_keyword":
-                excluded.append({"mint": mint, "ticker": m.ticker, "reason": reason})
+                row: dict = {"mint": mint, "ticker": m.ticker, "reason": reason}
+                if missing:  # D37: never silent, name what was missing
+                    row["missing"] = missing
+                if m.mc_usd is not None and math.isfinite(m.mc_usd):
+                    row["mc_usd"] = round(m.mc_usd, 2)
+                excluded.append(row)
 
     ranked = rank(scored)
     pos = {mint: i + 1 for i, mint in enumerate(ranked)}

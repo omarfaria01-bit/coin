@@ -71,11 +71,9 @@ def coverage(times: Iterable[int], start: int, end: int, bucket_seconds: int) ->
     if bucket_seconds <= 0 or end <= start:
         return 0.0
     expected = max(1, (end - start) // bucket_seconds)
-    filled = {
-        (t - start) // bucket_seconds
-        for t in times
-        if start <= t < end and 0 <= (t - start) // bucket_seconds < expected
-    }
+    # D38: a window that is not a whole number of buckets (young coin) puts its last moments in a
+    # partial bucket; fold that into the last full one instead of dropping the sample.
+    filled = {min((t - start) // bucket_seconds, expected - 1) for t in times if start <= t < end}
     return len(filled) / expected
 
 
@@ -244,6 +242,7 @@ def trade_quality(
     creator: str | None,
     min_trader_lamports: int,
     roundtrip_seconds: int,
+    skip_unknown: bool = False,
 ) -> TradeQuality | None:
     """Per-wallet SOL volume and round trips. None when the walk is incomplete or any counted
     swap has an unknown wallet, side or SOL amount (fail closed: never a flattering count).
@@ -262,12 +261,16 @@ def trade_quality(
             continue
         seen.add(sig)
         if not isinstance(when, int):
+            if skip_unknown:  # D37: lower bound, an unreadable swap is simply not counted
+                continue
             return None
         if not window_start <= when < window_end:
             continue
         payer = tx.get("fee_payer")
         out, got = tx.get("sol_out"), tx.get("sol_in")
         if not isinstance(payer, str) or not isinstance(out, int) or not isinstance(got, int):
+            if skip_unknown:
+                continue
             return None
         moves = [
             r for r in tx.get("transfers") or [] if isinstance(r, Mapping) and r.get("mint") == mint
@@ -275,6 +278,8 @@ def trade_quality(
         bought = any(r.get("to") == payer for r in moves)
         sold = any(r.get("from") == payer for r in moves)
         if bought == sold:
+            if skip_unknown:
+                continue
             return None
         side, lamports = (1, out) if bought else (-1, got)
         if lamports > 0:
@@ -359,6 +364,10 @@ def bundle_pct(
     for tx in txs:
         slot = tx.get("slot")
         if not isinstance(slot, int) or not first <= slot < first + window_slots:
+            continue
+        if "summary" in tx and not trades_mint(tx, mint):
+            # D38: only swaps are buys. The launch mint-to and the pool deposit are not (GTA VI
+            # read 102% of supply "bought" in its StonkFun launch block before this fix).
             continue
         for row in _rows(tx):
             amount = row.get("amount")

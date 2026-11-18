@@ -156,3 +156,21 @@ def test_authorities_price_and_deepest_pair() -> None:
         MINT,
     )
     assert pair is not None and pair["volume"]["h24"] == 8  # type: ignore[index]
+
+
+def test_d38_bundle_ignores_launch_mint_and_pool_deposit() -> None:
+    # GTA VI (StonkFun) read 102%: the launch mint-to and the pool deposit are not buys.
+    launch = {
+        "slot": 7,
+        "summary": "create",
+        "ok": True,
+        "transfers": [{"mint": MINT, "to": ALICE, "amount": 1_000}],
+    }
+    assert bundle_pct([launch], MINT, 1_000, set()) == 0.0
+
+
+def test_d38_coverage_counts_a_sample_in_the_partial_last_bucket() -> None:
+    from adapters.market_data import coverage
+
+    # 10.83h-old coin: window 38990 s, last sample 1 s before the end
+    assert coverage([38_989], 0, 38_990, 300) > 0

@@ -87,6 +87,7 @@ def test_seeded_mints_never_bypass_safety_filters(
         mc_usd=1_500_000.0,
         top10_pct=20.0,
         total_fees_sol=40.0,
+        trading_fees_24h_sol=40.0,
         window_fees_sol=12.0,
         bundle_pct=3.0,
         dev_pct=1.0,

@@ -40,6 +40,8 @@ class Metrics:
     extensions: tuple[str, ...] | None = None  # Token-2022 mint extension names, () for legacy
     unique_traders: int | None = None
     volume_usd: float | None = None  # window total
+    # D38: est. trading fees paid in 24h = DexScreener h24 volume (all pools) x dex_fee_rate, in SOL
+    trading_fees_24h_sol: float | None = None
     # F9/F10 quality (#170, D33), from the swaps themselves
     independent_traders: int | None = None  # wallets above min_trader_volume_sol, no creator
     roundtrip_share: float | None = None  # share of SOL volume that is same-wallet round trips
@@ -65,9 +67,18 @@ def candidate_status(m: Metrics, params: IndexParams, overrides: Overrides) -> s
     if m.mint in {e.mint for e in overrides.deny}:
         return "denied"
     text = " ".join((m.name, m.ticker, m.description))
-    if any(keyword_hit(text, k) for k in params.keywords.strong):
+    if gta_match(text, params):
         return None
     return "no_keyword"
+
+
+def gta_match(text: str, params: IndexParams) -> bool:
+    """D37 vocabulary: a strong word, or an ambiguous word with GTA context (see Keywords)."""
+    kw = params.keywords
+    if any(keyword_hit(text, k) for k in kw.strong):
+        return True
+    hits = {k.lower() for k in kw.needs_context if keyword_hit(text, k)}
+    return len(hits) >= 2
 
 
 # ------------------------------------------------------------------ §3 filters
@@ -87,6 +98,7 @@ _NUMERIC = (
     "bundle_pct",
     "dev_pct",
     "volume_usd",
+    "trading_fees_24h_sol",
     "roundtrip_share",
     "median_trade_sol",
 )
@@ -95,6 +107,40 @@ _NUMERIC = (
 def _all_finite(m: Metrics) -> bool:
     """NaN or infinity anywhere counts as missing data (fail-safe, never fail-open)."""
     return all(getattr(m, k) is None or math.isfinite(getattr(m, k)) for k in _NUMERIC)
+
+
+def missing_metrics(m: Metrics, params: IndexParams) -> list[str]:
+    """Names of the metrics that make `m` insufficient_data (published in the output, D37)."""
+    skip = set(params.dry_run.skip_filters)
+    out = [k for k in _NUMERIC if getattr(m, k) is not None and not math.isfinite(getattr(m, k))]
+    if m.coverage is None or m.coverage <= 0:
+        out.append("coverage(no samples)")
+    need = {
+        "F1": ("age_hours",),
+        "F2": ("liquidity_usd",),
+        "F3": ("top10_pct",),
+        "F4": (
+            "trading_fees_24h_sol"
+            if params.filters.fees_measure == "dex_24h_trading"
+            else "total_fees_sol",
+        ),
+        "F5": ("bundle_pct",),
+        "F8": ("mint_authority_revoked", "freeze_authority_revoked", "token_program"),
+        "F9": (
+            "unique_traders"
+            if params.filters.traders_measure == "window_wallets"
+            else "independent_traders",
+        ),
+        "F10": ("volume_usd",),
+        "F11": ("mc_usd",),
+    }
+    for code, names in need.items():
+        if code in skip:
+            continue
+        out.extend(n for n in names if getattr(m, n) is None and n not in out)
+    if m.token_program == TOKEN_2022 and m.extensions is None and "F8" not in skip:
+        out.append("extensions")
+    return out
 
 
 def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
@@ -128,20 +174,16 @@ def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
         if not lo(f.top10_min_pct) <= m.top10_pct <= lo(f.top10_max_pct):
             return "F3"
     if "F4" not in skip:
-        if m.total_fees_sol is None:
+        fees = m.trading_fees_24h_sol if f.fees_measure == "dex_24h_trading" else m.total_fees_sol
+        if fees is None:
             return MISSING
-        if m.total_fees_sol < lo(f.min_total_fees_sol):
+        if fees < lo(f.min_total_fees_sol):
             return "F4"
     if "F5" not in skip:
         if m.bundle_pct is None:
             return MISSING
         if m.bundle_pct > lo(f.max_bundle_pct):
             return "F5"
-    if "F7" not in skip:
-        if m.creator_launches_7d is None:
-            return MISSING
-        if m.creator_launches_7d > f.max_creator_launches_7d:
-            return "F7"
     if "F8" not in skip and f.require_authorities_revoked:
         if m.mint_authority_revoked is None or m.freeze_authority_revoked is None:
             return MISSING
@@ -159,9 +201,11 @@ def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
         elif m.token_program != SPL_TOKEN:
             return "F8"
     if "F9" not in skip:
-        if m.independent_traders is None:
+        window_wallets = f.traders_measure == "window_wallets"
+        traders = m.unique_traders if window_wallets else m.independent_traders
+        if traders is None:
             return MISSING
-        if m.independent_traders < f.min_unique_traders:
+        if traders < f.min_unique_traders:
             return "F9"
     if "F10" not in skip:
         if m.volume_usd is None:
@@ -183,7 +227,10 @@ def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
 def log_score(m: Metrics, params: IndexParams) -> float | None:
     """log S rounded to `round_decimals`; None if an input is missing or not > 0."""
     s = params.score
-    fees = m.window_fees_sol if s.score_fees_window == "window" else m.total_fees_sol
+    if s.score_fees_window == "dex_24h":  # D38: same 24h all-pools measure as F4
+        fees = m.trading_fees_24h_sol
+    else:
+        fees = m.window_fees_sol if s.score_fees_window == "window" else m.total_fees_sol
     vals = (m.mc_usd, m.liquidity_usd, fees, m.unique_traders)
     if any(v is None or not math.isfinite(v) or v <= 0 for v in vals):
         return None

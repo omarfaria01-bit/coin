@@ -20,18 +20,21 @@ def _shipped() -> dict:
 def test_shipped_params_and_overrides_load() -> None:
     p = IndexParams.model_validate(_shipped())
     o = Overrides.model_validate(json.loads((ROOT / "index" / "overrides.json").read_text()))
-    assert p.filters.top10_min_pct == 13 and p.filters.top10_max_pct == 27  # kiwi
+    assert p.filters.top10_min_pct == 0 and p.filters.top10_max_pct == 30  # kiwi, D38
     assert p.filters.min_total_fees_sol == 8  # kiwi, D35
     assert (p.membership.size, p.membership.enter_rank, p.membership.exit_rank) == (10, 8, 12)
     assert p.rebalance_hours == 1
     assert p.payout.holder_rewards == "7/10"
     assert p.payout.draw_pot == "3/10" and p.payout.pay_in == "basket"
     assert p.dry_run.skip_filters == ()
-    assert o.deny == ()
+    assert [e.mint for e in o.deny] == ["6wiaCq8oQiupFfeDU4ouAuYnCKXCch581HAmpvrxpump"]  # D38 scam
     f = p.filters
     assert (f.min_age_hours, f.max_bundle_pct) == (4, 30)  # D35
     assert "Lucia" in p.keywords.strong and "VI" not in p.keywords.strong
-    assert "Jason" not in p.keywords.strong and len(p.keywords.strong) == 35
+    # D37: one big GTA vocabulary; ambiguous words (Jason, Vice...) only count with GTA context
+    assert "Jason" not in p.keywords.strong and len(p.keywords.strong) >= 35
+    assert "Jason" in p.keywords.needs_context and "Vice" in p.keywords.needs_context
+    assert not set(p.keywords.strong) & set(p.keywords.needs_context)
 
 
 def test_removed_rules_are_rejected() -> None:

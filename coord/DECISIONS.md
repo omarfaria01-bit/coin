@@ -303,3 +303,59 @@ volume; then cap 25% per coin with water-filling; fewer than 4 members -> equal 
 (`equal`, `score_capped` stay as options). Rank/membership still use the score S (§4); only the weights changed.
 Risk, said plainly: volume is raw (no wash cleanup, D35), so a coin with inflated volume gets up to half-weight pull from
 it; the 25% cap and F9 (200 traders) are the only limits. A half whose total is 0 counts as equal. Hetzner: pull /opt/coin.
+
+## D37 · 2026-11-18 · Index: top-down discovery, GTA vocabulary with context, no silent gaps (#156, kiwi chat 18 Nov relayed by Grok)
+Source: kiwi in chat 18 Nov (relayed by the Grok executor): one big GTA vocabulary, ambiguous words need GTA context, no weak
+tier, no manual allow; trending coins first in data collection; discovery top-down from the most established coins by market
+cap via vocabulary search, never hunting new launches. Root cause of the empty top 10 (18 Nov 09-10 UTC): (a) discovery walked
+recent pump.fun creates, so big coins like AudaCity were never candidates; (b) big coins have more history than the 30-page cap,
+so lifetime fees, window traders and the launch-block bundle were blanked as `insufficient_data`; (c) top10 holders came only
+from 5-min samples taken in minute 0-4 of each hour, and the hourly run's own holder read was ignored when any sample existed;
+(d) one Helius JSON-RPC error aborted or blanked whole rows.
+1. Discovery: DexScreener search for `discovery.search_terms`, Solana only; `max_trending` top h24-volume coins first, then the
+   `max_by_mc` biggest market caps. Seed file and previous members still added. The pump.fun walk is gone.
+2. Vocabulary: `keywords.strong` grows to the whole GTA series (+ #267's Dacity/AudaCity/DacityCoin/BAWSAQ/Macca/Rocco/GTA memes);
+   new `keywords.needs_context` (Jason, Vice, Trevor, ...) counts only with a strong word or a second different ambiguous word.
+3. Big coins: window metrics are exact when the newest-first pages reach before the window start; F4 accepts the lifetime
+   fees of the fetched pages when that lower bound already >= 8 SOL; F9 likewise accepts a lower bound >= 200; bundle uses the
+   oldest page (launch block). Lower-bound metrics are tagged `helius-parsed-events-lower-bound` in `sources`.
+4. Holder data: the hourly getTokenLargestAccounts reading is always one more sample; an owner with no account on chain counts
+   as a plain wallet (it can only raise top10). 5. Output: `excluded[].missing` names the missing metric(s); `mc_usd` shown.
+6. Speed: a coin whose best DexScreener pool is below `prescreen_liquidity_share` (1/2) of F2's $50k is not walked on chain and
+   is listed as F2 from DexScreener; JSON-RPC errors are retried twice; one mint's error no longer aborts the pass.
+Unchanged: F1 4h, F2 $50k, F3 13-27%, F4 8 SOL, F5 30%, no F6, F7, F8, F9 200, F10 raw volume, F11, D36 weights.
+Risk, said plainly: lower bounds can only make a coin pass a minimum it truly passes; scores of big coins use lower-bound
+window fees/traders when their window is longer than the page cap (they rank a bit low, never high). Hetzner: pull /opt/coin.
+
+## D38 · 2026-11-18 · Index filters calibrated on kiwi's reference coins (#156, kiwi chat 12:34-12:35 Rome relayed by Grok)
+Source: kiwi in chat 18 Nov: "F7: toglilo", "F3: solo massimo 30%" (12:34), and "ti ho mandato diverse coin in top basati su
+quelle e regola i filtri" (12:35): calibrate so his reference coins pass while fakes stay out. Reference set: DCI HCNhQC,
+AudaCity DKYcjo, Rocco HZbiEp, Macca AKotzk, BAWSAQ 4La95N, Dacity nxPqZ4, rockstar 9HFUEa, GTA memes BsbsB3. Fakes that must
+stay out: EcLbZ6 ($12B), 3kZoBR, VUduB4, EiLTVJ, EkDjHZ and the 0-trader copies (liquidity ~ market cap).
+1. F7 removed (the creator's 7-day history is no longer walked; `creator_launches_7d` stays null in the output).
+2. F3: top10 <= 30%, no minimum (`top10_min_pct` 0, `top10_max_pct` 30).
+3. F4 measure: `fees_measure = "dex_24h_trading"`: DexScreener h24 volume of all pools x `dex_fee_rate` 1/400 (0.25%) / SOL
+   price (DexScreener SOL-quoted pairs), threshold stays 8 SOL. Calibration 18 Nov ~12:45 Rome (SOL ~$74): reference coins
+   13.3-134.5 SOL (min GTA memes 13.3); fakes 0-0.2 SOL except VUduB4 10.4 and EkDjHZ 10.0 (13 and 50 txns of wash), which F9 stops.
+   Lifetime network fees (old F4) could not be proven for any big coin: 3000 swaps carry 0.05-0.3 SOL.
+4. F9 measure: `traders_measure = "window_wallets"`, `min_unique_traders` 200 -> 50: distinct fee payers of the window swaps
+   (lower bound when the 3000-swap page cap is hit). Reference coins 61-632 (min rockstar 61); fakes 0-16.
+Unchanged: F1 4h, F2 $50k (kiwi), F5 30%, F8, F10, F11, D36 weights. DCI HCNhQC is at ~$30k liquidity, so it fails F2; reported,
+not lowered.
+5. kiwi's "coin buone" list (12:49 Rome) joins the reference set and the seed file: GTA VI 4kjruq, AudaCity DKYcjo, Dacity
+   nxPqZ4, DacityCoin 4rYsDH, Lucia HsZXb9, BAWSAQ 4La95N, DacityCoin/DACT GZUGmA (+ the 8 above). GZUGmA's pool was created
+   18 Nov ~12:02 Rome, so F1 (4h) holds it out until ~16:02 Rome; not changed.
+6. F5 measurement fix: only swaps in the launch window count as bundle buys (the launch mint-to and pool deposit made GTA VI
+   read 102%).
+7. Coverage fix: a sample in the last partial 5-min bucket of a young coin's window was dropped (coverage 0 ->
+   insufficient_data for GTA Vice Inu 6wiaCq, Leonida 9rbKkz and others); it now counts.
+8. Deny list: GTA Vice Inu 6wiaCq8oQiupFfeDU4ouAuYnCKXCch581HAmpvrxpump added to `overrides.deny` (kiwi in chat 13:19 Rome:
+   "GTA VICE INU E UNO SCAM").
+9. A coin's on-chain read is retried once before its error is published.
+10. Score fees: `score.score_fees_window = "dex_24h"`, the same 24h all-pools DexScreener measure as F4. The old score used
+   network fees from at most 3000 recent swaps, a lower bound that shrinks the busier a coin is: GTA VI (6.8M$ 24h volume)
+   scored 0.08 SOL vs AudaCity 0.20 SOL, which put GTA VI below AudaCity despite 2.3x the market cap. Traders in the score
+   are still window wallets from the fetched swaps (lower bound for the busiest coins).
+Risk, said plainly: F4 now trusts DexScreener volume (wash volume counts, as D35 already accepts), and F9 no longer needs 0.05 SOL
+per wallet, so ~50 dust wallets can satisfy it (red-team case updated: tests/test_index_hourly_attacks.py).
+
