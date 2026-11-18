@@ -205,12 +205,18 @@
     return capWeights(rows);
   }
 
+  // CSP (no inline handlers): a broken coin logo falls back to its initials.
+  document.addEventListener("error", (e) => {
+    const el = e.target;
+    if (el && el.classList && el.classList.contains("coin-logo")) el.parentNode.classList.add("noimg");
+  }, true);
+
   function coinCell(r) {
     const initial = esc((r.ticker || "?").slice(0, 3).toUpperCase());
     const name = esc(r.name || r.ticker || "?");
     const ticker = esc(r.ticker || "?");
     const img = esc(r.image || DEX_IMG(r.mint));
-    return `<div class="coin"><img class="coin-logo" src="${img}" alt="" width="36" height="36" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('noimg')"><span class="coin-fb" aria-hidden="true">${initial}</span><span class="coin-meta"><b>${name}</b><small>${ticker}</small></span></div>`;
+    return `<div class="coin"><img class="coin-logo" src="${img}" alt="" width="36" height="36" loading="lazy" referrerpolicy="no-referrer"><span class="coin-fb" aria-hidden="true">${initial}</span><span class="coin-meta"><b>${name}</b><small>${ticker}</small></span></div>`;
   }
 
   function chgCell(v) {
