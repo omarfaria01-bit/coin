@@ -63,9 +63,11 @@
   },
   "draws": {
     "enabled": false,
-    "period_days": 7.0,
+    "period_hours": 1.0,
+    "cap": 0.05,
+    "min_pot_lamports": 10000000,
     "min_balance_usd": 0.0,
-    "min_hold_hours": 24.0,
+    "min_hold_hours": 1.0,
     "prize_split": [
       0.4,
       0.1,
@@ -80,10 +82,10 @@
     ]
   },
   "fees": {
-    "dev": 0.25,
-    "holder_pot": 0.35,
-    "draw_pot": 0.25,
-    "buyback_burn": 0.15,
+    "dev": 0.0,
+    "holder_pot": 0.7,
+    "draw_pot": 0.3,
+    "buyback_burn": 0.0,
     "router_interval_minutes": 60
   },
   "vesting": {

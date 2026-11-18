@@ -214,3 +214,16 @@ boost are untouched (boost still off at launch).
 holder's reward per token-hour (seed 0). The old §14 bound (≤ 30%) cannot hold with this curve, so the row
 bound is now ≤ 60% and is flagged for kiwi. Loyalty beyond 4h earns no extra multiplier. Reward per
 token-hour by holding time (seed 1, 12 days): 4h 1.40 · 12h 2.02 · 24h 2.07 · 72h 2.13 · 7d 2.14.
+
+## D28 · 2026-11-18 · Hourly draw, 70/30 fees, no team share, no buyback (kiwi, #156)
+kiwi, 18 Nov 00:53–00:58 Rome (comments 6964535858, 6964592643, 6964626883). Fees: 100% of creator fees go to
+holders: 70% holder rewards / 30% draw pot, dev 0%, buyback 0% (`FeeParams`, COIN_MATH §10; extends D26).
+Draw: one per hour (`draws.period_hours` = 1, was 7 days); eligible only after a 1h hold (`min_hold_hours` = 1 =
+T_START, a younger cluster scores 0); linked wallets are merged by the existing cluster rule; no cluster above 5%
+of the odds (`draws.cap`, exact water-filling; with < 20 clusters odds become equal); odds ∝ isqrt(score); minimum
+pot 0.01 SOL (`draws.min_pot_lamports`), below it the pot rolls over; Σ prizes + rollover = pot (tested).
+Randomness stays the commit→reveal VRF stream of §9 (`rho` is input, never made in the engine).
+New pure module `engine/hourly_draw.py` (+ Hypothesis tests). **Still OFF** (`draws.enabled` false): the legal
+gate (COIN_MATH §16/#8) and the VRF devnet test are not done, and the hourly job does not call it yet, so the
+engine's daily epoch is unchanged apart from the 70/30 pots. Goldens regenerated (`tools/regen_golden.py`);
+holder pot is now 70% of fees, so payouts per epoch roughly double versus the 35% default.

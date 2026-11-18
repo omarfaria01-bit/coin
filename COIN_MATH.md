@@ -285,12 +285,12 @@ R_e = α · Pot_e        α = 1/10 per day
 
 This is the part built for small holders: one entry per person, odds that grow with the square root of the score, and prizes large enough to matter to a small position.
 
-A separate draw pot (section 10). A draw closes every `DRAW_PERIOD` = 7 epochs (`n` below).
+A separate draw pot (section 10). **A draw closes every hour** (`DRAW_PERIOD` = 1 hour, kiwi 2026-11-18, D28; was 7 epochs). The hourly plan is `engine/hourly_draw.py`.
 
 **Snapshot.** At the end of the period's last epoch the eligible list is frozen and its hash is published. Anything that happens after the snapshot has no effect on this draw.
 
 **Eligible cluster (price-free):**
-- eligible for rewards (section 2) in **at least ⌈5n/7⌉ of the `n` epochs** (5 of 7)
+- holds lots at least `T_START` = 1 hour old (a cluster scores 0 before that, so it cannot enter); eligible for rewards (section 2) in **at least ⌈5n/7⌉ of the `n` periods** (n = 1 for the hourly draw, so 1 of 1)
 - `B̄_c ≥ MIN_DRAW_SHARE · total supply` in the final epoch (default 1/100,000 of supply = 10,000 tokens of 1B)
 - not in forfeit state (section 11)
 
@@ -298,12 +298,14 @@ These are time-weighted conditions. Dust sent to a wallet can't remove them, and
 
 **Weight (integer):** `w_c = isqrt( floor( Σ s_c over the n epochs ) )`.
 - `s_c` is in token base units × multiplier, so `floor` already fixes the integer unit. `isqrt` is the exact integer square root.
-- One entry per cluster. A cluster with 100× the score gets 10× the odds.
+- One entry per cluster (linked wallets are already merged by the cluster rule, section 7). A cluster with 100× the score gets 10× the odds.
+- **Cap (D28):** no cluster may hold more than 5% of the total odds. Weights above the cap are cut to it and the rest keep their exact ratios (water-filling, exact integers). With fewer than 20 eligible clusters the cap cannot hold, so odds become equal.
 - Domain: clusters with weight 0 are dropped, and `1 ≤ W = Σ w_c < 2¹²⁸` (asserted). If no cluster is eligible, there is no draw and the pot carries over.
+- **Minimum pot (D28):** if the draw pot is below 0.01 SOL (10,000,000 lamports) at the snapshot, there is no draw and the whole pot rolls over to the next hour. Σ prizes + rollover = pot always.
 
 **Draw payout.**
 ```
-D = δ · DrawPot_close            δ = 1 for the weekly draw   (DrawPot_close = draw pot balance in Q at the snapshot)
+D = δ · DrawPot_close            δ = 1 for the hourly draw   (DrawPot_close = draw pot balance in Q at the snapshot)
 prizes: 1 × 40% of D,  3 × 10% of D,  6 × 5% of D            (10 winners, 100% of D)
 ```
 - Each prize is `floor(D · share)` in Q base units. The few units lost to rounding stay in the draw pot.
@@ -326,16 +328,16 @@ x_i = SHA-256( "COIN_SYSTEM_DRAW_V1" ‖ genesis_hash ‖ mint ‖ draw_index �
 
 ## 10. Fee routing (creator-fee share only; the pad keeps its own cut)
 
-| Destination | Default |
+| Destination | Default (D28, kiwi 2026-11-18) |
 |---|---|
-| Dev wallets (kiwi + Omega) | 25% |
-| Holder reward pot | 35% |
-| Draw pot | 25% |
-| Buyback & burn | 15% |
+| Dev wallets | 0% (no team share) |
+| Holder reward pot | 70% |
+| Draw pot | 30% |
+| Buyback & burn | 0% (none) |
 
 - A router script runs hourly. Buyback is sliced over time (small chunks, never one big buy).
 - Burn = the token program's `Burn` instruction from the router's own token account. The supply decrease is checked on-chain after each burn and logged. P1 research must confirm the pad's token allows it.
-- If draws are disabled (section 16), their 25% goes to the holder reward pot.
+- If draws are disabled (section 16), their 30% goes to the holder reward pot.
 - Every movement is logged to `ledger/fees.csv` and is public.
 
 ## 11. Price-weighted vesting (early buys + dev buy)
