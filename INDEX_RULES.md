@@ -37,6 +37,7 @@ A token is a **candidate** if it is a Solana token and its name, ticker or descr
 | F9 | Real traders | ≥ 200 unique wallets bought or sold in the window |
 | F10 | Turnover | 0.05 ≤ volume in the window / average market cap ≤ 3 |
 | F11 | Market cap vs liquidity | average market cap ≤ 100 × average pool liquidity (D29, #167). A thin pool cannot carry a huge market cap |
+| F8c | Token program (part of F8) | legacy SPL Token, or Token-2022 with only allowlisted mint extensions (D32, #171); anything else fails, unknown = insufficient_data |
 
 F3 and F4 are kiwi's parameters. A coin that fails any filter is listed in the output with the first filter it failed. A missing metric counts as a failure (`insufficient_data`).
 

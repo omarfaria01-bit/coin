@@ -59,6 +59,13 @@ class Filters(_Strict):
     min_turnover: Num = "1/20"
     max_turnover: Num = 3
     max_mc_liquidity_ratio: Num = 100  # F11 (#167, D29)
+    # F8c (#171, D32): Token-2022 mint extensions allowed (jsonParsed names); all others fail.
+    token2022_allowed_extensions: tuple[str, ...] = (
+        "metadataPointer",
+        "tokenMetadata",
+        "interestBearingConfig",
+        "scaledUiAmountConfig",
+    )
 
     @model_validator(mode="after")
     def _ranges(self) -> Filters:

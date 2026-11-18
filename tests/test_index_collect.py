@@ -136,3 +136,14 @@ def test_measure_prefers_helius_price_and_sums_fee_plus_tip() -> None:
     assert row.bundle_pct == 0.0 and row.age_hours == 1.0 and row.coverage == 1 / 12
     assert row.mint_authority_revoked is True and row.sources["mc_usd"].startswith("helius-das@")
     assert row.sources["liquidity_usd"].startswith("dexscreener@")
+
+
+def test_extensions_parse_fail_safe() -> None:
+    from adapters.index_collect import _extensions
+
+    assert _extensions({"info": {}}) == []
+    assert _extensions({"info": {"extensions": [{"extension": "transferHook"}]}}) == [
+        "transferHook"
+    ]
+    assert _extensions({"info": {"extensions": [{"nope": 1}]}}) is None
+    assert _extensions(None) is None

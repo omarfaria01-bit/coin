@@ -137,6 +137,7 @@ def chain_facts(
         "symbol": asset.get("symbol") or "",
         "description": asset.get("description") or "",
         "program": mint_acc["program"] if mint_acc else None,
+        "mint_extensions": _extensions(mint_acc),
         "age_hours": age,
         "top10_pct": top10,
         "bundle_pct": bundle_pct(txs, mint, supply_i, skip, creator=creator),
@@ -217,3 +218,19 @@ def measure_mints(
             )
         )
     return out
+
+
+def _extensions(mint_acc: Mapping[str, object] | None) -> list[str] | None:
+    """Token-2022 extension names from the parsed mint (empty for legacy); None if unknown."""
+    info = mint_acc.get("info") if mint_acc else None
+    if not isinstance(info, Mapping):
+        return None
+    ext = info.get("extensions")
+    if ext is None:
+        return []
+    if not isinstance(ext, list):
+        return None
+    names = [e.get("extension") for e in ext if isinstance(e, Mapping)]
+    if len(names) != len(ext) or not all(isinstance(n, str) for n in names):
+        return None  # unreadable entry: unknown, fail-safe
+    return sorted(set(names))  # type: ignore[arg-type]

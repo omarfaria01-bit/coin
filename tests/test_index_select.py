@@ -47,6 +47,8 @@ def coin(i: int, mc: float) -> Metrics:
         creator_launches_7d=1,
         mint_authority_revoked=True,
         freeze_authority_revoked=True,
+        token_program="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        extensions=(),
         unique_traders=500,
         volume_usd=mc,
     )

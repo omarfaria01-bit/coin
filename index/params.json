@@ -36,7 +36,13 @@
     "min_unique_traders": 200,
     "min_turnover": "1/20",
     "max_turnover": 3,
-    "max_mc_liquidity_ratio": 100
+    "max_mc_liquidity_ratio": 100,
+    "token2022_allowed_extensions": [
+      "metadataPointer",
+      "tokenMetadata",
+      "interestBearingConfig",
+      "scaledUiAmountConfig"
+    ]
   },
   "score": {
     "w_mc": "2/5",

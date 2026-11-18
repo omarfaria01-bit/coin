@@ -59,6 +59,8 @@ def base(m: str, ticker: str, name: str, **kw) -> Metrics:
         creator_launches_7d=2,
         mint_authority_revoked=True,
         freeze_authority_revoked=True,
+        token_program="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        extensions=(),
         unique_traders=250,
         volume_usd=300_000.0,
     )
