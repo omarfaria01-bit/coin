@@ -3,6 +3,12 @@
 import json
 from pathlib import Path
 
+from hypothesis import given, settings
+from hypothesis import strategies as st
+
+from index.filters import Metrics, candidate_status, first_failed_filter
+from index.params import IndexParams, Overrides
+from index.select import run_index
 from tools.run_index import _valid, main
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -56,3 +62,63 @@ def test_sample_run_collects_seeds_when_discovery_is_empty(tmp_path):
     finally:
         watch._mints = orig
     assert seen and set(_seeds()) <= set(seen[0])
+
+
+@settings(max_examples=50)
+@given(
+    st.sampled_from(_seeds()),
+    st.floats(min_value=0.0, max_value=5.0, allow_nan=False, allow_infinity=False),
+    st.floats(min_value=0.0, max_value=10_000.0, allow_nan=False, allow_infinity=False),
+)
+def test_seeded_mints_never_bypass_safety_filters(
+    mint: str, age_hours: float, liquidity_usd: float
+) -> None:
+    """Hypothesis test: seeded mints from seed_mints.txt never bypass safety filters (#232)."""
+    params = IndexParams.model_validate(json.loads((ROOT / "index/params.json").read_text()))
+    overrides = Overrides()
+
+    m = Metrics(
+        mint=mint,
+        ticker="NOTGTA",
+        name="Random Coin",
+        coverage=1.0,
+        age_hours=age_hours,
+        liquidity_usd=liquidity_usd,
+        mc_usd=1_500_000.0,
+        top10_pct=20.0,
+        total_fees_sol=40.0,
+        window_fees_sol=12.0,
+        bundle_pct=3.0,
+        dev_pct=1.0,
+        creator_launches_7d=1,
+        mint_authority_revoked=True,
+        freeze_authority_revoked=True,
+        token_program="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        extensions=(),
+        unique_traders=900,
+        independent_traders=900,
+        roundtrip_share=0.0,
+        volume_wallets=100,
+        median_trade_sol=0.1,
+        volume_usd=600_000.0,
+    )
+
+    status = candidate_status(m, params, overrides)
+    if status is None:
+        fail_filter = first_failed_filter(m, params)
+        assert fail_filter is not None, (
+            f"Seeded mint {mint} bypassed safety filters with failing metrics!"
+        )
+    else:
+        assert status in {"no_keyword", "weak_keyword", "denied", "self"}
+
+    res = run_index(
+        candidates=[m],
+        prev_members=[],
+        params=params,
+        overrides=overrides,
+        as_of="2026-11-18T06:00:00Z",
+        code_commit="abc",
+    )
+    assert not any(mem["mint"] == mint for mem in res["members"])
+    assert any(exc["mint"] == mint for exc in res["excluded"]) or len(res["members"]) == 0
