@@ -1,7 +1,7 @@
 """Per-wallet JSON for the GTASP10 site (#273, D39). Read-only: no keys, no tx, no clock.
 
 The site reads `/gtasp10/data/wallets/<address>.json`. Every number here comes from the engine
-(`engine.scoring.h_of_age`, `engine.hourly_draw.draw_weights`); the page never recomputes them.
+(`loyalty_multiplier`, `draw_weights`); the page never recomputes them.
 Nothing is written unless the caller asks: `build_wallet_records` is pure, `write_wallet_files`
 does an atomic temp + rename per file.
 """
@@ -23,7 +23,7 @@ from engine.hourly_draw import (
     draw_weights,
     eligible_groups,
 )
-from engine.scoring import h_of_age
+from engine.loyalty import loyalty_multiplier
 from engine.types import ClusterId
 
 SCHEMA_VERSION = 1
@@ -85,7 +85,7 @@ def build_wallet_records(
             odds = Fraction(0)
             if eligible and wsum > 0 and gbal > 0:
                 odds = Fraction(weights[cluster], wsum) * Fraction(w.balance, gbal)
-            mult = h_of_age(w.holding_seconds)
+            mult = loyalty_multiplier(w.holding_seconds)
             out[w.wallet] = {
                 "schema": SCHEMA_VERSION,
                 "address": w.wallet,

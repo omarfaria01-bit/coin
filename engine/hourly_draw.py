@@ -21,13 +21,17 @@ from fractions import Fraction
 from math import lcm
 
 from engine.draws import is_draw_eligible, sample_draw_winners
+from engine.loyalty import loyalty_scores
 from engine.types import ClusterId
 
 CAP_DEFAULT = Fraction(1, 20)  # D28: no group above 5% of the odds
 SUPPLY_CAP_DEFAULT = Fraction(1, 20)  # D39: no group counts more than 5% of supply
 MIN_HOLDING_SHARE_DEFAULT = Fraction(1, 10_000)  # D39: 0.01% of supply to enter
 MIN_GROUPS_DEFAULT = 100  # COIN_MATH §16: draws need ≥ 100 eligible groups
-MIN_POT_LAMPORTS_DEFAULT = 10_000_000  # 0.01 SOL, D26/D28: below this the pot rolls over
+MIN_POT_LAMPORTS_DEFAULT = 10_000_000  # 0.01 SOL, D26/D28: v0.3.3 field, unchanged
+# GTASP10 draw (D43): one SOL prize. Below 0.1 SOL the whole pot rolls over.
+SOL_PRIZE_MIN_LAMPORTS = 100_000_000
+DRAW_COMING_SOON = "coming_soon"
 _BPS = 10_000
 _WEIGHT_LIMIT = 1 << 128
 _SCALE_BITS = 120
@@ -202,3 +206,45 @@ def plan_hourly_draw(
     )
     prizes = {c: pot * bps // _BPS for c, bps in zip(winners, prize_bps, strict=False)}
     return DrawPlan(True, tuple(winners), prizes, pot - sum(prizes.values()), "ok", len(ok))
+
+
+def plan_sol_prize(
+    balances: Mapping[ClusterId, int],
+    hold_seconds: Mapping[ClusterId, int],
+    pot: int,
+    *,
+    total_supply: int,
+    genesis_hash: bytes,
+    mint: bytes,
+    draw_index: int,
+    snapshot_hash: bytes,
+    rho: bytes,
+    enabled: bool = False,
+    min_pot: int = SOL_PRIZE_MIN_LAMPORTS,
+    min_groups: int = MIN_GROUPS_DEFAULT,
+    cap: Fraction = CAP_DEFAULT,
+) -> DrawPlan:
+    """One SOL prize for one winner. Off by default (`coming_soon`): the pot rolls over.
+
+    Odds use `loyalty_scores` (the same multiplier as holder rewards). A pot below
+    0.1 SOL rolls over. Σ prize + rollover == pot.
+    """
+    if isinstance(pot, bool) or not isinstance(pot, int) or pot < 0:
+        raise ValueError("pot must be an int >= 0")
+    if not enabled:
+        return DrawPlan(False, (), {}, pot, DRAW_COMING_SOON)
+    return plan_hourly_draw(
+        loyalty_scores(balances, hold_seconds),
+        pot,
+        (_BPS,),  # single prize: the winner takes the pot
+        balances=balances,
+        total_supply=total_supply,
+        genesis_hash=genesis_hash,
+        mint=mint,
+        draw_index=draw_index,
+        snapshot_hash=snapshot_hash,
+        rho=rho,
+        min_pot=min_pot,
+        min_groups=min_groups,
+        cap=cap,
+    )

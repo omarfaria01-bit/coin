@@ -412,3 +412,24 @@ Replaces D36 (50% MC share + 50% volume share, cap 25%).
 3. Discovery search terms add: Snapmatic, Hugh Johnson, Lifeinvader, Bleeter, Weazel, iFruit, Eyefind.
 4. Nothing is allowlisted: a coin found this way must pass F1-F11 on its own.
 
+## D42 · 2026-11-18 · Vocabulary: buckme / GTA 6 bank app (#300)
+kiwi via issue #300. Discovery only. New `keywords.strong` and `discovery.search_terms`:
+`buckme`, `$B`, `GTA 6 bank app`, `gta6 bank`, `bank app`. Reference coin name `buckme`,
+symbol `b` (shown as `$B`), CA `Cr8kuNqKwiVVuzqLYKcJhmpSHy767837BwLFr9GDYXUf`, X `@buckme_sol`.
+The mint is not in the seed file and not in `overrides`. Bare `b` is not a keyword (it would
+match unrelated tickers). The coin still has to pass F1–F11 on its own. Filters and weights
+are unchanged. `bank app` is broad on purpose; filters are what keep unrelated coins out.
+
+## D43 · 2026-11-18 · Daily dust carry, one SOL prize, loyalty curve to 10× (#156 audit points 3, 4, 5/7)
+Product rules for GTASP10. The v0.3.3 epoch (`h_of_age`, `config/coin.json`, goldens) stays on
+the D27 5× table, so there is no sim re-run. Rewards and the SOL draw call `loyalty_multiplier`.
+1. Rewards accrue per holder (`balance × loyalty_multiplier`) and settle once a day. Paid only
+   when the position's SOL worth is at least the rent of a 170-byte Token-2022 account
+   (1,513,840 lamports, measured in `reports/research_token2022_claims_2026-11.md`). Less than
+   that is carried and no token account is opened. A lower configured floor is raised to the rent.
+2. Fee split stays 70% holder rewards in basket coins / 30% draw pot / 0% team / 0% buyback.
+3. The draw is one SOL prize. Pot below 0.1 SOL rolls over. `draw_enabled` is false and
+   `draw_status` is `coming_soon` (legal #8). Turning it on is not done here.
+4. Loyalty: 0 before 1h; 1× on [1h, 1h30]; 1.5× at 1h45; 2× at 2h; 3× at 2h30; 4× at 3h; 5× at 4h;
+   then `5 + 5·ln(t/4h)/ln(30d/4h)`, capped at 10× at 30 days. Same function for both weights.
+

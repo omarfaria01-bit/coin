@@ -101,7 +101,12 @@
       "In-game meme",
       "Eyefind",
       "iFruit",
-      "Weazel News"
+      "Weazel News",
+      "buckme",
+      "$B",
+      "GTA 6 bank app",
+      "gta6 bank",
+      "bank app"
     ],
     "needs_context": [
       "Jason",
@@ -156,7 +161,12 @@
       "Bleeter",
       "Weazel",
       "iFruit",
-      "Eyefind"
+      "Eyefind",
+      "buckme",
+      "$B",
+      "GTA 6 bank app",
+      "gta6 bank",
+      "bank app"
     ],
     "max_by_mc": 40,
     "max_trending": 10,
@@ -214,7 +224,12 @@
     "pay_in": "basket",
     "draw_period_hours": 1,
     "holder_reward_hours": 24,
-    "min_prize_lamports": 10000000
+    "min_prize_lamports": 10000000,
+    "draw_enabled": false,
+    "draw_status": "coming_soon",
+    "draw_winners": 1,
+    "draw_min_pot_lamports": 100000000,
+    "min_reward_lamports": 1513840
   },
   "self_mint": null,
   "dry_run": {

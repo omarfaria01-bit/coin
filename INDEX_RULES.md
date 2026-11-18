@@ -2,7 +2,7 @@
 
 The index tracks the **top 10 GTA 6 memecoins on Solana**, chosen every hour by the published rules below. Anyone can recompute it from the published inputs. Parameters live in `index/params.json` (validated by `index/params.py`, unknown keys rejected); changing one needs a DECISIONS.md entry. The temporary coin name and ticker are **GTASP10** (D26).
 
-Holder rewards and draw prizes are both paid in the index basket (section 7). Out of scope for this coin (D24): supply vesting, dev-token locks, early-buy vesting, taint/forfeit, underwater boost, treasury bot.
+Holder rewards (70%) are paid in the index basket. The draw (30%) is one SOL prize and stays off (`coming_soon`) until the legal gate (section 7). Out of scope for this coin (D24): supply vesting, dev-token locks, early-buy vesting, taint/forfeit, underwater boost, treasury bot.
 
 ## 1. Universe
 
@@ -16,6 +16,9 @@ A token is a **candidate** if it is a Solana token and its name, ticker or descr
 - **D41 (kiwi 18 Nov 14:24):** GTA in-game app / Snapmatic meme words are strong (Snapmatic, Hugh Johnson, Lifeinvader,
   Bleeter, Eyefind, iFruit, Weazel, In-game meme). Everyday words (`keywords.generic`: Hugh, Johnson, Core, Meme) count
   only next to a strong word or a non-generic ambiguous word; two generic words are never enough.
+- **D42 (#300):** `buckme`, `$B`, `GTA 6 bank app`, `gta6 bank`, `bank app` are strong discovery words
+  (reference coin `buckme` / `$B`, CA `Cr8kuNqKwiVVuzqLYKcJhmpSHy767837BwLFr9GDYXUf`, X `@buckme_sol`).
+  No mint is included by hand. Bare `b` is not a keyword.
 - **Discovery (D37):** top-down, never new launches. DexScreener search for the vocabulary terms (Solana); the top h24-volume
   (trending) coins are collected first, then the biggest market caps (`discovery` in params). Seed file and last members too.
 
@@ -87,12 +90,13 @@ So a newcomer must reach the top 8 to enter, and a member is only replaced when 
 
 Weights are published as integer basis points summing to 10,000: floor each, then hand out the remaining points one by one by largest remainder, ties to the better rank.
 
-## 7. How the coin uses the index: basket rewards
+## 7. How the coin uses the index: basket rewards and one SOL draw
 
-- Creator fees for this coin: 70% holder rewards, 30% draw pot (`payout` in params). No team share and no buyback. Both pots are paid in the index basket, not in SOL. Holder rewards stay on a 24h cadence; the draw closes every hour.
-- At each draw, a prize of `D` lamports is split: member `i` gets `floor(D · bps_i / 10000)` lamports; the leftover lamports go to the rank-1 member.
-- Each part buys that member's token, sliced, with a 3% slippage cap (`prize_slippage_bps`). A part below `min_prize_lamports` (0.01 SOL) is not bought; it stays in the pot for the next hour. A part that can't be bought within the cap is paid in SOL.
-- The engine file `config/coin.json` is not this split (D26). Buying basket tokens is a mainnet write and needs kiwi's `APPROVED <issue#>`. This repo does not send those transactions.
+- Creator fees for this coin: 70% holder rewards, 30% draw pot (`payout` in params). No team share and no buyback.
+- Holder rewards accrue per holder, weighted by balance × the loyalty multiplier (`engine/loyalty.py`), and are paid once a day in the index basket. A position worth less than a token-account's rent (`min_reward_lamports`, 1,513,840 lamports) is not paid and no account is opened; it carries to the next day.
+- The draw is a single SOL prize (one winner). If the pot is below 0.1 SOL (`draw_min_pot_lamports`) it rolls over to the next draw. The draw is off (`draw_enabled` false, `draw_status` `coming_soon`) until the legal gate. Odds use the same loyalty multiplier.
+- A basket buy of holder rewards is sliced by member weight, with a 3% slippage cap (`prize_slippage_bps`). A part below `min_prize_lamports` (0.01 SOL) is not bought; it stays for the next buy. A part that can't be bought within the cap is paid in SOL.
+- The engine file `config/coin.json` is not this split (D26). Its 5× epoch curve is unchanged. Buying basket tokens is a mainnet write and needs kiwi's `APPROVED <issue#>`. This repo does not send those transactions.
 
 ## 8. Output (`index/out/<YYYY-MM-DDTHH>.json`, canonical JSON)
 
