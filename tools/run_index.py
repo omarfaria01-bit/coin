@@ -271,6 +271,12 @@ def main(argv: list[str] | None = None) -> int:
         help="official run: no skipped filters, self_mint set, no insufficient_data; else exit 3",
     )
     args = parser.parse_args(argv)
+    if args.rpc_url:
+        try:
+            market_data.require_https(args.rpc_url)
+        except ValueError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
 
     samples = Path(args.samples) if args.samples else SAMPLES / f"{args.as_of[:10]}.jsonl"
     default_skip = () if args.official else ("F4",)
