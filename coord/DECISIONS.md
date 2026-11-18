@@ -401,3 +401,12 @@ Replaces D36 (50% MC share + 50% volume share, cap 25%).
 4. 18 Nov 12:00Z dry run: GTA VI 18.00, AudaCity 18.00, Leonida 10.22, WASTED 10.13, Grand Trench 9.92, Macca 8.80,
    GTA memes 7.18, Lucia 6.45, Rocco 6.08, DacityCoin 5.22 (%).
 5. Tests: tests/test_index_d40_weights.py (golden, hypothesis sweep n=1..25 incl. zero MC, emergency recompute).
+
+## D41 · 2026-11-18 · Vocabulary: GTA 6 in-game apps / Snapmatic meme narrative (#156, kiwi chat 14:24 Rome relayed by Grok)
+1. New `strong` words: Snapmatic, Hugh Johnson, HughJohnson, Hugh Johnson Core, Lifeinvader, Bleeter, In-game meme,
+   Eyefind, iFruit, Weazel, Weazel News (GTA in-game phone/social/news apps; Snapmatic = in-game photo app).
+2. New `keywords.generic` tier: Hugh, Johnson, Core, Meme. They count only next to a strong word or a non-generic
+   `needs_context` word (Jason, Vice...); two generic words together ("Core Meme") are never GTA context.
+3. Discovery search terms add: Snapmatic, Hugh Johnson, Lifeinvader, Bleeter, Weazel, iFruit, Eyefind.
+4. Nothing is allowlisted: a coin found this way must pass F1-F11 on its own.
+
