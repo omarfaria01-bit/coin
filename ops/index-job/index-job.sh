@@ -41,6 +41,8 @@ run() {
     --overrides "$REPO/index/overrides.json" \
     --samples "$REPO/data/index/samples" \
     --out "$WORK/index/out" \
+    --mints-file "${COIN_INDEX_MINTS:-$REPO/index/seed_mints.txt}" \
+    --discover-pages "${COIN_INDEX_DISCOVER_PAGES:-100}" \
     "$@"
 }
 

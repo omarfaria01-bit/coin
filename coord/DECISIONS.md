@@ -235,3 +235,11 @@ compare), checked after F10 so F1–F10 results do not change. Missing mc or liq
 Not added yet (needs data design): the free-float / independent-holder check and the pair-selection pin from #167
 steps 2–3. F3/F4 untouched (kiwi's). A coin at ratio 100 (e.g. $6M MC on $60k) still passes; kiwi can change
 the ratio in `index/params.json` (params_hash moves, so it shows in the hourly output).
+
+## D30 · 2026-11-18 · Persistent seed mint universe for sampling (#196, Claude)
+Discovery only sees recent pump.fun creates, so the first hourly run was empty and `min_coverage` (1/2 of the 24h
+window) can never fill. `index/seed_mints.txt` (96 mints from the 17 Nov dry-run) is now passed with `--mints-file`
+by `ops/index-job/index-job.sh` (override path with `COIN_INDEX_MINTS`), and discovery pages go 25 → 100
+(`COIN_INDEX_DISCOVER_PAGES`). A seed is only a mint to measure: keyword, F1–F11, `min_coverage` and `deny` all
+still apply; it is not an `allow` entry. No param changed, `min_coverage` untouched. DAS has no name search, so
+keyword discovery stays parsed pump.fun history.
