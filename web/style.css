@@ -249,3 +249,115 @@ a.venue:hover{border-color:var(--pink);box-shadow:0 0 22px #ff2d9544;transform:t
 .hero .sun,.hero .grid,.hero .palms,.hero .palms-m{display:none!important}
 .hero .sky{background:linear-gradient(180deg,rgba(10,2,20,.45) 0%,rgba(10,2,20,.25) 35%,rgba(10,2,20,.55) 72%,#0b0214 100%),url(wallpaper.jpg) center 40%/cover no-repeat}
 @media(max-width:700px){.hero .sky{background:linear-gradient(180deg,rgba(10,2,20,.55) 0%,rgba(10,2,20,.35) 40%,rgba(10,2,20,.65) 75%,#0b0214 100%),url(wallpaper-m.jpg) center 35%/cover no-repeat}}
+
+/* ===== 18 Nov 14:40 — overflow fixes + polish (Grok) ===== */
+html,body{overflow-x:clip}
+@supports not (overflow:clip){html,body{overflow-x:hidden}}
+img,svg,video,iframe{max-width:100%}
+.section,.sec-head,.glass,.card,.cands,.board,.members-grid,.table-card{min-width:0}
+p,li,summary,h2,h3{overflow-wrap:anywhere}
+.fee-line{display:inline-block;margin-top:.55rem;padding:.3rem .8rem;border-radius:999px;font-weight:800;font-size:.95em;color:#fff;background:linear-gradient(90deg,#ff2d9540,#8b5cf640);border:1px solid #ff4fd866;text-shadow:0 0 10px #ff2d95}
+
+/* Section hierarchy */
+.section{padding-top:5rem}
+.sec-head{display:flex;flex-direction:column;gap:.35rem;margin-bottom:1.6rem;padding-bottom:.9rem;position:relative}
+.sec-head:after{content:"";position:absolute;left:0;bottom:0;width:72px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--pink),var(--orange));box-shadow:0 0 14px var(--pink)}
+.sec-head p{margin:0;max-width:62ch}
+h2{line-height:1.08;letter-spacing:.01em}
+.card h3,.cands h3{font-family:Bungee,sans-serif;font-weight:400;font-size:1.05rem;letter-spacing:.02em;color:#fff;text-shadow:0 0 12px #ff2d9566}
+.card{padding:1.35rem 1.4rem;transition:border-color .2s,box-shadow .2s}
+.card:hover{border-color:#ff4fd855;box-shadow:0 0 28px #ff2d9522}
+.cands{margin-top:2.6rem}
+.foot{margin-top:5rem}
+
+/* Top-10 board: table only where it fits, cards elsewhere */
+.board-tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.board-tbl{table-layout:auto}
+.board-tbl th,.board-tbl td{padding:.65rem .5rem}
+.board-tbl td:nth-child(2){max-width:0;width:34%}
+.board-tbl .coin-meta b{max-width:100%}
+.coin-meta{overflow:hidden}
+.coin-meta b,.coin-meta small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.board-tbl .vbar{max-width:40px}
+@media(max-width:1179px){
+  .board-tbl-wrap,.board-tbl{display:none}
+  .board-cards{display:grid}
+  .board{background:none!important;border:0!important;padding:0!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+}
+@media(min-width:640px) and (max-width:1179px){
+  .board-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .members-grid{grid-template-columns:1fr}
+  .donut-card{max-width:300px;width:100%;margin:0 auto}
+}
+@media(min-width:1180px){.members-grid{grid-template-columns:220px minmax(0,1fr)}}
+.bcard{min-width:0;overflow:hidden;transition:border-color .2s,box-shadow .2s,transform .2s}
+.bcard:hover{box-shadow:0 0 24px #ff2d9533;transform:translateY(-2px)}
+.bcard-top{min-width:0}
+.bcard .chg-wrap{flex:none;font-weight:700;font-size:.85rem}
+.bcard .coin-meta b{white-space:nowrap}
+.bcard-grid .v{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bcard-foot{gap:.6rem;min-width:0}
+.bcard-foot .mono{word-break:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.bcard-foot .dex-link{flex:none}
+
+/* Candidates: cards on phones instead of a wide table */
+.table-card{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tk b{max-width:16ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:639px){
+  .cands-head{align-items:stretch}
+  .cands-head .seg{width:100%}
+  .seg button{flex:1;padding:.5rem .4rem}
+  .table-card{overflow:visible;background:none;border:0;backdrop-filter:none;-webkit-backdrop-filter:none}
+  #cands,#cands tbody{display:block;width:100%}
+  #cands thead{display:none}
+  #cands tr{display:grid;grid-template-columns:2rem minmax(0,1fr) auto;grid-template-areas:"rk tk st" "m1 m1 m1";gap:.35rem .6rem;align-items:center;margin:0 0 .55rem;padding:.75rem .85rem;border-radius:14px;background:var(--glass);border:1px solid var(--line)}
+  #cands td{display:block;padding:0;border:0;text-align:left;white-space:normal;min-width:0}
+  #cands td.rk{grid-area:rk;width:auto}
+  #cands td.tk{grid-area:tk;min-width:0}
+  #cands td.tk b{max-width:100%}
+  #cands td.st{display:block!important;grid-area:st;justify-self:end}
+  #cands td[data-l]{font-size:.8rem}
+  #cands td[data-l]:before{content:attr(data-l);display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+  #cands tr{grid-template-areas:"rk tk st" "a b c"}
+  #cands td[data-l="Mkt cap"]{grid-area:a}
+  #cands td[data-l="Liquidity"]{display:block!important;grid-area:b}
+  #cands td[data-l="Vol 24h"]{grid-area:c}
+  #cands td[data-l] b{font-weight:800}
+  #cands .vbar{display:none}
+  #cands tr td[colspan]{grid-column:1/-1}
+  #cands tr:hover td{background:none}
+}
+
+/* Formula and long codes wrap instead of scrolling */
+.formula{white-space:normal;overflow-wrap:anywhere;line-height:1.5}
+@media(max-width:520px){.formula{font-size:.78rem}}
+.chips span{white-space:nowrap}
+@media(max-width:380px){.chips span{white-space:normal}}
+
+/* Hero polish on small phones */
+@media(max-width:420px){
+  .hero{padding:5.5rem .9rem 6rem}
+  .ca{display:block;max-width:100%}
+  .counter{padding:.85rem}
+}
+
+/* Buy weight — prominent on every top-10 row (kiwi 14:33) */
+.wtrack{display:block;position:relative;height:6px;border-radius:3px;background:#ffffff14;overflow:hidden;min-width:0}
+.wtrack i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,var(--pink),var(--orange),var(--yellow));box-shadow:0 0 8px var(--pink)}
+.board-tbl .wcell{justify-content:flex-start;gap:.5rem}
+.board-tbl .wcell .wtrack{width:56px;flex:none}
+.board-tbl th:nth-child(3){text-align:left;color:var(--yellow)}
+.board-tbl td:nth-child(3){text-align:left}
+.wpct{display:inline-block;min-width:3.6em;padding:.15rem .45rem;border-radius:8px;background:#ffd16618;border:1px solid #ffd16655;color:var(--yellow);font-family:Bungee,sans-serif;font-weight:400;font-size:.85rem;text-align:center}
+.bweight{display:grid;grid-template-columns:auto auto;justify-content:space-between;align-items:baseline;gap:.25rem .6rem;margin-top:.75rem;padding:.6rem .75rem;border-radius:12px;background:#ffd1660f;border:1px solid #ffd16644}
+.bw-lbl{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#ffe7a8}
+.bw-val{font-family:Bungee,sans-serif;font-weight:400;font-size:1.35rem;line-height:1;color:var(--yellow);text-shadow:0 0 12px #ff8a3d88}
+.bweight .wtrack{grid-column:1/-1;height:7px}
+.board-note{margin:.7rem 0 0}
+.members-grid .board-note{grid-column:1/-1}
+@media(max-width:639px){.donut-card{max-width:210px;padding:.7rem}.donut-center b{font-size:1.9rem}}
+@media(max-width:639px){
+  #cands tr{grid-template-columns:1.8rem repeat(3,minmax(0,1fr));grid-template-areas:"rk tk st st" ". a b c"}
+  #cands td[data-l="Vol 24h"]{text-align:right}
+}
+@media(max-width:420px){.fee-line{font-size:.8em;padding:.3rem .7rem}}
