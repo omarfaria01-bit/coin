@@ -288,6 +288,9 @@ def run_index(
     for mint in sorted(by_mint, key=mint_key):
         m = by_mint[mint]
         reason = candidate_status(m, params, overrides)
+        nodata = reason == "no_keyword" and not (m.name or m.ticker or m.description)
+        if nodata:  # D38: no name at all means no data (dead/unknown mint), not a vocabulary miss
+            reason = MISSING
         if reason is None:
             reason = first_failed_filter(m, params)
         missing: list[str] = []
@@ -298,6 +301,8 @@ def run_index(
                 missing = ["score_inputs"]
             else:
                 scored[mint] = ls
+        elif nodata:
+            missing = ["name (no DexScreener pool, no on-chain metadata)"]
         elif reason == MISSING:
             missing = missing_metrics(m, params) or ["unknown"]
             for tag in ("error", "onchain"):
