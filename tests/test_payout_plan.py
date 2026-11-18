@@ -88,20 +88,11 @@ def test_carry_in_from_previous_plan_and_absent_wallet_keeps_carry() -> None:
 
 
 def test_exclusions_earn_nothing_and_their_carry_is_resplit() -> None:
+    dev_snap = snap(("a", 1, H4), ("pool", 10**9, H4), ("dev", 10**9, H4))
+    dev_snap["wallets"][2]["excluded_reason"] = "team"
     plan = build_plan(
         day=DAY,
-        snapshot={
-            "wallets": [
-                {"address": "a", "balance": 1, "holding_seconds": H4},
-                {"address": "pool", "balance": 10**9, "holding_seconds": H4},
-                {
-                    "address": "dev",
-                    "balance": 10**9,
-                    "holding_seconds": H4,
-                    "excluded_reason": "team",
-                },
-            ]
-        },
+        snapshot=dev_snap,
         balances=bal({M1: 1000}),
         exclude={"pool": "pool", "burn1": "burn"},
         carry_in=[{"wallet": "dev", "mint": M1, "amount": "300"}],
@@ -131,24 +122,8 @@ def test_nobody_eligible_carries_on_system_wallet() -> None:
         ({"exclude": {"x": "friend"}}, "reason"),
         ({"carry_in": [{"wallet": "a", "mint": M1, "amount": "999"}]}, "carry-in"),
         ({"carry_in": [{"wallet": "a", "mint": M2, "amount": "1"}]}, "no balance"),
-        (
-            {
-                "balances": {
-                    "system_wallet": SYS,
-                    "mints": {M1: {"amount": "1.5", "price_lamports": "1"}},
-                }
-            },
-            "amount",
-        ),
-        (
-            {
-                "balances": {
-                    "system_wallet": SYS,
-                    "mints": {M1: {"amount": "5", "price_lamports": 0.5}},
-                }
-            },
-            "price",
-        ),
+        ({"balances": bal({M1: "1.5"})}, "amount"),
+        ({"balances": bal({M1: 5}, 0.5)}, "price"),
         ({"snapshot": snap(("a", 1, H4), ("a", 2, H4))}, "duplicate"),
     ],
 )
