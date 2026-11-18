@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from adapters import market_data  # noqa: E402
+from adapters import market_data_legacy as market_data  # noqa: E402
 from index.filters import MISSING  # noqa: E402
 from index.params import DryRun, IndexParams, Overrides, frac  # noqa: E402
 from index.select import canonical_json, run_index  # noqa: E402

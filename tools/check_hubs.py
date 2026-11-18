@@ -20,7 +20,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from adapters.hubs import DEFAULT_PATH, load_hubs  # noqa: E402
-from adapters.market_data import require_https  # noqa: E402
+from adapters.market_data_legacy import require_https  # noqa: E402
 
 DEFAULT_RPC = "https://api.mainnet-beta.solana.com"
 BATCH = 50
