@@ -27,7 +27,7 @@ def test_shipped_params_and_overrides_load() -> None:
     assert p.payout.holder_rewards == "7/10"
     assert p.payout.draw_pot == "3/10" and p.payout.pay_in == "basket"
     assert p.dry_run.skip_filters == ()
-    assert o.deny == ()
+    assert [e.mint for e in o.deny] == ["6wiaCq8oQiupFfeDU4ouAuYnCKXCch581HAmpvrxpump"]  # D38 scam
     f = p.filters
     assert (f.min_age_hours, f.max_bundle_pct) == (4, 30)  # D35
     assert "Lucia" in p.keywords.strong and "VI" not in p.keywords.strong

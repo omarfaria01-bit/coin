@@ -349,6 +349,8 @@ not lowered.
    read 102%).
 7. Coverage fix: a sample in the last partial 5-min bucket of a young coin's window was dropped (coverage 0 ->
    insufficient_data for GTA Vice Inu 6wiaCq, Leonida 9rbKkz and others); it now counts.
+8. Deny list: GTA Vice Inu 6wiaCq8oQiupFfeDU4ouAuYnCKXCch581HAmpvrxpump added to `overrides.deny` (kiwi in chat 13:19 Rome:
+   "GTA VICE INU E UNO SCAM"). 9. A coin's on-chain read is retried once before its error is published.
 Risk, said plainly: F4 now trusts DexScreener volume (wash volume counts, as D35 already accepts), and F9 no longer needs 0.05 SOL
 per wallet, so ~50 dust wallets can satisfy it (red-team case updated: tests/test_index_hourly_attacks.py).
 
