@@ -210,7 +210,7 @@ export async function main(argv = process.argv.slice(2)) {
   }
   const plan = validatePlan(JSON.parse(fs.readFileSync(planPath, "utf8")));
   const heliusKey = process.env.HELIUS_API_KEY;
-  if (!heliusKey) throw new Error("HELIUS_API_KEY is not set");
+  if (!heliusKey && !process.env.PAYOUT_RPC_URL) throw new Error("HELIUS_API_KEY is not set");
   fs.mkdirSync(cfg.state_dir, { recursive: true });
   const lock = path.join(cfg.state_dir, "run.lock");
   let fd;
@@ -222,7 +222,8 @@ export async function main(argv = process.argv.slice(2)) {
   }
   try {
     const secret = readSecret(process.env.PAYOUT_BOT_KEYPAIR ?? "/etc/coin/fee-bot/keypair.json");
-    const chain = await web3Chain(secret, `https://mainnet.helius-rpc.com/?api-key=${heliusKey}`);
+    // PAYOUT_RPC_URL is for the devnet end-to-end test only; mainnet goes through Helius.
+    const chain = await web3Chain(secret, process.env.PAYOUT_RPC_URL ?? `https://mainnet.helius-rpc.com/?api-key=${heliusKey}`);
     return await run({ cfg, plan, chain });
   } finally {
     fs.closeSync(fd);
