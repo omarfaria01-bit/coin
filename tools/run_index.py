@@ -32,6 +32,7 @@ import base58  # noqa: E402
 from adapters.helius_client import HeliusClient  # noqa: E402
 from adapters.hubs import load_hubs  # noqa: E402
 from adapters.index_collect import discover_mints, measure_mints  # noqa: E402
+from adapters.index_history_cache import HistoryCache  # noqa: E402
 from adapters.market_data import Sample  # noqa: E402
 from index.filters import Metrics, candidate_status, first_failed_filter  # noqa: E402
 from index.params import IndexParams, Overrides  # noqa: E402
@@ -112,6 +113,7 @@ def _rebalance(args, client, params, overrides, as_of, measure, discover) -> Non
         fetched_at=_iso(as_of),
         sample_seconds=params.sample_minutes * 60,
         holder_seconds=params.holder_sample_minutes * 60,
+        **({"cache": HistoryCache(args.history_cache)} if args.history_cache else {}),
     )
     if not rows and _latest(Path(args.out)) is not None:
         raise RuntimeError("no measurements")
@@ -293,6 +295,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--mints-file")
     parser.add_argument("--discover-pages", type=int, default=25)
     parser.add_argument("--max-history-pages", type=int, default=30)
+    parser.add_argument(
+        "--history-cache", default=None, help="dir for the incremental cache (#247)"
+    )
     parser.add_argument(
         "--official",
         action="store_true",

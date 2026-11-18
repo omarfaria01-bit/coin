@@ -15,7 +15,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass
 
 # Free plan, https://www.helius.dev/docs/billing/rate-limits (2026-11-17).
@@ -138,6 +138,27 @@ class HeliusClient:
         limit: int = HISTORY_PAGE_LIMIT,
     ) -> tuple[list[dict[str, object]], bool]:
         """Parsed history. The bool is True when the page cap stopped the walk early."""
+        rows, truncated, _ = self.history_new(
+            address, start=start, end=end, sort=sort, max_pages=max_pages, limit=limit
+        )
+        return rows, truncated
+
+    def history_new(
+        self,
+        address: str,
+        *,
+        known: Collection[str] = (),
+        start: int | None = None,
+        end: int | None = None,
+        sort: str = "desc",
+        max_pages: int | None = None,
+        limit: int = HISTORY_PAGE_LIMIT,
+    ) -> tuple[list[dict[str, object]], bool, bool]:
+        """Like `history`, but stops at the first row whose signature is in `known`.
+
+        Returns (rows before that row, truncated, hit). `hit` is True when it stopped on a known
+        signature, so the caller can append what it already has (#247).
+        """
         token: str | None = None
         out: list[dict[str, object]] = []
         pages = max_pages if max_pages is not None else self.max_history_pages
@@ -168,12 +189,17 @@ class HeliusClient:
             )
             if not isinstance(payload, dict) or not isinstance(payload.get("data"), list):
                 raise RuntimeError("helius history failed")
-            out.extend(row for row in payload["data"] if isinstance(row, dict))
+            for row in payload["data"]:
+                if not isinstance(row, dict):
+                    continue
+                if known and row.get("signature") in known:
+                    return out, False, True
+                out.append(row)
             nxt = payload.get("paginationToken")
             if not isinstance(nxt, str) or not nxt:
-                return out, False
+                return out, False, False
             token = nxt
-        return out, True
+        return out, True, False
 
     def pairs(self, mints: Sequence[str]) -> list[Mapping[str, object]]:
         """DexScreener `/tokens/v1/solana/{mints}` only. Never the search endpoint."""

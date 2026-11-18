@@ -18,6 +18,7 @@ from adapters.helius_parse import (
     parse_largest,
     parse_mint_account,
 )
+from adapters.index_history_cache import HistoryCache, cached_history
 from adapters.index_observe import metrics_from, spot_quote
 from adapters.market_data import (
     LAMPORTS_PER_SOL,
@@ -67,6 +68,7 @@ def chain_facts(
     hubs: Iterable[str],
     treasury: str | None,
     pair: Mapping[str, object] | None,
+    cache: HistoryCache | None = None,
 ) -> dict[str, object]:
     """On-chain facts for one mint. Raises if Helius fails; missing fields stay None."""
     raw_asset = client.rpc("getAsset", {"id": mint, "options": {"showFungible": True}})
@@ -94,7 +96,7 @@ def chain_facts(
         if holders is not None and unknown:
             holders = [(None, amount) for _, amount in holders]
     curves: list[str | None] = []
-    raw, truncated = client.history(mint, end=as_of)
+    raw, truncated = cached_history(client, cache, mint, as_of=as_of, max_age=as_of - window_start)
     txs = _txs(raw)
     for tx in txs:
         creates = tx.get("creates")
@@ -206,6 +208,7 @@ def measure_mints(
     fetched_at: str,
     sample_seconds: int,
     holder_seconds: int,
+    cache: HistoryCache | None = None,
 ) -> list[Metrics]:
     """One read-only pass. DexScreener is batched. A Helius error aborts the pass."""
     found = client.pairs(list(mints)) if mints else []
@@ -219,6 +222,7 @@ def measure_mints(
             hubs=hubs,
             treasury=treasury,
             pair=pick_pair(found, mint),
+            cache=cache,
         )
         start = window_start
         age = facts.get("age_hours")
