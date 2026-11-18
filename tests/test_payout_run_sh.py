@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
+import subprocess  # nosec B404
 import sys
 from pathlib import Path
 
@@ -38,7 +38,7 @@ def setup(tmp: Path) -> tuple[Path, dict]:
 
 
 def run(env: dict) -> None:
-    subprocess.run(["bash", str(ROOT / "ops/payout-bot/run.sh")], env=env, check=True)
+    subprocess.run(["bash", str(ROOT / "ops/payout-bot/run.sh")], env=env, check=True)  # nosec B603 B607
 
 
 def test_first_day_then_rerun_and_carry(tmp_path):

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-import subprocess
+import subprocess  # nosec B404
 import sys
 from pathlib import Path
 
@@ -117,7 +117,7 @@ def test_planner_accepts_the_export(cfg, tmp_path, capsys):
     plan = tmp_path / "plan.json"
     args = ["--snapshot", d / "snapshot.json", "--balances", d / "balances.json"]
     args += ["--exclude", d / "exclude.json", "--day", DAY0, "--out", plan]
-    subprocess.run([sys.executable, ROOT / "tools/payout_plan.py", *map(str, args)], check=True)
+    subprocess.run([sys.executable, ROOT / "tools/payout_plan.py", *map(str, args)], check=True)  # nosec B603
     p = json.loads(plan.read_text())
     assert p["schema"] == 1 and p["day"] == DAY0 and p["system_wallet"] == SYS
     paid = {t["wallet"]: int(t["amount"]) for t in p["transfers"]}
