@@ -6,6 +6,7 @@ or market cap only when DAS has none. One sample cannot pretend to cover the win
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping, Sequence
 
 from adapters.market_data import Sample, aggregate_samples, market_cap_usd
@@ -38,6 +39,15 @@ def spot_quote(
             mc = _num(pair.get("marketCap"))
             source = "dexscreener" if mc is not None else None
     return {"mc_usd": mc, "liquidity_usd": liq, "volume_usd": vol, "price_source": source}
+
+
+def _scaled(value: float | None, factor: object) -> float | None:
+    """D38: top-pool reading x (all pools / top pool) when the all-pools read succeeded."""
+    if value is None or isinstance(factor, bool) or not isinstance(factor, (int, float)):
+        return value
+    if not math.isfinite(factor) or factor < 1:
+        return value
+    return value * float(factor)
 
 
 def metrics_from(
@@ -73,6 +83,7 @@ def metrics_from(
     chain = f"helius-parsed-events@{fetched_at}"
     rpc = f"helius-rpc@{fetched_at}"
     lower = {k for k in facts.get("lower_bounds") or () if isinstance(k, str)}
+    pools = "dexscreener-all-pools" if facts.get("pool_liq_factor") else "dexscreener"
     extra: dict[str, str] = {}
     if facts.get("prescreen"):
         extra["onchain"] = f"skipped: dexscreener liquidity below prescreen@{fetched_at}"
@@ -85,7 +96,7 @@ def metrics_from(
         description=str(facts.get("description") or ""),
         coverage=stats.coverage,
         age_hours=_opt(facts.get("age_hours")),
-        liquidity_usd=stats.liquidity_usd,
+        liquidity_usd=_scaled(stats.liquidity_usd, facts.get("pool_liq_factor")),
         mc_usd=stats.mc_usd,
         top10_pct=stats.top10_pct,
         total_fees_sol=_opt(facts.get("total_fees_sol")),
@@ -98,7 +109,7 @@ def metrics_from(
         token_program=facts["program"] if isinstance(facts.get("program"), str) else None,
         extensions=_ext_opt(facts.get("mint_extensions")),
         unique_traders=_int_opt(facts.get("unique_traders")),
-        volume_usd=stats.volume_usd,
+        volume_usd=_scaled(stats.volume_usd, facts.get("pool_vol_factor")),
         trading_fees_24h_sol=_opt(facts.get("trading_fees_24h_sol")),
         independent_traders=_int_opt(facts.get("independent_traders")),
         roundtrip_share=_opt(facts.get("roundtrip_share")),
@@ -106,8 +117,8 @@ def metrics_from(
         median_trade_sol=_opt(facts.get("median_trade_sol")),
         sources={
             "mc_usd": tag,
-            "liquidity_usd": f"dexscreener@{fetched_at}",
-            "volume_usd": f"dexscreener@{fetched_at}",
+            "liquidity_usd": f"{pools}@{fetched_at}",
+            "volume_usd": f"{pools}@{fetched_at}",
             "trading_fees_24h_sol": f"dexscreener-h24-volume-x-fee-rate@{fetched_at}",
             "top10_pct": rpc,
             "total_fees_sol": chain,

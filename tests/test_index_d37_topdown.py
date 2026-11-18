@@ -73,3 +73,51 @@ def test_discovery_is_top_down_trending_first_never_pump_history() -> None:
     assert "C" * 32 not in mints and "D" * 32 not in mints
     assert mints[0] == "B" * 32  # highest h24 volume first (trending priority)
     assert mints.index("A" * 32) < mints.index("E" * 32)  # then by market cap
+
+
+def test_d38_pool_totals_sum_real_pools_only() -> None:
+    from adapters.index_collect import _pool_totals
+
+    m = "4kjruqGHDsSqkMdFfCjV7Vb62HPFhtXyWc2t6JpQzDnz"
+    pools = [
+        {
+            "pairAddress": "a",
+            "baseToken": {"address": m},
+            "liquidity": {"usd": 169_000},
+            "volume": {"h24": 7_100_000},
+        },
+        {
+            "pairAddress": "a",
+            "baseToken": {"address": m},
+            "liquidity": {"usd": 169_000},
+            "volume": {"h24": 7_100_000},
+        },
+        {
+            "pairAddress": "b",
+            "baseToken": {"address": m},
+            "liquidity": {"usd": 400_000},
+            "volume": {"h24": 600_000},
+        },
+        {
+            "pairAddress": "c",
+            "baseToken": {"address": m},
+            "liquidity": {"usd": 258},
+            "volume": {"h24": 417_000},
+        },
+        {
+            "pairAddress": "d",
+            "baseToken": {"address": "other"},
+            "liquidity": {"usd": 1e6},
+            "volume": {"h24": 1e6},
+        },
+    ]
+    assert _pool_totals(pools, m) == (569_000.0, 7_700_000.0)
+
+
+def test_d38_scaled_never_shrinks() -> None:
+    from adapters.index_observe import _scaled
+
+    assert _scaled(100.0, 3.0) == 300.0
+    assert _scaled(100.0, 0.5) == 100.0
+    assert _scaled(100.0, None) == 100.0
+    assert _scaled(None, 2.0) is None
