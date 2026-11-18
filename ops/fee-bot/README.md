@@ -14,6 +14,9 @@ Bought basket tokens stay in the system wallet (public). Paying them out to hold
 - The secret key lives only in `/etc/coin/fee-bot/keypair.json` (owner `coinbot`, mode 600). The bot
   refuses any other mode or owner. It is never printed, logged or committed (`*keypair*.json` is gitignored).
 - The RPC URL holds the Helius key and is never printed.
+- **Public rules (#345):** split, caps, slippage and reserves come only from `econ/params.json` in the repo
+  (72h timelock, sha256 in `fee-bot.json`). `config.json` holds only paths, mode and mint; it may lower a cap
+  (shown publicly as `local_lower_caps`), never raise it or set a rule.
 - Caps: `max_per_swap_lamports`, `max_per_run_lamports`, `max_per_day_lamports`; slippage at most 3%;
   price impact gate; buys only from a fresh, non-dry-run index whose weights sum to 10000; never buys its own mint.
 - The wallet must hold pot + basket + `min_reserve_lamports` (tx fees and token-account rent) or the bot stops.
@@ -39,6 +42,6 @@ and sends ~0.1 SOL for the reserve.
 ## Go live
 1. `"mode": "dry"`: `systemctl start coin-fee-bot.service; journalctl -u coin-fee-bot -n 50`. Check `distributable`,
    `plan` and `dry_buy` lines.
-2. Smoke test: `"mode": "live"`, `max_per_run_lamports` `"20000000"` (0.02 SOL). Run once, check the signatures on Solscan
+2. Smoke test: `"mode": "live"`, add `"max_per_run_lamports": "20000000"` (0.02 SOL) to `config.json`. Run once, check the signatures on Solscan
    and `ledger.jsonl`.
-3. Full caps from `config.example.json`, then `systemctl enable --now coin-fee-bot.timer`.
+3. Remove the local cap (back to the public caps), then `systemctl enable --now coin-fee-bot.timer`.

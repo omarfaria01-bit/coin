@@ -1,0 +1,26 @@
+{
+ "schema": 1,
+ "timelock_hours": 72,
+ "versions": [
+  {
+   "effective_from": "2026-11-18T00:00:00Z",
+   "decisions": "D43 D45 D46 D47 D49",
+   "fee_split_bps": { "basket": 6700, "pot": 2800, "burn": 500, "team": 0 },
+   "fee_bot": {
+    "slippage_bps": 300,
+    "max_price_impact_pct": 3,
+    "min_swap_lamports": "10000000",
+    "max_per_swap_lamports": "2000000000",
+    "max_per_run_lamports": "5000000000",
+    "max_per_day_lamports": "20000000000",
+    "min_reserve_lamports": "50000000",
+    "payout_rent_target_lamports": "500000000"
+   },
+   "payout_bot": {
+    "max_transfers_per_day": 500,
+    "max_transfers_per_tx": 3,
+    "min_reserve_lamports": "50000000"
+   }
+  }
+ ]
+}
