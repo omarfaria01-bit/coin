@@ -1,7 +1,15 @@
-last_tick: 2026-11-18 (quiet tick, nothing new since the merge below; PRs #176-#185 index-track, none status:review; no owner:grok issues) — previous: merged #190 (#188 narrow except) and #191 (#187 https-only RPC/HTTP); open PRs #176-#185 left to index track; no owner:grok issues; no Grok PRs
+last_tick: 2026-11-18 ~03:15 UTC (overnight backend push: stack #176-#185 all merged; D27 curve #192, D28 draws+fees #195 merged; dry run done, top-10 empty, see #196)
 updated: 2026-11-17
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary manager for it while Grok is offline; Hetzner Claude session owns site + daily job. Brief: docs/prompts/PROMPT_INDEX.md. Out of scope: vesting/locks (D24).
+
+## Overnight backend checklist (kiwi directive 18 Nov 02:10 Rome, target 09:00 Rome)
+- [x] 1. Stacked PRs #176–#185 reviewed and merged (bottom-up; #184 rebased, #185 cherry-picked onto main and cut to 240 lines).
+- [x] 2. kiwi's #156 decisions recorded and implemented: D26 (GTASP10, Helius, pump.fun, 70/30, hourly rebalance), D27 (T_START 1h, 5x curve at 4h, #192), D28 (hourly draw: cap 5%, sqrt odds, min pot rollover, 70/30 fees, no team/buyback, #195). Draws stay OFF (legal #8). Flipper row bound 30%→60% flagged to kiwi.
+- [x] 3a. #163 hourly job merged with #185 (dry-run only; server install is separate). [ ] 3b. #189 sim/Hypothesis coverage (Grok #193 #194 queued, then Claude). [ ] 3c. #167/#169/#170/#171/#172 rule hardening (docs, next).
+- [~] 4. Dry-run top-10: ran read-only, 0 candidates (pump.fun history = ~1s/page). Report reports/index_dryrun_2026-11-18.md; question to kiwi in #196.
+- [x] 5. Grok queue: #193, #194 opened (owner:grok, status:todo).
+- [ ] 6. Skipped: #186 (needs workflow-scope token), #168 and #7 (needs:kiwi).
 
 ## Done
 - P0 setup, CI, Haiku subagents, on-chain research. D7–D14 (see DECISIONS; D2/D4/D13/D14 superseded by D16).
