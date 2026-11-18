@@ -303,18 +303,21 @@ def measure_mints(
         ):
             facts = dict(dex, prescreen=True)
         else:
-            try:
-                facts = chain_facts(
-                    client,
-                    mint,
-                    as_of=as_of,
-                    window_start=window_start,
-                    hubs=hubs,
-                    treasury=treasury,
-                    pair=pair,
-                )
-            except Exception as exc:  # noqa: BLE001 - one mint's failure is published, not fatal
-                facts = dict(dex, error=type(exc).__name__)
+            facts = dict(dex, error="not_run")
+            for _attempt in range(2):  # D38: one retry; a transient Helius error dropped GTA VI
+                try:
+                    facts = chain_facts(
+                        client,
+                        mint,
+                        as_of=as_of,
+                        window_start=window_start,
+                        hubs=hubs,
+                        treasury=treasury,
+                        pair=pair,
+                    )
+                    break
+                except Exception as exc:  # noqa: BLE001 - one mint's failure is published, not fatal
+                    facts = dict(dex, error=type(exc).__name__)
         facts = dict(facts, trading_fees_24h_sol=_trading_fees(found, mint, sol_usd, dex_fee_rate))
         start = window_start
         age = facts.get("age_hours")
