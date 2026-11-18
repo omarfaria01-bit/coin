@@ -5,8 +5,8 @@ Install on the server is done by the assistant. This repo does not open that mac
 
 ## What runs
 
-- `coin-index-sample.timer` — every 5 minutes, `--mode sample`. The score window is 24 hours of 5-minute buckets. An hourly sample alone cannot pass the 50% coverage rule.
-- `coin-index-hourly.timer` — every UTC hour. Records one quote inside the closing window, runs `--mode rebalance`, then `--mode emergency`, then pushes `index/out/` to the `index-data` branch.
+- `coin-index-sample.timer` — every 5 minutes, `--mode sample`. Uses its own separate sampler lock (`$LOCK.sample`), so it runs independently without waiting for the hourly run. The score window is 24 hours of 5-minute buckets.
+- `coin-index-hourly.timer` — every UTC hour. Runs `--mode rebalance`, then `--mode emergency`, then pushes `index/out/` to the `index-data` branch. Hourly no longer runs a sample pass (the 5-minute timer owns sampling).
 
 Membership uses the previous hour's file. The 8/12 rank band applies, and a rank exit waits one extra hour. A member whose hour is missing keeps its last passing metrics. If rebalance or emergency errors, nothing is pushed and the previous remote file stays.
 
@@ -17,6 +17,10 @@ Membership uses the previous hour's file. The 8/12 rank band applies, and a rank
 - `HELIUS_API_KEY` (required)
 - `COIN_REPO` (default `/opt/coin`)
 - `COIN_INDEX_WORKTREE` (default `/var/lib/coin/index-data`)
+- `COIN_INDEX_ENV` (default `/etc/coin/index.env`)
+- `COIN_INDEX_LOCK` (default `/var/lib/coin/index-job.lock`, with sampler using `$LOCK.sample`)
+- `COIN_INDEX_MINTS` (default `$COIN_REPO/index/seed_mints.txt`)
+- `COIN_INDEX_DISCOVER_PAGES` (default `10`)
 
 No DexScreener key. The key is not written to git or to the journal by this script.
 

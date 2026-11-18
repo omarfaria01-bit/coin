@@ -10,6 +10,7 @@ prints `HELIUS_API_KEY`, and only writes `index/out/` on `index-data`.
 | Published worktree, branch `index-data` | `/var/lib/coin/index-data` (`COIN_INDEX_WORKTREE`) |
 | Env file, mode 600 | `/etc/coin/index.env` (`COIN_INDEX_ENV`) |
 | Lock | `/var/lib/coin/index-job.lock` (`COIN_INDEX_LOCK`) |
+| Sampler lock | `/var/lib/coin/index-job.lock.sample` (`COIN_INDEX_LOCK.sample`) |
 | 5-minute sampler | `coin-index-sample.timer` |
 | Hourly build | `coin-index-hourly.timer` |
 
@@ -23,6 +24,7 @@ cd /opt/coin
 sudo git status --porcelain          # must print nothing
 sudo git fetch origin main
 sudo git pull --ff-only origin main
+sudo systemctl daemon-reload         # only if unit files changed (the script itself needs no restart)
 ```
 
 `index-job.sh` runs the same pull before every tick and refuses a dirty tree
@@ -44,9 +46,7 @@ sudo systemctl start coin-index-hourly.service  # one tick by hand
 Stop the job now with `sudo systemctl stop coin-index-sample.service
 coin-index-hourly.service`; stopping a timer alone does not stop an in-flight run.
 
-The hourly run records one sample in the closing window, runs `--mode rebalance`,
-then `--mode emergency`, then pushes `index/out/` to `index-data` if it changed.
-Keep the sample timer running: a 24 h window has 288 five-minute buckets.
+The 5-minute sampler (`coin-index-sample.timer`) uses its own separate sampler lock (`$COIN_INDEX_LOCK.sample`) and runs independently every 5 minutes without waiting for the hourly run. The hourly run runs `--mode rebalance`, then `--mode emergency`, then pushes `index/out/` to `index-data` if it changed; it no longer repeats a sample pass. Keep the sample timer running: a 24 h window has 288 five-minute buckets.
 
 ## 3. Check the last run
 
@@ -75,10 +75,7 @@ the live index.
 
 `members: []` is a valid output. Check the reason before touching anything.
 
-1. **Coverage (usual cause).** An `excluded` reason of `insufficient_data` means
-   fewer than 50% of the scoring window's five-minute buckets had a sample. Keep
-   `coin-index-sample.timer` running: 288 buckets/day, 144 needed for the
-   minimum, so the first full top-10 needs at least 12 h of samples.
+1. **Coverage (usual cause).** An `excluded` reason of `insufficient_data` means zero samples were found in the 24h scoring window (no coverage minimum under D35; any samples in the window count). Keep `coin-index-sample.timer` running:
    ```bash
    sudo ls -lt /opt/coin/data/index/samples | head
    sudo wc -l /opt/coin/data/index/samples/*.jsonl | tail -1
@@ -101,7 +98,7 @@ hot edit in `/opt/coin` makes the tree dirty and stops publishing. Verify with:
 grep -n '<mint>' /opt/coin/index/seed_mints.txt
 ```
 
-`allow` / `deny` in `index/overrides.json` need a reason and kiwi's approval.
+`deny` in `index/overrides.json` needs a reason and kiwi's approval.
 
 ## 6. Rollback
 
