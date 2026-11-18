@@ -9,6 +9,7 @@ import math
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from fractions import Fraction
 
 import base58
 
@@ -93,7 +94,7 @@ def _all_finite(m: Metrics) -> bool:
 
 
 def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
-    """First failed filter ("F1".."F10" or "insufficient_data"), or None if all pass.
+    """First failed filter ("F1".."F11" or "insufficient_data"), or None if all pass.
 
     A missing metric counts as a failure. Filters in `dry_run.skip_filters` are not checked.
     """
@@ -157,6 +158,12 @@ def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
             return MISSING
         if not lo(f.min_turnover) <= m.volume_usd / m.mc_usd <= lo(f.max_turnover):
             return "F10"
+    if "F11" not in skip:
+        if m.mc_usd is None or m.liquidity_usd is None or m.liquidity_usd <= 0:
+            return MISSING
+        # Exact compare: mc <= ratio * liq. A thin pool cannot carry a huge market cap (#167).
+        if Fraction(m.mc_usd) > frac(f.max_mc_liquidity_ratio) * Fraction(m.liquidity_usd):
+            return "F11"
     return None
 
 

@@ -227,3 +227,11 @@ New pure module `engine/hourly_draw.py` (+ Hypothesis tests). **Still OFF** (`dr
 gate (COIN_MATH §16/#8) and the VRF devnet test are not done, and the hourly job does not call it yet, so the
 engine's daily epoch is unchanged apart from the 70/30 pots. Goldens regenerated (`tools/regen_golden.py`);
 holder pot is now 70% of fees, so payouts per epoch roughly double versus the 35% default.
+
+## D29 · 2026-11-18 · F11: market cap ≤ 100 × liquidity (#167, Claude, new filter)
+Red team #162 showed a 0.1% float on a $50k pool reports a $50M market cap and ranks first (constant-product:
+MC = L / f). Added **F11** `mc_usd ≤ max_mc_liquidity_ratio × liquidity_usd` (default 100, exact Fraction
+compare), checked after F10 so F1–F10 results do not change. Missing mc or liquidity → `insufficient_data`.
+Not added yet (needs data design): the free-float / independent-holder check and the pair-selection pin from #167
+steps 2–3. F3/F4 untouched (kiwi's). A coin at ratio 100 (e.g. $6M MC on $60k) still passes; kiwi can change
+the ratio in `index/params.json` (params_hash moves, so it shows in the hourly output).

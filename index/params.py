@@ -10,7 +10,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-FILTER_CODES = ("F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10")
+FILTER_CODES = ("F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11")
 
 Num = int | str
 
@@ -58,6 +58,7 @@ class Filters(_Strict):
     min_unique_traders: int = Field(200, ge=0)
     min_turnover: Num = "1/20"
     max_turnover: Num = 3
+    max_mc_liquidity_ratio: Num = 100  # F11 (#167, D29)
 
     @model_validator(mode="after")
     def _ranges(self) -> Filters:
@@ -71,6 +72,7 @@ class Filters(_Strict):
             "max_dev_pct",
             "min_turnover",
             "max_turnover",
+            "max_mc_liquidity_ratio",
         ):
             if frac(getattr(self, name)) < 0:
                 raise ValueError(f"{name} must be >= 0")
@@ -78,6 +80,8 @@ class Filters(_Strict):
             raise ValueError("need top10_min_pct < top10_max_pct <= 100")
         if not 0 < frac(self.min_turnover) < frac(self.max_turnover):
             raise ValueError("need 0 < min_turnover < max_turnover")
+        if frac(self.max_mc_liquidity_ratio) <= 0:
+            raise ValueError("max_mc_liquidity_ratio must be > 0")
         if frac(self.min_liquidity_usd) <= 0 or frac(self.min_total_fees_sol) <= 0:
             raise ValueError("liquidity and fee minimums must be > 0 (the score takes their log)")
         if self.min_unique_traders < 1:

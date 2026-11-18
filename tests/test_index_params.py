@@ -53,7 +53,7 @@ def test_score_weights_must_sum_to_one() -> None:
         ("filters", "min_turnover", 5),  # min > max
         ("filters", "min_liquidity_usd", 0),  # log of 0 in the score
         ("weights", "cap_pct", 0),
-        ("dry_run", "skip_filters", ["F11"]),
+        ("dry_run", "skip_filters", ["F12"]),
     ],
 )
 def test_inconsistent_values_rejected(section: str, key: str, value: object) -> None:

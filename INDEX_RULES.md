@@ -36,6 +36,7 @@ A token is a **candidate** if it is a Solana token and its name, ticker or descr
 | F8 | Authorities | mint authority and freeze authority both revoked |
 | F9 | Real traders | ≥ 200 unique wallets bought or sold in the window |
 | F10 | Turnover | 0.05 ≤ volume in the window / average market cap ≤ 3 |
+| F11 | Market cap vs liquidity | average market cap ≤ 100 × average pool liquidity (D29, #167). A thin pool cannot carry a huge market cap |
 
 F3 and F4 are kiwi's parameters. A coin that fails any filter is listed in the output with the first filter it failed. A missing metric counts as a failure (`insufficient_data`).
 
