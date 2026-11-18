@@ -10,7 +10,9 @@ logos of the current GTASP10 top 10 (index weight order); the 11th face is a gol
   cached in `/var/cache/gtasp10-logo` (24h). Missing logo -> ticker text. GTA VI (`4kjru…`) has a
   placeholder image upstream, so it is drawn as `GTA VI` text.
 - Output (atomic): `/var/www/gtasp10/logo.png` (1024), `logo-400.png`, `logo.json` (as_of, source, coins).
-- Deploy: script -> `/usr/local/bin/gtasp10-logo.py`, template -> `/usr/local/share/gtasp10/logo_template.jpg`,
+- Deploy: script -> `/usr/local/bin/gtasp10-logo.py`, template -> `/usr/local/share/gtasp10/logo_template_vice_sunset.jpg`
+  (default palette B, from `palettes/`; original black `logo_template.jpg` kept as fallback/rollback),
+  drop-in `gtasp10-logo.palette.conf` -> `/etc/systemd/system/gtasp10-logo.service.d/palette.conf`,
   units -> `/etc/systemd/system/`, `systemctl enable --now gtasp10-logo.timer` (hourly at :07 UTC).
 - Read-only on index data; only public DexScreener GETs. No wallets, no posting.
 
@@ -22,3 +24,8 @@ logos of the current GTASP10 top 10 (index weight order); the 11th face is a gol
   cache dir. Install: `useradd --system --no-create-home --shell /usr/sbin/nologin gtasp10-logo;
   setfacl -m u:gtasp10-logo:rwx /var/www/gtasp10`.
 - The rendered logo contains third-party coin images: any change of the X avatar/banner needs a human look first.
+
+## Palette (kiwi, 18 Nov 2026)
+Live palette is **B / vice sunset** (`palettes/logo_template_vice_sunset.jpg`), chosen because the black logo
+disappeared on X dark mode. LIVE on Hetzner since 18 Nov 14:45 Rome. Rollback: remove the `palette.conf` drop-in
+(or point it at `logo_template.jpg`), `systemctl daemon-reload && systemctl start gtasp10-logo.service`.

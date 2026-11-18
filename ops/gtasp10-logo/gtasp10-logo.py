@@ -25,7 +25,10 @@ from datetime import UTC, datetime
 
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
-TEMPLATE = os.environ.get("GTASP10_LOGO_TEMPLATE", "/usr/local/share/gtasp10/logo_template.jpg")
+# Default palette: variant B "vice sunset" (kiwi, 18 Nov 2026). Original black: logo_template.jpg
+TEMPLATE = os.environ.get(
+    "GTASP10_LOGO_TEMPLATE", "/usr/local/share/gtasp10/logo_template_vice_sunset.jpg"
+)
 INDEX_GLOB = os.environ.get("GTASP10_INDEX_GLOB", "/var/lib/coin/index-data/index/out/*T*.json")
 CANDIDATES = os.environ.get("GTASP10_CANDIDATES", "/var/www/gtasp10/data/candidates.json")
 OUT_DIR = os.environ.get("GTASP10_LOGO_OUT", "/var/www/gtasp10")
