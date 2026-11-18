@@ -1,4 +1,5 @@
-last_tick: 2026-11-18 ~06:55 Rome / 04:55 UTC (URGENT seed directive re-verified again: index/seed_mints.txt 101 lines on origin/main, index-data last run 04:00Z, NO dup PR. Open owner:grok todo: #231 #232, doing: #224 #225. Nothing else startable by Claude; earliest non-empty top-10 ~15:00Z)
+last_tick: 2026-11-18 ~08:50 Rome (kiwi 08:25 rule changes DONE: D35 merged in #238 (one keyword tier, no min_coverage, F1 4h, F4 8 SOL, F5 30%, no F6, F10 volume>0; sampler own lock, 10 discover pages). Merged #234 #235 #236; closed #237/#231 (obsolete). Queued #239 #240 for Grok. Weights: WAITING for kiwi's choice (not changed). No open PRs.)
+prev_tick: 2026-11-18 ~06:55 Rome / 04:55 UTC (URGENT seed directive re-verified again: index/seed_mints.txt 101 lines on origin/main, index-data last run 04:00Z, NO dup PR. Open owner:grok todo: #231 #232, doing: #224 #225. Nothing else startable by Claude; earliest non-empty top-10 ~15:00Z)
 prev_tick: 2026-11-18 ~06:40 Rome / 04:40 UTC (URGENT seed directive re-verified: index/seed_mints.txt on main, index-data last run 04:00Z, no dup PR, no open PRs. Opened #231 (coverage progress+ETA tool) and #232 (seeded mints vs filters Hypothesis) for Grok; #224 #225 doing. Earliest non-empty top-10 ~15:00Z)
 prev_tick: 2026-11-18 ~06:25 Rome / 04:21 UTC (URGENT seed directive re-verified: index/seed_mints.txt (101 lines, D30) on main, index-data last run 04:00Z, no dup PR, no open PRs. Open owner:grok todo: #224 #225. Nothing else startable; earliest non-empty top-10 ~15:00Z)
 prev_tick: 2026-11-18 ~05:20 Rome / 04:18 UTC (URGENT seed directive re-verified yet again: index/seed_mints.txt (101 lines, D30) on main, Hetzner index-data last run 04:00Z, no duplicate PR opened. #229 state PR green -> merged. Open owner:grok todo: #224 #225. Nothing else startable; earliest non-empty top-10 ~15:00Z)
@@ -25,7 +26,10 @@ parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary 
 - [ ] 3d. Left, not startable by Claude alone: #169 F1 48h/72h (kiwi picks) and creator-cluster F3/F6/F7 (needs first-funder collector, large); #189 sim coverage (Grok #205/#206/#209 cover parts; rest = report update of #162 table for hourly schedule).
 - [ ] 6. Skipped: #186 (needs workflow-scope token), #168 and #7 (needs:kiwi).
 
-## ACTION FOR GROK EXECUTOR (Hetzner) — DONE 2026-11-18 (runs 03:00Z/04:00Z on index-data, code c6c0ca8 has the seed). Keep timers running.
+## ACTION FOR GROK EXECUTOR (Hetzner) — D35 (08:50 Rome, NEW)
+#238 changed index/params.json, the job script and the sampler lock. Run: `cd /opt/coin && git pull --ff-only origin main && systemctl start coin-index-hourly.service`. Old samples stay valid (no coverage minimum now). Expect a non-empty top-10 as soon as the first hourly run finishes. Report the output (members/excluded counts) in #1.
+
+## (old) ACTION FOR GROK EXECUTOR (Hetzner) — DONE 2026-11-18 (runs 03:00Z/04:00Z on index-data, code c6c0ca8 has the seed). Keep timers running.
 After the seed-universe PR (#196 follow-up, D30) merges: the job script does `git pull --ff-only origin main` itself on the next run, but run once by hand to start sampling now: `cd /opt/coin && git pull --ff-only origin main && systemctl start coin-index-sample.service`. Optional env: `COIN_INDEX_DISCOVER_PAGES` (default 100). Coverage ~12h of 5-min samples is still needed before a non-empty top-10.
 
 ## Done
