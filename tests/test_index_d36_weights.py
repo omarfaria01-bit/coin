@@ -133,7 +133,7 @@ def test_d36_weights_property_sweep(n_members: int, mc_vol_list: list[tuple[floa
 
         for mi in members:
             for mj in members:
-                if math.isclose(raw_shares[mi], raw_shares[mj], rel_tol=1e-7, abs_tol=1e-7):
+                if math.isclose(raw_shares[mi], raw_shares[mj], rel_tol=1e-9, abs_tol=0.0):
                     assert abs(bps[mi] - bps[mj]) <= 1
                 elif raw_shares[mi] > raw_shares[mj]:
                     assert bps[mi] >= bps[mj]
@@ -156,3 +156,19 @@ def test_d36_emergency_removal_recomputation() -> None:
     assert all(m["weight_bps"] >= 0 for m in removed_out["members"])
     assert all(m["weight_bps"] <= 2_500 for m in removed_out["members"])  # n=9 >= 4
     assert victim not in {m["mint"] for m in removed_out["members"]}
+
+
+def test_d36_zero_raw_free_members_share_budget_equally() -> None:
+    """Regression: after capping, free members with zero mc and volume must not divide by zero."""
+    members = [mint(i) for i in range(4)]
+    log_s = {m: float(i) for i, m in enumerate(members)}
+    mcv = {
+        members[0]: (0.0, 0.0),
+        members[1]: (1.0, 1.0),
+        members[2]: (0.0, 0.0),
+        members[3]: (1.0, 1.0),
+    }
+    bps = weights_bps(members, log_s, P, mcv)
+    assert sum(bps.values()) == 10_000
+    assert bps[members[1]] == bps[members[3]] == 2_500
+    assert bps[members[0]] == bps[members[2]] == 2_500
