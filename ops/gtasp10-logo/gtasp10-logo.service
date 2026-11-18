@@ -1,0 +1,15 @@
+[Unit]
+Description=GTASP10 live logo render (top 10 coin logos in the heist bag)
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/bin/gtasp10-logo.py
+Nice=10
+CacheDirectory=gtasp10-logo
+ProtectSystem=strict
+ReadWritePaths=/var/www/gtasp10
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+TimeoutStartSec=300
