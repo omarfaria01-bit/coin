@@ -1,4 +1,4 @@
-last_tick: 2026-11-18 (latest): merged #190 (#188 narrow except) and #191 (#187 https-only RPC/HTTP); open PRs #176-#185 left to index track; no owner:grok issues; no Grok PRs
+last_tick: 2026-11-18 (quiet tick, nothing new since the merge below; PRs #176-#185 index-track, none status:review; no owner:grok issues) — previous: merged #190 (#188 narrow except) and #191 (#187 https-only RPC/HTTP); open PRs #176-#185 left to index track; no owner:grok issues; no Grok PRs
 updated: 2026-11-17
 phase: P2 engine rewrite to COIN_MATH v0.3.3 (Grok slices) → wiring → P3 sim table + variant report for kiwi
 parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary manager for it while Grok is offline; Hetzner Claude session owns site + daily job. Brief: docs/prompts/PROMPT_INDEX.md. Out of scope: vesting/locks (D24).
