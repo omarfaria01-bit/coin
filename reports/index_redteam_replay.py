@@ -62,6 +62,10 @@ def base(m: str, ticker: str, name: str, **kw) -> Metrics:
         token_program="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
         extensions=(),
         unique_traders=250,
+        independent_traders=250,
+        roundtrip_share=0.0,
+        volume_wallets=100,
+        median_trade_sol=0.1,
         volume_usd=300_000.0,
     )
     vals.update(kw)
@@ -69,7 +73,14 @@ def base(m: str, ticker: str, name: str, **kw) -> Metrics:
 
 
 LEGIT = base(mint(1), "LEGIT", "Grand Theft Auto 6 Army")
-SYBIL = base(mint(2), "SYBIL", "GTA 6 Official", volume_usd=100_000.0)
+SYBIL = base(
+    mint(2),
+    "SYBIL",
+    "GTA 6 Official",
+    volume_usd=100_000.0,
+    independent_traders=0,  # 250 wallets x 0.01 SOL: below 0.05 SOL each (D33)
+    roundtrip_share=0.9,
+)
 LOWFLOAT = base(
     mint(3),
     "FLOAT",
@@ -79,6 +90,10 @@ LOWFLOAT = base(
     total_fees_sol=10.0,
     window_fees_sol=10.0,
     unique_traders=200,
+    independent_traders=200,
+    roundtrip_share=0.0,
+    volume_wallets=100,
+    median_trade_sol=0.1,
     volume_usd=2_500_000.0,
 )
 REBRAND = base(
