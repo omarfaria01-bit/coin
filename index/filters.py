@@ -59,21 +59,14 @@ def keyword_hit(text: str, keyword: str) -> bool:
 
 
 def candidate_status(m: Metrics, params: IndexParams, overrides: Overrides) -> str | None:
-    """None if `m` is a candidate, else why not: "self", "denied", "weak_keyword", "no_keyword".
-
-    "weak_keyword" coins are listed in the output so kiwi can approve them with an allow entry.
-    """
+    """None if `m` is a candidate, else why not: "self", "denied", "no_keyword"."""
     if params.self_mint is not None and m.mint == params.self_mint:
         return "self"
     if m.mint in {e.mint for e in overrides.deny}:
         return "denied"
-    if m.mint in {e.mint for e in overrides.allow}:
-        return None
     text = " ".join((m.name, m.ticker, m.description))
     if any(keyword_hit(text, k) for k in params.keywords.strong):
         return None
-    if any(keyword_hit(text, k) for k in params.keywords.weak):
-        return "weak_keyword"
     return "no_keyword"
 
 
@@ -113,7 +106,7 @@ def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
     skip = set(params.dry_run.skip_filters)
     if not _all_finite(m):
         return MISSING
-    if m.coverage is None or m.coverage < float(frac(params.min_coverage)):
+    if m.coverage is None or m.coverage <= 0:  # D35: any samples count, none = no data
         return MISSING
 
     def lo(x: object) -> float:
@@ -144,11 +137,6 @@ def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
             return MISSING
         if m.bundle_pct > lo(f.max_bundle_pct):
             return "F5"
-    if "F6" not in skip:
-        if m.dev_pct is None:
-            return MISSING
-        if m.dev_pct > lo(f.max_dev_pct):
-            return "F6"
     if "F7" not in skip:
         if m.creator_launches_7d is None:
             return MISSING
@@ -176,20 +164,9 @@ def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:
         if m.independent_traders < f.min_unique_traders:
             return "F9"
     if "F10" not in skip:
-        if m.volume_usd is None or m.mc_usd is None or m.mc_usd <= 0:
+        if m.volume_usd is None:
             return MISSING
-        if m.roundtrip_share is None or m.volume_wallets is None:
-            return MISSING
-        if not 0 <= m.roundtrip_share <= 1:
-            return MISSING
-        clean = m.volume_usd * (1 - m.roundtrip_share)
-        if not lo(f.min_turnover) <= clean / m.mc_usd <= lo(f.max_turnover):
-            return "F10"
-        if m.volume_wallets < f.min_volume_wallets:
-            return "F10"
-        if m.median_trade_sol is None:
-            return MISSING
-        if Fraction(m.median_trade_sol) < frac(f.min_trade_sol):
+        if m.volume_usd <= 0:  # D35: raw window volume as-is, only needs to exist
             return "F10"
     if "F11" not in skip:
         if m.mc_usd is None or m.liquidity_usd is None or m.liquidity_usd <= 0:

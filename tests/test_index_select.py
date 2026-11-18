@@ -143,7 +143,7 @@ def test_prize_split_conserves_lamports(lamports: int, n: int) -> None:
 def test_run_index_is_deterministic_and_complete() -> None:
     coins = [coin(i, 1_000_000.0 + i * 10_000) for i in range(14)]
     coins.append(replace(coin(50, 2e6), top10_pct=40.0))  # fails F3
-    coins.append(replace(coin(51, 2e6), name="Lucia", ticker="LUCIA"))  # weak keyword
+    coins.append(replace(coin(51, 2e6), name="Dog", ticker="DOG"))  # no keyword
     kw = {"params": P, "overrides": Overrides(), "as_of": "2026-11-19T18:00:00Z"}
     a = run_index(coins, [], code_commit="abc", **kw)  # type: ignore[arg-type]
     b = run_index(list(reversed(coins)), [], code_commit="abc", **kw)  # type: ignore[arg-type]
@@ -152,14 +152,14 @@ def test_run_index_is_deterministic_and_complete() -> None:
     assert a["members"][0]["ticker"] == "GTA13"  # highest MC
     assert sum(m["weight_bps"] for m in a["members"]) == 10_000
     reasons = {e["ticker"]: e["reason"] for e in a["excluded"]}
-    assert reasons == {"GTA50": "F3", "LUCIA": "weak_keyword"}
+    assert reasons == {"GTA50": "F3"}
     assert a["dry_run"] is False and a["changes"]["exited"] == []
 
 
 def test_exit_reasons_reported() -> None:
     coins = [coin(i, 1_000_000.0 + i * 10_000) for i in range(12)]
     prev = [mint(0), mint(99)]
-    coins[0] = replace(coins[0], dev_pct=9.0)  # fails F6
+    coins[0] = replace(coins[0], total_fees_sol=1.0)  # fails F4
     out = run_index(coins, prev, P, Overrides(), "2026-11-20T18:00:00Z", "abc")
     exited = {e["mint"]: e["reason"] for e in out["changes"]["exited"]}
-    assert exited == {mint(0): "F6", mint(99): "not_measured"}
+    assert exited == {mint(0): "F4", mint(99): "not_measured"}

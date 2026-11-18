@@ -140,7 +140,6 @@ def _rebalance(args, client, params, overrides, as_of, measure, discover) -> Non
 def _mints(args, client, params, overrides, discover) -> list[str]:
     found = discover(client, args.discover_pages) if args.mode != "emergency" else []
     extra = list(_prev_members(Path(args.out)))
-    extra.extend(entry.mint for entry in overrides.allow)
     if args.mints_file:
         for line in Path(args.mints_file).read_text().splitlines():
             text = line.split("#", 1)[0].strip()
@@ -218,7 +217,10 @@ def _load_samples(directory: Path) -> list[Sample]:
         for line in path.read_text().splitlines():
             if not line.strip():
                 continue
-            item = json.loads(line)
+            try:
+                item = json.loads(line)
+            except json.JSONDecodeError:
+                continue  # torn last line while a 5-minute sample is appending (D35)
             rows.append(
                 Sample(
                     item["mint"],

@@ -20,6 +20,9 @@ if [[ -z "${HELIUS_API_KEY:-}" ]]; then
   exit 2
 fi
 
+# D35: samples never wait on the (slow) hourly run: separate lock per mode. Sample appends one
+# jsonl line per mint; the hourly reader skips a torn last line. Only hourly pulls code.
+[[ "$MODE" == "sample" ]] && LOCK="$LOCK.sample"
 mkdir -p "$(dirname "$LOCK")"
 exec 9>"$LOCK"
 if ! flock -n 9; then
@@ -32,8 +35,10 @@ if [[ -n "$(git status --porcelain)" ]]; then
   echo "repo is dirty; published index left unchanged" >&2
   exit 1
 fi
-git fetch origin main
-git pull --ff-only origin main
+if [[ "$MODE" != "sample" ]]; then
+  git fetch origin main
+  git pull --ff-only origin main
+fi
 
 run() {
   uv run python tools/run_index.py \
@@ -42,7 +47,7 @@ run() {
     --samples "$REPO/data/index/samples" \
     --out "$WORK/index/out" \
     --mints-file "${COIN_INDEX_MINTS:-$REPO/index/seed_mints.txt}" \
-    --discover-pages "${COIN_INDEX_DISCOVER_PAGES:-100}" \
+    --discover-pages "${COIN_INDEX_DISCOVER_PAGES:-10}" \
     "$@"
 }
 
@@ -87,8 +92,6 @@ fi
 
 prepare_worktree
 AS_OF="$(date -u +%Y-%m-%dT%H:00:00Z)"
-SAMPLE_AS_OF="$(date -u -d "$AS_OF - 1 second" +%Y-%m-%dT%H:%M:%SZ)"
-run --mode sample --as-of "$SAMPLE_AS_OF" || echo "sample failed; older samples kept" >&2
 run --mode rebalance --as-of "$AS_OF"
 run --mode emergency --as-of "$AS_OF"
 publish
