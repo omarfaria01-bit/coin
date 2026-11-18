@@ -136,6 +136,7 @@ class HeliusClient:
         sort: str = "desc",
         max_pages: int | None = None,
         limit: int = HISTORY_PAGE_LIMIT,
+        stop_on_cached: set[str] | None = None,
     ) -> tuple[list[dict[str, object]], bool]:
         """Parsed history. The bool is True when the page cap stopped the walk early."""
         token: str | None = None
@@ -168,7 +169,12 @@ class HeliusClient:
             )
             if not isinstance(payload, dict) or not isinstance(payload.get("data"), list):
                 raise RuntimeError("helius history failed")
-            out.extend(row for row in payload["data"] if isinstance(row, dict))
+            page_rows = [row for row in payload["data"] if isinstance(row, dict)]
+            out.extend(page_rows)
+            if stop_on_cached is not None and page_rows:
+                oldest_sig = page_rows[-1].get("signature")
+                if isinstance(oldest_sig, str) and oldest_sig in stop_on_cached:
+                    return out, False
             nxt = payload.get("paginationToken")
             if not isinstance(nxt, str) or not nxt:
                 return out, False

@@ -18,6 +18,7 @@ from adapters.helius_parse import (
     parse_largest,
     parse_mint_account,
 )
+from adapters.index_history_cache import fetch_mint_history_incremental
 from adapters.index_observe import metrics_from, spot_quote
 from adapters.market_data import (
     LAMPORTS_PER_SOL,
@@ -94,7 +95,7 @@ def chain_facts(
         if holders is not None and unknown:
             holders = [(None, amount) for _, amount in holders]
     curves: list[str | None] = []
-    raw, truncated = client.history(mint, end=as_of)
+    raw, truncated = fetch_mint_history_incremental(client, mint, as_of=as_of)
     txs = _txs(raw)
     for tx in txs:
         creates = tx.get("creates")
