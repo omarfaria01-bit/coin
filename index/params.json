@@ -35,7 +35,8 @@
     "require_authorities_revoked": true,
     "min_unique_traders": 200,
     "min_turnover": "1/20",
-    "max_turnover": 3
+    "max_turnover": 3,
+    "max_mc_liquidity_ratio": 100
   },
   "score": {
     "w_mc": "2/5",

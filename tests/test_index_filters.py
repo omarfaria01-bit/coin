@@ -194,3 +194,31 @@ def test_lifetime_fee_measure_is_global() -> None:
     assert log_score(m, P) is None  # window measure chosen, missing -> excluded
     assert log_score(m, life) is not None
     assert log_score(good(window_fees_sol=float("nan")), P) is None
+
+
+# ------------------------------------------------------------------ F11 (#167, D29)
+
+
+def test_f11_mc_over_liquidity_boundary_is_exact() -> None:
+    # liquidity 60k, ratio 100 -> MC 6,000,000 passes, one cent over fails. Turnover kept in band.
+    ok = good(liquidity_usd=60_000.0, mc_usd=6_000_000.0, volume_usd=600_000.0)
+    assert first_failed_filter(ok, P) is None
+    bad = good(liquidity_usd=60_000.0, mc_usd=6_000_000.01, volume_usd=600_000.0)
+    assert first_failed_filter(bad, P) == "F11"
+
+
+def test_f11_low_float_replay_fails_and_legit_coin_unchanged() -> None:
+    # The #167 replay: $50M MC on $50k liquidity (ratio 1000) used to rank first.
+    float_coin = good(liquidity_usd=50_000.0, mc_usd=50_000_000.0, volume_usd=2_500_000.0)
+    assert first_failed_filter(float_coin, P) == "F11"
+    legit = good(liquidity_usd=150_000.0, mc_usd=2_000_000.0, volume_usd=300_000.0)
+    assert first_failed_filter(legit, P) is None
+
+
+def test_f11_missing_mc_is_insufficient_and_skip_works() -> None:
+    assert first_failed_filter(good(mc_usd=None), P) == "insufficient_data"
+    skipped = P.model_copy(
+        update={"dry_run": P.dry_run.model_copy(update={"skip_filters": ("F11",)})}
+    )
+    float_coin = good(liquidity_usd=50_000.0, mc_usd=50_000_000.0, volume_usd=2_500_000.0)
+    assert first_failed_filter(float_coin, skipped) is None
