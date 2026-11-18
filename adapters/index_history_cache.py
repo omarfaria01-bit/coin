@@ -51,6 +51,21 @@ def load_cache(
     return valid_txs, truncated
 
 
+KEEP_MIN = 1000
+
+
+def _block_time(tx: dict[str, Any]) -> int | None:
+    for value in (
+        tx.get("block_time"),
+        tx.get("blockTime"),
+        tx.get("timestamp"),
+        (tx.get("parsed") or {}).get("blockTime") if isinstance(tx.get("parsed"), dict) else None,
+    ):
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+    return None
+
+
 def save_cache(
     mint: str,
     transactions: list[dict[str, Any]],
@@ -65,11 +80,14 @@ def save_cache(
 
     cutoff = as_of - window_seconds
     pruned: list[dict[str, Any]] = []
-    for tx in transactions:
+    for i, tx in enumerate(transactions):
         if not isinstance(tx, dict):
             continue
-        bt = tx.get("block_time")
-        if isinstance(bt, int) and bt < cutoff:
+        bt = _block_time(tx)
+        # D37: raw rows carry parsed.blockTime (block_time was never set, so nothing was pruned
+        # and the cache grew to 1.6G). Keep the window, or at least the newest KEEP_MIN rows.
+        if isinstance(bt, int) and bt < cutoff and i >= KEEP_MIN:
+            truncated = True  # older rows dropped: lifetime sums become lower bounds
             continue
         pruned.append(tx)
 
@@ -81,7 +99,9 @@ def save_cache(
     }
     path = _cache_path(mint, cache_dir)
     try:
-        path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+        tmp.replace(path)
     except OSError as exc:
         log.warning("Failed to write cache for mint %s: %s", mint, exc)
 
@@ -141,5 +161,6 @@ def fetch_mint_history_incremental(
         else:
             combined.append(tx)
 
+    truncated = truncated or bool(cached_truncated)  # D37: pruned history is a lower bound
     save_cache(mint, combined, truncated, as_of, window_seconds, cache_dir)
     return combined, truncated

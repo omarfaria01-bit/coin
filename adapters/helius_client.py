@@ -116,16 +116,20 @@ class HeliusClient:
 
     def rpc(self, method: str, params: list[object] | dict[str, object]) -> object:
         kind = "das" if method in _DAS_METHODS else "rpc"
-        payload = self._send(
-            "POST",
-            f"https://mainnet.helius-rpc.com/?api-key={self._key}",
-            {"jsonrpc": "2.0", "id": 1, "method": method, "params": params},
-            self._das_pace if kind == "das" else self._rpc_pace,
-            kind,
-        )
-        if not isinstance(payload, dict) or payload.get("error"):
-            raise RuntimeError(f"helius {method} failed")
-        return payload.get("result")
+        payload: object = None
+        for attempt in range(3):  # a JSON-RPC error (rate limit, node hiccup) is retried twice
+            payload = self._send(
+                "POST",
+                f"https://mainnet.helius-rpc.com/?api-key={self._key}",
+                {"jsonrpc": "2.0", "id": 1, "method": method, "params": params},
+                self._das_pace if kind == "das" else self._rpc_pace,
+                kind,
+            )
+            if isinstance(payload, dict) and not payload.get("error"):
+                return payload.get("result")
+            if attempt < 2:
+                self._sleep(1.0 + attempt)
+        raise RuntimeError(f"helius {method} failed")
 
     def history(
         self,
@@ -182,7 +186,7 @@ class HeliusClient:
         return out, True
 
     def pairs(self, mints: Sequence[str]) -> list[Mapping[str, object]]:
-        """DexScreener `/tokens/v1/solana/{mints}` only. Never the search endpoint."""
+        """DexScreener `/tokens/v1/solana/{mints}` (batched quotes; discovery uses `search`)."""
         found: list[Mapping[str, object]] = []
         for offset in range(0, len(mints), DEX_BATCH):
             chunk = ",".join(mints[offset : offset + DEX_BATCH])
@@ -197,6 +201,22 @@ class HeliusClient:
                 raise RuntimeError("dexscreener tokens failed")
             found.extend(row for row in payload if isinstance(row, Mapping))
         return found
+
+    def search(self, query: str) -> list[Mapping[str, object]]:
+        """DexScreener `/latest/dex/search` (D37 top-down discovery). Read-only, public."""
+        from urllib.parse import quote
+
+        payload = self._send(
+            "GET",
+            f"https://api.dexscreener.com/latest/dex/search?q={quote(query)}",
+            None,
+            self._dex_pace,
+            "dex",
+        )
+        pairs = payload.get("pairs") if isinstance(payload, dict) else None
+        if not isinstance(pairs, list):
+            raise RuntimeError("dexscreener search failed")
+        return [row for row in pairs if isinstance(row, Mapping)]
 
     def _send(
         self,

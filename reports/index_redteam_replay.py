@@ -53,6 +53,7 @@ def base(m: str, ticker: str, name: str, **kw) -> Metrics:
         mc_usd=2_000_000.0,
         top10_pct=20.0,
         total_fees_sol=12.0,
+        trading_fees_24h_sol=12.0,
         window_fees_sol=12.0,
         bundle_pct=0.0,
         dev_pct=2.0,
@@ -78,6 +79,7 @@ SYBIL = base(
     "SYBIL",
     "GTA 6 Official",
     volume_usd=100_000.0,
+    unique_traders=40,  # D38: F9 counts window wallets (>= 50); 40 sybil wallets fail
     independent_traders=0,  # 250 wallets x 0.01 SOL: below 0.05 SOL each (D33)
     roundtrip_share=0.9,
 )
@@ -88,6 +90,7 @@ LOWFLOAT = base(
     mc_usd=50_000_000.0,
     liquidity_usd=50_000.0,
     total_fees_sol=10.0,
+    trading_fees_24h_sol=10.0,
     window_fees_sol=10.0,
     unique_traders=200,
     independent_traders=200,
@@ -138,7 +141,14 @@ def main() -> None:
     print("status of SYBIL with self_mint=SYBIL:", candidate_status(SYBIL, p_self, OVERRIDES))
 
     print("\n== dry_run skipped F4 (no fee source) ==")
-    no_fee = base(mint(6), "NOFEE", "GTA 6 No Fees", total_fees_sol=0.0, window_fees_sol=1.0)
+    no_fee = base(
+        mint(6),
+        "NOFEE",
+        "GTA 6 No Fees",
+        total_fees_sol=0.0,
+        trading_fees_24h_sol=0.0,
+        window_fees_sol=1.0,
+    )
     print("F4 checked:", first_failed_filter(no_fee, PARAMS))
     p_skip = PARAMS.model_copy(
         update={"dry_run": PARAMS.dry_run.model_copy(update={"skip_filters": ("F4",)})}

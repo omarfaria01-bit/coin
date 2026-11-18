@@ -131,7 +131,9 @@ def test_measure_prefers_helius_price_and_sums_fee_plus_tip() -> None:
     )[0]
     assert row.mc_usd == 2_000.0 and row.liquidity_usd == 60_000.0 and row.volume_usd == 1_000.0
     assert row.total_fees_sol == 0.003005 and row.unique_traders == 1
-    assert row.top10_pct == 20.0 and row.dev_pct == 5.0 and row.creator_launches_7d == 1
+    assert (
+        row.top10_pct == 20.0 and row.dev_pct == 5.0 and row.creator_launches_7d is None
+    )  # D38: F7 removed, not walked
     # one hour old → 12 five-minute buckets, one spot sample
     assert row.bundle_pct == 0.0 and row.age_hours == 1.0 and row.coverage == 1 / 12
     assert row.mint_authority_revoked is True and row.sources["mc_usd"].startswith("helius-das@")

@@ -41,6 +41,7 @@ def good(i: int = 1, **kw: object) -> Metrics:
         mc_usd=1_500_000.0,
         top10_pct=20.0,
         total_fees_sol=40.0,
+        trading_fees_24h_sol=40.0,
         window_fees_sol=12.0,
         bundle_pct=3.0,
         dev_pct=1.0,
@@ -111,17 +112,15 @@ def test_good_coin_passes() -> None:
         ({"coverage": None}, "insufficient_data"),
         ({"age_hours": 3.9}, "F1"),
         ({"liquidity_usd": 49_999.0}, "F2"),
-        ({"top10_pct": 12.99}, "F3"),
-        ({"top10_pct": 27.01}, "F3"),
-        ({"total_fees_sol": 7.99}, "F4"),
+        ({"top10_pct": 30.01}, "F3"),  # D38: max 30%, no minimum
+        ({"trading_fees_24h_sol": 7.99}, "F4"),  # D38: DexScreener 24h trading fees
         ({"bundle_pct": 30.01}, "F5"),
-        ({"creator_launches_7d": 4}, "F7"),
         ({"freeze_authority_revoked": False}, "F8"),
-        ({"independent_traders": 199}, "F9"),
-        ({"independent_traders": None}, "insufficient_data"),
+        ({"unique_traders": 49}, "F9"),  # D38: window wallets >= 50
+        ({"unique_traders": None}, "insufficient_data"),
         ({"volume_usd": 0.0}, "F10"),
         ({"volume_usd": None}, "insufficient_data"),
-        ({"total_fees_sol": None}, "insufficient_data"),
+        ({"trading_fees_24h_sol": None}, "insufficient_data"),
     ],
 )
 def test_each_filter_fails(change: dict, code: str) -> None:
@@ -131,14 +130,16 @@ def test_each_filter_fails(change: dict, code: str) -> None:
 @pytest.mark.parametrize(
     "change",
     [
-        {"top10_pct": 13.0},
-        {"top10_pct": 27.0},
+        {"top10_pct": 0.5},  # D38: no minimum
+        {"top10_pct": 30.0},
+        {"creator_launches_7d": 400},  # D38: F7 removed
+        {"total_fees_sol": None},  # D38: F4 uses the 24h DexScreener measure
         {"total_fees_sol": 10.0},
         {"liquidity_usd": 50_000.0},
-        {"independent_traders": 200},
+        {"unique_traders": 50},
         {"coverage": 0.01},
         {"age_hours": 4.0},
-        {"total_fees_sol": 8.0},
+        {"trading_fees_24h_sol": 8.0},
         {"bundle_pct": 30.0},
         {"dev_pct": 99.0},  # F6 removed (D35)
         {"roundtrip_share": 0.95, "volume_wallets": 1, "median_trade_sol": 0.0001},
@@ -151,15 +152,15 @@ def test_boundaries_pass(change: dict) -> None:
 
 def test_dry_run_skip_lets_missing_fees_through() -> None:
     dry = P.model_copy(update={"dry_run": P.dry_run.model_copy(update={"skip_filters": ("F4",)})})
-    assert first_failed_filter(good(total_fees_sol=None), dry) is None
-    assert first_failed_filter(good(total_fees_sol=None), P) == "insufficient_data"
+    assert first_failed_filter(good(trading_fees_24h_sol=None), dry) is None
+    assert first_failed_filter(good(trading_fees_24h_sol=None), P) == "insufficient_data"
 
 
 # ------------------------------------------------------------------ §4
 
 
 def test_score_needs_positive_inputs() -> None:
-    assert log_score(good(window_fees_sol=None), P) is None
+    assert log_score(good(trading_fees_24h_sol=None), P) is None  # D38: dex_24h fee measure
     assert log_score(good(), P) is not None
 
 
@@ -213,10 +214,10 @@ def test_lifetime_fee_measure_is_global() -> None:
     life = P.model_copy(
         update={"score": P.score.model_copy(update={"score_fees_window": "lifetime"})}
     )
-    m = good(window_fees_sol=None)
-    assert log_score(m, P) is None  # window measure chosen, missing -> excluded
+    m = good(trading_fees_24h_sol=None)
+    assert log_score(m, P) is None  # dex_24h measure chosen (D38), missing -> excluded
     assert log_score(m, life) is not None
-    assert log_score(good(window_fees_sol=float("nan")), P) is None
+    assert log_score(good(trading_fees_24h_sol=float("nan")), P) is None
 
 
 # ------------------------------------------------------------------ F11 (#167, D29)

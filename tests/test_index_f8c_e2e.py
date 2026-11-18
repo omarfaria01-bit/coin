@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -117,7 +118,7 @@ def _metrics(owner: str, ext: object = None) -> Metrics:
         das_interval=0,
         dex_interval=0,
     )
-    return measure_mints(
+    row = measure_mints(
         client,
         [MINT],
         as_of=AS_OF,
@@ -129,6 +130,8 @@ def _metrics(owner: str, ext: object = None) -> Metrics:
         sample_seconds=300,
         holder_seconds=3600,
     )[0]
+    # D38: F4 reads DexScreener 24h fees; the fixture pair has no SOL quote, set it so F8 is reached
+    return replace(row, trading_fees_24h_sol=40.0)
 
 
 @pytest.mark.parametrize(("owner", "ext"), [(SPL, None), (T22, [{"extension": "metadataPointer"}])])

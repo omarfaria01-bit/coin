@@ -44,6 +44,7 @@ def coin(i: int, mc: float, vol: float) -> Metrics:
         mc_usd=mc,
         top10_pct=20.0,
         total_fees_sol=40.0,
+        trading_fees_24h_sol=40.0,
         window_fees_sol=12.0,
         bundle_pct=2.0,
         dev_pct=1.0,
@@ -86,7 +87,7 @@ def test_d36_golden() -> None:
     assert cj == canonical_json(run_index(candidates, [], P, OVERRIDES, as_of, code_commit))
     raw = cj if isinstance(cj, bytes) else cj.encode()
     assert hashlib.sha256(raw).hexdigest() == (
-        "c1f1c60436aef6bb3bb773e2a444fade9a5629dc84fd95d65c5edbcf0c13957c"
+        "67b2c841897083d37e29b15b32e2fbd166ba5a874d00be94b533bb1b5fab1734"
     )
 
 
