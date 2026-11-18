@@ -111,3 +111,4 @@ HsZXb9rppRQarZHHCvuLkKP7sAKPMCwrarf5KTTcpump  # kiwi good coin (18 Nov 12:49 cha
 GZUGmAtuSx9755C3W1CLDVtA7MZQ8QWF1XjhjEbjpump  # kiwi good coin (18 Nov 12:49 chat, D38)
 9hjBLBrc7WZW2H8UQvBAvG5WiTZotXUv2Bdcn4f4pump  # kiwi report: top coin missing from index (18 Nov 18:39 Rome)
 8HXsCMy8ma8QP2yVZXG5SZYyaTZw5AUrUDha1G4upump  # Founder, DCTY community (kiwi 18 Nov 20:20 Rome, #326)
+79rE2ac8JhN3U12QLhymgDmCTiwBN1d4maTcK1fhpump  # Apocrycoin (kiwi 18 Nov 20:41 Rome)
