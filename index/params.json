@@ -220,10 +220,10 @@
     "slippage_bps": 300
   },
   "payout": {
-    "holder_rewards": "7/10",
-    "draw_pot": "3/10",
+    "holder_rewards": "67/100",
+    "draw_pot": "7/25",
     "team": 0,
-    "buyback_burn": 0,
+    "buyback_burn": "1/20",
     "pay_in": "basket",
     "draw_period_hours": 1,
     "holder_reward_hours": 24,

@@ -28,10 +28,24 @@
 <div class="page-hero">
   <p class="kicker">Holders</p>
   <h1>Rewards &amp; draw</h1>
-  <p>0% of fees go to the team. 100% go to holders: 70% is distributed as rewards in the basket coins, and 30% goes to the draw pot.</p>
+  <p>100% of fees go back to the community: 67% holder rewards, 28% prize pot, 5% buyback & burn. 0% to the team.</p>
   <p>The team holds about 2% of the supply.</p>
 </div>
 <main>
+<section class="section">
+  <div class="glass card" id="fee-proof">
+    <h3>Proof: the dev cannot take the fees</h3>
+    <ul class="ticks">
+      <li>100% of the coin's creator fees go to the public <strong>system wallet</strong> <a class="mono" href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">3ann…hJkd</a>. Its key was generated on our server by the fee bot and is held only there.</li>
+      <li>Fee setting on pump.fun: <span id="fee-sharing-tx">transaction link added right after launch</span>.</li>
+      <li>A bot spends the fees by fixed public rules (<a href="docs.html#who-changes-rules">rules file, 72h timelock</a>). The 5% for buyback &amp; burn is held in the system wallet until the burn starts.</li>
+      <li>Every move is public: <a href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">system wallet on Solscan</a> and the bot's log <a class="mono" href="data/fee-bot.json" target="_blank" rel="noopener">fee-bot.json</a>.</li>
+      <li>Team wallets earn no rewards and receive 0% of fees.</li>
+      <li>Honest limit: the bots run on our server; full on-chain enforcement (multisig with time lock) is planned.</li>
+    </ul>
+    <div id="rules-lock"></div>
+  </div>
+</section>
 <section class="section">
   <div class="glass card dev-card">
     <h2>The dev does not run the money</h2>
@@ -49,7 +63,7 @@
   <div class="glass card">
     <h3>Daily rewards</h3>
     <p>You earn for every full hour you hold, starting after your first hour. Rewards are paid once a day at 00:10 UTC (01:10 Rome) for the day that just ended.</p>
-    <p>Rewards accrue with the holding score and are paid once a day in the basket. If your share of a coin is worth less than 0.00151384 SOL (the cost of opening a token account), it is not sent yet: it stays yours and is added to the next day, until it is worth sending. The cost of opening your token account is paid by the system wallet, from the holders' 70%.</p>
+    <p>Rewards accrue with the holding score and are paid once a day in the basket. If your share of a coin is worth less than 0.00151384 SOL (the cost of opening a token account), it is not sent yet: it stays yours and is added to the next day, until it is worth sending. The cost of opening your token account is paid by the system wallet, from the holders' 67%.</p>
     <p><strong>Payouts are automatic.</strong> Once a day a bot sends holder rewards from the public system wallet. The dev does not sign, pick or change any payment. Every payout is public on-chain and listed on this page. The only manual control is an emergency stop that pauses payouts for everyone; any use is announced.</p>
     <p>Team wallets (about 2% of supply) earn no rewards: <a href="https://solscan.io/account/E8JgzMnBJU5Mwbsmw88SyivaDiUYJNjkupU53UEG4uXJ" target="_blank" rel="noopener">creator E8Jg…4uXJ</a> and <a href="https://solscan.io/account/GscVFwxRLP15bAoT8QwfnHbXULDXZr6fGCsEsXCQJEks" target="_blank" rel="noopener">dev share GscV…JEks</a>.</p>
     <p class="muted">You need at least 1/1,000,000 of the supply for rewards to count. The multiplier changes your share of the fees that were actually collected.</p>
@@ -108,5 +122,7 @@
 <script src="nav.js?v=20261118f"></script>
 <script src="app.js?v=20261118f"></script>
 <script src="payouts.js?v=20261118f"></script>
+<script src="rules-lock.js?v=20261118g"></script>
+<script src="fee-proof.js?v=20261118g"></script>
 </body>
 </html>

@@ -70,11 +70,23 @@
   <div class="sec-head"><h2>Where the fees go</h2></div>
   <div class="glass card">
     <div class="split">
-      <div class="bar"><span class="a" style="width:70%">70%</span><span class="b" style="width:30%">30%</span></div>
-      <p>0% of fees go to the team. 100% go to holders: 70% is distributed as rewards in the basket coins, and 30% goes to the draw pot.</p>
+      <div class="bar"><span class="a" style="width:67%">67%</span><span class="b" style="width:28%">28%</span><span class="b" style="width:5%" title="buyback &amp; burn">5%</span></div>
+      <p>100% of fees go back to the community: 67% holder rewards, 28% prize pot, 5% buyback & burn. 0% to the team.</p>
       <p>The team holds about 2% of the supply.</p>
       <p class="muted">Weights are proportional to the square root of market cap, with an 18% cap and a 5% floor, recomputed every hour.</p>
     </div>
+  </div>
+  <div class="glass card" id="fee-proof">
+    <h3>Proof: the dev cannot take the fees</h3>
+    <ul class="ticks">
+      <li>100% of the coin's creator fees go to the public <strong>system wallet</strong> <a class="mono" href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">3ann…hJkd</a>. Its key was generated on our server by the fee bot and is held only there.</li>
+      <li>Fee setting on pump.fun: <span id="fee-sharing-tx">transaction link added right after launch</span>.</li>
+      <li>A bot spends the fees by fixed public rules (<a href="docs.html#who-changes-rules">rules file, 72h timelock</a>). The 5% for buyback &amp; burn is held in the system wallet until the burn starts.</li>
+      <li>Every move is public: <a href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">system wallet on Solscan</a> and the bot's log <a class="mono" href="data/fee-bot.json" target="_blank" rel="noopener">fee-bot.json</a>.</li>
+      <li>Team wallets earn no rewards and receive 0% of fees.</li>
+      <li>Honest limit: the bots run on our server; full on-chain enforcement (multisig with time lock) is planned.</li>
+    </ul>
+    <div id="rules-lock"></div>
   </div>
 </section>
 
@@ -121,5 +133,7 @@
 <script src="rules.js?v=20261118f"></script>
 <script src="nav.js?v=20261118f"></script>
 <script src="app.js?v=20261118f"></script>
+<script src="rules-lock.js?v=20261118g"></script>
+<script src="fee-proof.js?v=20261118g"></script>
 </body>
 </html>

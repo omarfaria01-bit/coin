@@ -49,10 +49,10 @@ def _mult(value: Fraction) -> str:
 
 
 def _pct(value: Fraction | int | str) -> str:
-    number = float(value if isinstance(value, Fraction) else frac(value)) * 100
-    if number == int(number):
-        return f"{int(number)}%"
-    return f"{number:.1f}%"
+    exact = (value if isinstance(value, Fraction) else frac(value)) * 100
+    if exact.denominator == 1:
+        return f"{int(exact)}%"
+    return f"{float(exact):.1f}%"
 
 
 def hold_summary(knots: tuple[tuple[int, Fraction], ...], t_start: int) -> str:
@@ -85,7 +85,8 @@ def build_rules() -> dict:
     holder = frac(params.payout.holder_rewards)
     draw = frac(params.payout.draw_pot)
     team = frac(params.payout.team)
-    if holder + draw + team != 1:
+    burn = frac(params.payout.buyback_burn)
+    if holder + draw + team + burn != 1:
         raise SystemExit("fee shares do not sum to 1")
     knots = tuple((int(a), h if isinstance(h, Fraction) else Fraction(h)) for a, h in _KNOTS)
     if int(T_START) != 3600:
@@ -109,10 +110,9 @@ def build_rules() -> dict:
         raise SystemExit("dust floor disagrees between params and rewards")
     if reward_min > MIN_PAYOUT_Q_MAX:
         raise SystemExit("minimum payout is outside the published range")
-    fee_line = (
-        f"{_pct(team)} of fees go to the team. 100% go to holders: "
-        f"{_pct(holder)} is distributed as rewards in the basket coins, "
-        f"and {_pct(draw)} goes to the draw pot."
+    fee_line = (  # D49 wording
+        f"100% of fees go back to the community: {_pct(holder)} holder rewards, "
+        f"{_pct(draw)} prize pot, {_pct(burn)} buyback & burn. {_pct(team)} to the team."
     )
     every = "hour" if int(params.rebalance_hours) == 1 else f"{int(params.rebalance_hours)} hours"
     cap = int(params.weights.cap_pct)
@@ -189,6 +189,7 @@ def build_rules() -> dict:
             "team_pct": int(team * 100),
             "holder_pct": int(holder * 100),
             "draw_pct": int(draw * 100),
+            "burn_pct": int(burn * 100),
             "pay_in": params.payout.pay_in,
         },
         "rewards": {
