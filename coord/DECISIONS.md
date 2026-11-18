@@ -486,3 +486,17 @@ out of the standing approval.
    0.5 SOL), within its `max_per_day_lamports`; the sender only spends SOL above pot + basket + reserve. The D43 floor
    still skips shares worth less than the rent (carried). Team wallets excluded and disclosed on the site:
    creator `E8Jg…4uXJ`, fomo dev share `GscV…JEks`. System wallet `3ann…hJkd`.
+
+## D47 · 2026-11-18 · Payouts count the hours actually held, from the first hour (kiwi, chat 21:06–21:10 Rome)
+kiwi: the first payout must follow the rules we set (earn after 1h of holding), not wait a full day. With D46's
+`day_min` (smallest balance over all of the day's snapshots, 0 if first seen after the day's first snapshot),
+nobody would earn anything on launch day.
+1. Replace the daily `day_min` weight with **balance-hours**: for each pair of consecutive hourly snapshots in the
+   UTC day, a wallet earns `min(balance_prev, balance_now)` for that hour. Absent or 0 in either snapshot = 0 for
+   that hour. The day's weight is the sum over its hours, times the loyalty multiplier (D43) at that hour.
+2. So a wallet earns from its second snapshot on (≥ 1 hour held, matching D43's "0 before 1h"); selling part of the
+   position lowers the next hours only; buying just before a snapshot and selling after still earns nothing.
+3. Payout cadence is unchanged: one settlement per UTC day at 00:10 UTC (01:10 Rome), for the day that just ended,
+   pro-rata on these weights; conservation (`paid + carried == accrued`) and the D43 dust floor unchanged.
+4. Site text (Rewards/FAQ/Docs): "You earn for every full hour you hold, starting after your first hour. Rewards are
+   paid once a day at 00:10 UTC for the day that just ended."
