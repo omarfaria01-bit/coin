@@ -38,7 +38,7 @@ test("config rejects unknown keys, bad mode or mint, and any local change of a p
   const smoke = load({ max_per_run_lamports: "20000000" }); // lowering a cap is allowed and public
   assert.equal(smoke.max_per_run_lamports, "20000000");
   assert.deepEqual(smoke.econ.local_lower_caps, { max_per_run_lamports: "20000000" });
-  assert.throws(() => load({ mode: "live" }), /burn/); // D49 burn not implemented yet (#344)
+  assert.equal(load({ mode: "live" }).burn_bps, 500); // live runs; the burn share is held until #344
 });
 
 test("keypair must be a private file; loaded key matches", () => {

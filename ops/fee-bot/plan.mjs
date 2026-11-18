@@ -3,20 +3,25 @@
 
 const BPS = 10_000n;
 
-/** Split newly received creator fees: pot = floor(in * potBps / 10000), basket = the rest. */
-export function splitIncoming(lamports, potBps) {
+/**
+ * Split newly received creator fees: pot = floor(in * potBps / 10000), burn = floor(in * burnBps / 10000),
+ * basket = the rest. The burn share (D49) is held in `burnLamports` until buyback & burn runs (#344).
+ */
+export function splitIncoming(lamports, potBps, burnBps = 0n) {
   if (lamports < 0n) throw new Error("negative incoming");
-  if (potBps < 0n || potBps > BPS) throw new Error("potBps out of range");
+  if (potBps < 0n || burnBps < 0n || potBps + burnBps > BPS) throw new Error("bps out of range");
   const pot = (lamports * potBps) / BPS;
-  return { pot, basket: lamports - pot };
+  const burn = (lamports * burnBps) / BPS;
+  return { pot, burn, basket: lamports - pot - burn };
 }
 
 /** Apply one claim to the state. Pure: returns a new state. */
-export function applyIncoming(state, lamports, potBps) {
-  const { pot, basket } = splitIncoming(lamports, potBps);
+export function applyIncoming(state, lamports, potBps, burnBps = 0n) {
+  const { pot, burn, basket } = splitIncoming(lamports, potBps, burnBps);
   return {
     ...state,
     potLamports: state.potLamports + pot,
+    burnLamports: state.burnLamports + burn,
     basketLamports: state.basketLamports + basket,
     totalInLamports: state.totalInLamports + lamports,
   };
@@ -89,14 +94,20 @@ export function rentTopUp(basketLamports, freeLamports, targetLamports, dayLeftL
   return x > 0n ? x : 0n;
 }
 
-/** Conservation: everything that came in is either still in pot/basket or was spent. */
+/** Conservation: everything that came in is either still in pot/burn/basket or was spent. */
 export function conserved(state) {
-  return state.totalInLamports === state.potLamports + state.basketLamports + state.totalSpentLamports;
+  return state.totalInLamports === state.potLamports + state.burnLamports + state.basketLamports + state.totalSpentLamports;
+}
+
+/** SOL the wallet holds for others (pot, burn share, basket budget): never spent on anything else. */
+export function owedLamports(state) {
+  return state.potLamports + state.burnLamports + state.basketLamports;
 }
 
 export function emptyState() {
   return {
     potLamports: 0n,
+    burnLamports: 0n,
     basketLamports: 0n,
     totalInLamports: 0n,
     totalSpentLamports: 0n,
@@ -112,6 +123,7 @@ export function stateToJson(s) {
 export function stateFromJson(o) {
   const base = emptyState();
   for (const k of Object.keys(base)) {
+    if (k === "burnLamports" && !(k in o)) continue; // state from before D49: nothing held for burn yet
     if (!(k in o)) throw new Error(`state missing ${k}`);
     base[k] = typeof base[k] === "bigint" ? BigInt(o[k]) : String(o[k]);
   }
