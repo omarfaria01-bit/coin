@@ -1,0 +1,382 @@
+{
+ "_note": "Bandit baseline (#186): known findings stay listed here; CI fails only on NEW ones.",
+ "results": [
+  {
+   "code": "40     try:\n41         with urllib.request.urlopen(req, timeout=timeout) as resp:\n42             payload = json.loads(resp.read().decode())\n",
+   "col_offset": 13,
+   "end_col_offset": 57,
+   "filename": "./adapters/solana_read.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 22,
+    "link": "https://cwe.mitre.org/data/definitions/22.html"
+   },
+   "issue_severity": "MEDIUM",
+   "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+   "line_number": 41,
+   "line_range": [
+    41
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+   "test_id": "B310",
+   "test_name": "blacklist"
+  },
+  {
+   "code": "172             d = load_json(f)\n173         except Exception:\n174             continue\n175         mem = d.get(\"members\") or []\n",
+   "col_offset": 8,
+   "end_col_offset": 20,
+   "filename": "./ops/gtasp10-logo/gtasp10-logo.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 703,
+    "link": "https://cwe.mitre.org/data/definitions/703.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "Try, Except, Continue detected.",
+   "line_number": 173,
+   "line_range": [
+    173,
+    174
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b112_try_except_continue.html",
+   "test_id": "B112",
+   "test_name": "try_except_continue"
+  },
+  {
+   "code": "62         freeze_authority_revoked=True,\n63         token_program=\"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA\",\n64         extensions=(),\n65         unique_traders=250,\n66         independent_traders=250,\n67         roundtrip_share=0.0,\n68         volume_wallets=100,\n69         median_trade_sol=0.1,\n70         volume_usd=300_000.0,\n71     )\n72     vals.update(kw)\n73     return Metrics(**vals)\n74 \n75 \n76 LEGIT = base(mint(1), \"LEGIT\", \"Grand Theft Auto 6 Army\")\n77 SYBIL = base(\n78     mint(2),\n79     \"SYBIL\",\n80     \"GTA 6 Official\",\n81     volume_usd=100_000.0,\n82     unique_traders=40,  # D38: F9 counts window wallets (>= 50); 40 sybil wallets fail\n83     independent_traders=0,  # 250 wallets x 0.01 SOL: below 0.05 SOL each (D33)\n84     roundtrip_share=0.9,\n85 )\n86 LOWFLOAT = base(\n87     mint(3),\n88     \"FLOAT\",\n89     \"GTA 6 Vice City\",\n90     mc_usd=50_000_000.0,\n",
+   "col_offset": 11,
+   "end_col_offset": 5,
+   "filename": "./reports/index_redteam_replay.py",
+   "issue_confidence": "MEDIUM",
+   "issue_cwe": {
+    "id": 259,
+    "link": "https://cwe.mitre.org/data/definitions/259.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "Possible hardcoded password: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'",
+   "line_number": 63,
+   "line_range": [
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b106_hardcoded_password_funcarg.html",
+   "test_id": "B106",
+   "test_name": "hardcoded_password_funcarg"
+  },
+  {
+   "code": "315     for name, cond, fn in all_rows():\n316         results = [(s, fn(random.Random(f\"{name}:{s}\"))) for s in range(seeds)]\n317         fails = [(s, o) for s, o in results if not o.passed]\n",
+   "col_offset": 26,
+   "end_col_offset": 54,
+   "filename": "./sim/acceptance_v033.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 330,
+    "link": "https://cwe.mitre.org/data/definitions/330.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "Standard pseudo-random generators are not suitable for security/cryptographic purposes.",
+   "line_number": 316,
+   "line_range": [
+    316
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random",
+   "test_id": "B311",
+   "test_name": "blacklist"
+  },
+  {
+   "code": "336         try:\n337             with urllib.request.urlopen(req, timeout=40) as resp:\n338                 payload = json.load(resp)\n",
+   "col_offset": 17,
+   "end_col_offset": 56,
+   "filename": "./sim/backtest.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 22,
+    "link": "https://cwe.mitre.org/data/definitions/22.html"
+   },
+   "issue_severity": "MEDIUM",
+   "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+   "line_number": 337,
+   "line_range": [
+    337
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+   "test_id": "B310",
+   "test_name": "blacklist"
+  },
+  {
+   "code": "102         return 0.0\n103     rng, wins = random.Random(f\"draw:{wallet}:{n}\"), 0\n104     for _ in range(samples):\n",
+   "col_offset": 16,
+   "end_col_offset": 51,
+   "filename": "./sim/outputs_v033.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 330,
+    "link": "https://cwe.mitre.org/data/definitions/330.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "Standard pseudo-random generators are not suitable for security/cryptographic purposes.",
+   "line_number": 103,
+   "line_range": [
+    103
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random",
+   "test_id": "B311",
+   "test_name": "blacklist"
+  },
+  {
+   "code": "93     params = params or CoinParams()\n94     rng = random.Random(f\"population:{seed}\")\n95     agents, tr = _crowd(rng, n, stable), Trades(f\"pop{seed}\")\n",
+   "col_offset": 10,
+   "end_col_offset": 45,
+   "filename": "./sim/population_v033.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 330,
+    "link": "https://cwe.mitre.org/data/definitions/330.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "Standard pseudo-random generators are not suitable for security/cryptographic purposes.",
+   "line_number": 94,
+   "line_range": [
+    94
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random",
+   "test_id": "B311",
+   "test_name": "blacklist"
+  },
+  {
+   "code": "95     agents, tr = _crowd(rng, n, stable), Trades(f\"pop{seed}\")\n96     behave = random.Random(f\"behaviour:{seed}\")  # draws for leave decisions, variant-independent\n97     farmer_exit = _farmer_exit_day(params) * DAY\n",
+   "col_offset": 13,
+   "end_col_offset": 47,
+   "filename": "./sim/population_v033.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 330,
+    "link": "https://cwe.mitre.org/data/definitions/330.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "Standard pseudo-random generators are not suitable for security/cryptographic purposes.",
+   "line_number": 96,
+   "line_range": [
+    96
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random",
+   "test_id": "B311",
+   "test_name": "blacklist"
+  },
+  {
+   "code": "6 import json\n7 import subprocess\n8 from pathlib import Path\n",
+   "col_offset": 0,
+   "end_col_offset": 17,
+   "filename": "./sim/run.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 78,
+    "link": "https://cwe.mitre.org/data/definitions/78.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "Consider possible security implications associated with the subprocess module.",
+   "line_number": 7,
+   "line_range": [
+    7
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess",
+   "test_id": "B404",
+   "test_name": "blacklist"
+  },
+  {
+   "code": "14     try:\n15         out = subprocess.check_output(\n16             [\"git\", \"rev-parse\", \"HEAD\"], text=True, stderr=subprocess.DEVNULL\n17         )\n18         return out.strip()\n",
+   "col_offset": 14,
+   "end_col_offset": 9,
+   "filename": "./sim/run.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 78,
+    "link": "https://cwe.mitre.org/data/definitions/78.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "Starting a process with a partial executable path",
+   "line_number": 15,
+   "line_range": [
+    15,
+    16,
+    17
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html",
+   "test_id": "B607",
+   "test_name": "start_process_with_partial_path"
+  },
+  {
+   "code": "14     try:\n15         out = subprocess.check_output(\n16             [\"git\", \"rev-parse\", \"HEAD\"], text=True, stderr=subprocess.DEVNULL\n17         )\n18         return out.strip()\n",
+   "col_offset": 14,
+   "end_col_offset": 9,
+   "filename": "./sim/run.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 78,
+    "link": "https://cwe.mitre.org/data/definitions/78.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "subprocess call - check for execution of untrusted input.",
+   "line_number": 15,
+   "line_range": [
+    15,
+    16,
+    17
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html",
+   "test_id": "B603",
+   "test_name": "subprocess_without_shell_equals_true"
+  },
+  {
+   "code": "37     )\n38     with urllib.request.urlopen(req, timeout=timeout) as resp:\n39         payload = json.loads(resp.read().decode())\n",
+   "col_offset": 9,
+   "end_col_offset": 53,
+   "filename": "./tools/check_hubs.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 22,
+    "link": "https://cwe.mitre.org/data/definitions/22.html"
+   },
+   "issue_severity": "MEDIUM",
+   "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+   "line_number": 38,
+   "line_range": [
+    38
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+   "test_id": "B310",
+   "test_name": "blacklist"
+  },
+  {
+   "code": "19 import os\n20 import subprocess\n21 import sys\n",
+   "col_offset": 0,
+   "end_col_offset": 17,
+   "filename": "./tools/run_index.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 78,
+    "link": "https://cwe.mitre.org/data/definitions/78.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "Consider possible security implications associated with the subprocess module.",
+   "line_number": 20,
+   "line_range": [
+    20
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess",
+   "test_id": "B404",
+   "test_name": "blacklist"
+  },
+  {
+   "code": "291     try:\n292         return subprocess.check_output(\n293             [\"git\", \"rev-parse\", \"HEAD\"], cwd=ROOT, text=True, stderr=subprocess.DEVNULL\n294         ).strip()\n295     except (subprocess.CalledProcessError, OSError):\n",
+   "col_offset": 15,
+   "end_col_offset": 9,
+   "filename": "./tools/run_index.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 78,
+    "link": "https://cwe.mitre.org/data/definitions/78.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "Starting a process with a partial executable path",
+   "line_number": 292,
+   "line_range": [
+    292,
+    293,
+    294
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html",
+   "test_id": "B607",
+   "test_name": "start_process_with_partial_path"
+  },
+  {
+   "code": "291     try:\n292         return subprocess.check_output(\n293             [\"git\", \"rev-parse\", \"HEAD\"], cwd=ROOT, text=True, stderr=subprocess.DEVNULL\n294         ).strip()\n295     except (subprocess.CalledProcessError, OSError):\n",
+   "col_offset": 15,
+   "end_col_offset": 9,
+   "filename": "./tools/run_index.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 78,
+    "link": "https://cwe.mitre.org/data/definitions/78.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "subprocess call - check for execution of untrusted input.",
+   "line_number": 292,
+   "line_range": [
+    292,
+    293,
+    294
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html",
+   "test_id": "B603",
+   "test_name": "subprocess_without_shell_equals_true"
+  },
+  {
+   "code": "38             d = json.load(f)\n39     except Exception:\n40         continue\n41     for e in d.get(\"excluded\", []) + d.get(\"members\", []):\n",
+   "col_offset": 4,
+   "end_col_offset": 16,
+   "filename": "./web/deploy/gtasp10-export.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 703,
+    "link": "https://cwe.mitre.org/data/definitions/703.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "Try, Except, Continue detected.",
+   "line_number": 39,
+   "line_range": [
+    39,
+    40
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b112_try_except_continue.html",
+   "test_id": "B112",
+   "test_name": "try_except_continue"
+  },
+  {
+   "code": "52                 s = json.loads(line)\n53             except Exception:\n54                 continue\n55             m = s.get(\"mint\")\n",
+   "col_offset": 12,
+   "end_col_offset": 24,
+   "filename": "./web/deploy/gtasp10-export.py",
+   "issue_confidence": "HIGH",
+   "issue_cwe": {
+    "id": 703,
+    "link": "https://cwe.mitre.org/data/definitions/703.html"
+   },
+   "issue_severity": "LOW",
+   "issue_text": "Try, Except, Continue detected.",
+   "line_number": 53,
+   "line_range": [
+    53,
+    54
+   ],
+   "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b112_try_except_continue.html",
+   "test_id": "B112",
+   "test_name": "try_except_continue"
+  }
+ ]
+}
