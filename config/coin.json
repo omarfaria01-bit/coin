@@ -30,7 +30,7 @@
   },
   "underwater": {
     "enabled": false,
-    "twap_hours": 6.0,
+    "twap_hours": 24.0,
     "min_age_hours": 48.0,
     "beta": 0.5,
     "d_max": 0.75
@@ -40,11 +40,11 @@
   },
   "sybil": {
     "weights": {
-      "same_fee_payer": 1.0,
-      "direct_transfer": 1.0,
+      "same_fee_payer": 0.0,
+      "direct_transfer": 0.6,
       "same_first_funder": 1.0,
-      "co_buy": 0.7,
-      "identical_balances": 0.6
+      "co_buy": 0.4,
+      "identical_balances": 0.3
     },
     "strong_edge": 0.7,
     "merge_threshold": 1.0,
@@ -55,7 +55,7 @@
     "identical_balance_tolerance": 0.001,
     "identical_balance_min_wallets": 4,
     "identical_balance_created_within_hours": 24.0,
-    "review_cluster_size": 10
+    "review_cluster_size": 50
   },
   "rewards": {
     "enabled": true,
@@ -68,7 +68,7 @@
   "draws": {
     "enabled": false,
     "period_days": 7.0,
-    "min_balance_usd": 10.0,
+    "min_balance_usd": 0.0,
     "min_hold_hours": 24.0,
     "prize_split": [
       0.4,
@@ -115,7 +115,7 @@
     "max_pool_volume_fraction": 0.02,
     "max_trade_lamports": null,
     "no_trade_first_hours": 24.0,
-    "breaker_drawdown": 0.6,
+    "breaker_drawdown": 0.4,
     "min_liquidity_lamports": null,
     "daily_loss_limit_lamports": null,
     "quiet_minutes": 15.0,

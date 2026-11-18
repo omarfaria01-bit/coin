@@ -1,0 +1,82 @@
+{
+ "schemaVersion": "1.0.0",
+ "pairs": [
+  {
+   "chainId": "solana",
+   "dexId": "pumpswap",
+   "url": "https://dexscreener.com/solana/5noplqbddwxewcmzrhctgvfboozrjhjzslwfkytg2rqw",
+   "pairAddress": "5NopLqBDdWXeWCmZrHctgvFboozrjHJzSLwfkyTg2rqw",
+   "baseToken": {
+    "address": "G9ZMir6uh66Y7viPkXAy7myA9jjE4T1YgheVUmGDpump",
+    "name": "Good To Ape",
+    "symbol": "GTA"
+   },
+   "quoteToken": {
+    "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "name": "USD Coin",
+    "symbol": "USDC"
+   },
+   "priceNative": "0.0001224",
+   "priceUsd": "0.0001224",
+   "txns": {
+    "h24": {
+     "buys": 10702,
+     "sells": 9588
+    }
+   },
+   "volume": {
+    "h24": 439422.38,
+    "h6": 52485.28,
+    "h1": 22353.39,
+    "m5": 1746.04
+   },
+   "liquidity": {
+    "base": 154284255,
+    "quote": 16074,
+    "usd": 34969.47
+   },
+   "fdv": 117264,
+   "marketCap": 117264,
+   "pairCreatedAt": 1794720632000
+  },
+  {
+   "chainId": "solana",
+   "dexId": "raydium",
+   "pairAddress": "8vF5vY9ZtYhYhYhYhYhYhYhYhYhYhYhYhYhYhYhYh",
+   "baseToken": {
+    "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "name": "Vibe Cat",
+    "symbol": "VIBE"
+   },
+   "quoteToken": {
+    "address": "So11111111111111111111111111111111111111112",
+    "name": "Wrapped SOL",
+    "symbol": "SOL"
+   },
+   "priceUsd": "0.01",
+   "volume": {
+    "h24": 1000.0
+   },
+   "liquidity": {
+    "usd": 9000.0
+   },
+   "marketCap": 100000.0,
+   "pairCreatedAt": 1794700000000
+  },
+  {
+   "chainId": "ethereum",
+   "dexId": "uniswap",
+   "pairAddress": "0xabc",
+   "baseToken": {
+    "address": "0xdef",
+    "name": "GTA",
+    "symbol": "GTA"
+   },
+   "quoteToken": {
+    "address": "0x1",
+    "name": "WETH",
+    "symbol": "WETH"
+   }
+  }
+ ]
+}

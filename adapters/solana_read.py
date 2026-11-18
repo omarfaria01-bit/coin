@@ -6,13 +6,16 @@ Mainnet READS only or Devnet read-only dry runs. Never sign or send transactions
 from __future__ import annotations
 
 import json
+import logging
 import urllib.error
 import urllib.request
 from typing import Any
 from urllib.parse import urlparse
 
-from adapters.parse_tx import parse_tx
+from adapters.parse_tx import ParseError, parse_tx
 from engine.types import SolTransfer, TokenEvent
+
+log = logging.getLogger(__name__)
 
 
 def validate_devnet_url(url: str) -> str:
@@ -95,15 +98,20 @@ def fetch_mint_history(
     sigs = fetch_signatures(rpc_url, mint, limit=limit)
     events_list: list[TokenEvent] = []
     sols_list: list[SolTransfer] = []
+    skipped = 0
     for sig in sigs:
         tx_data = fetch_transaction(rpc_url, sig)
         if not tx_data:
             continue
         try:
             evs, sols = parse_tx(tx_data, mint)
-            events_list.extend(evs)
-            sols_list.extend(sols)
-        except Exception:
-            # Skip unparseable or failed transactions
+        except (ParseError, ValueError, TypeError, KeyError) as exc:
+            # Malformed/failed transaction: skip it, but never silently.
+            skipped += 1
+            log.warning("skipping unparseable tx %s: %s", sig, exc)
             continue
+        events_list.extend(evs)
+        sols_list.extend(sols)
+    if skipped:
+        log.warning("fetch_mint_history: skipped %d of %d transactions", skipped, len(sigs))
     return tuple(events_list), tuple(sols_list)

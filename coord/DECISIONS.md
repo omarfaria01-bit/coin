@@ -178,3 +178,13 @@ turnover 0.05–3, score `0.4 ln MC + 0.3 ln Liq + 0.2 ln Fees + 0.1 ln Traders`
 equal weights, rebalance 18:00 UTC. Open: the data source for F4 and F9 (G1 found no confirmed
 official source for total fees; `reports/research_index_data_2026-11.md`). Until a source is fixed,
 F4 cannot be evaluated and the index is computed only as a dry run.
+
+## D23 · 2026-11-18 · Align `params.py` defaults to COIN_MATH v0.3.3 (#152)
+Eight defaults in `engine/params.py` / `config/coin.json` moved to the spec values: `underwater.twap_hours`
+6→24 (§5), `sybil.weights.same_fee_payer` 1→0, `direct_transfer` 1→3/5, `co_buy` 7/10→2/5,
+`identical_balances` 3/5→3/10, `sybil.review_cluster_size` 10→50 (§7), `draws.min_balance_usd` 10→0 (§9),
+`treasury_bot.breaker_drawdown` 3/5→2/5 (§12). COIN_MATH is the source of truth, so the code was stale.
+All eight fields are unused by `run_epoch` today (enforced weights live in `engine/sybil_v033.py`), so the
+sim re-run is unchanged: only goldens' `inputs_hash` moves, payouts/scores/state are byte-identical
+(`tools/regen_golden.py --check`, 33 acceptance rows PASS). `KNOWN_DRIFT` is now empty; the consistency
+test fails hard on any future movement. No kiwi decision needed (spec values, not new choices).

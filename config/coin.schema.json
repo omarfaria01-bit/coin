@@ -37,8 +37,8 @@
           "type": "number"
         },
         "min_balance_usd": {
-          "default": 10.0,
-          "description": "PROVISIONAL threshold (§9)",
+          "default": 0.0,
+          "description": "Unused: §9 draw eligibility is price-free (MIN_DRAW_SHARE), not a USD gate",
           "minimum": 0,
           "title": "Min Balance Usd",
           "type": "number"
@@ -319,11 +319,11 @@
         "weights": {
           "$ref": "#/$defs/SybilWeights",
           "default": {
-            "same_fee_payer": 1.0,
-            "direct_transfer": 1.0,
+            "same_fee_payer": 0.0,
+            "direct_transfer": 0.6,
             "same_first_funder": 1.0,
-            "co_buy": 0.7,
-            "identical_balances": 0.6
+            "co_buy": 0.4,
+            "identical_balances": 0.3
           }
         },
         "strong_edge": {
@@ -381,8 +381,8 @@
           "type": "number"
         },
         "review_cluster_size": {
-          "default": 10,
-          "description": "Clusters this big go to review.csv",
+          "default": 50,
+          "description": "Clusters with more wallets than this go to review.csv (§7)",
           "minimum": 2,
           "title": "Review Cluster Size",
           "type": "integer"
@@ -395,12 +395,14 @@
       "additionalProperties": false,
       "properties": {
         "same_fee_payer": {
-          "default": 1.0,
+          "default": 0.0,
+          "description": "§7: informational only, no link weight",
           "title": "Same Fee Payer",
           "type": "number"
         },
         "direct_transfer": {
-          "default": 1.0,
+          "default": 0.6,
+          "description": "§7 L1: two-sided token transfers",
           "title": "Direct Transfer",
           "type": "number"
         },
@@ -410,12 +412,14 @@
           "type": "number"
         },
         "co_buy": {
-          "default": 0.7,
+          "default": 0.4,
+          "description": "§7 L4: co-trades",
           "title": "Co Buy",
           "type": "number"
         },
         "identical_balances": {
-          "default": 0.6,
+          "default": 0.3,
+          "description": "§7 L5: identical balances",
           "title": "Identical Balances",
           "type": "number"
         }
@@ -515,8 +519,8 @@
           "type": "number"
         },
         "breaker_drawdown": {
-          "default": 0.6,
-          "description": "Stop buying at −60% from 7d high",
+          "default": 0.4,
+          "description": "Stop buying at −40% from the 72h high (§12)",
           "exclusiveMaximum": 1,
           "exclusiveMinimum": 0,
           "title": "Breaker Drawdown",
@@ -576,8 +580,8 @@
           "type": "boolean"
         },
         "twap_hours": {
-          "default": 6.0,
-          "description": "P̃ window (§5)",
+          "default": 24.0,
+          "description": "P̄ window (§5): arithmetic mean over the epoch's 86,400 s, not a 6 h P̃",
           "exclusiveMinimum": 0,
           "title": "Twap Hours",
           "type": "number"
@@ -748,7 +752,7 @@
       "$ref": "#/$defs/UnderwaterParams",
       "default": {
         "enabled": false,
-        "twap_hours": 6.0,
+        "twap_hours": 24.0,
         "min_age_hours": 48.0,
         "beta": 0.5,
         "d_max": 0.75
@@ -764,10 +768,10 @@
       "$ref": "#/$defs/SybilParams",
       "default": {
         "weights": {
-          "co_buy": 0.7,
-          "direct_transfer": 1.0,
-          "identical_balances": 0.6,
-          "same_fee_payer": 1.0,
+          "co_buy": 0.4,
+          "direct_transfer": 0.6,
+          "identical_balances": 0.3,
+          "same_fee_payer": 0.0,
           "same_first_funder": 1.0
         },
         "strong_edge": 0.7,
@@ -779,7 +783,7 @@
         "identical_balance_tolerance": 0.001,
         "identical_balance_min_wallets": 4,
         "identical_balance_created_within_hours": 24.0,
-        "review_cluster_size": 10
+        "review_cluster_size": 50
       }
     },
     "rewards": {
@@ -798,7 +802,7 @@
       "default": {
         "enabled": false,
         "period_days": 7.0,
-        "min_balance_usd": 10.0,
+        "min_balance_usd": 0.0,
         "min_hold_hours": 24.0,
         "prize_split": [
           0.4,
@@ -857,7 +861,7 @@
         "max_pool_volume_fraction": 0.02,
         "max_trade_lamports": null,
         "no_trade_first_hours": 24.0,
-        "breaker_drawdown": 0.6,
+        "breaker_drawdown": 0.4,
         "min_liquidity_lamports": null,
         "daily_loss_limit_lamports": null,
         "quiet_minutes": 15.0,
