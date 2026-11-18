@@ -195,8 +195,7 @@ def test_emergency_entries_use_the_documented_shape(tmp_path: Path) -> None:
     params = IndexParams.model_validate(json.loads(params_path.read_text()))
 
     payload = _payload(tmp_path / "run")
-    removed = apply_emergency(
-        payload, payload["members"][0]["mint"], "rug_flag", "2026-11-18T18:00:00Z", params
-    )
-    assert removed["members"] == []
+    gone = payload["members"][0]["mint"]
+    removed = apply_emergency(payload, gone, "rug_flag", "2026-11-18T18:00:00Z", params)
+    assert gone not in {m["mint"] for m in removed["members"]}  # D35: other coins may remain
     assert sorted(removed["emergency"][0]) == sorted(keys["emergency"])
