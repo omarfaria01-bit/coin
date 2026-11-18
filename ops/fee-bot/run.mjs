@@ -34,6 +34,7 @@ import {
   stateFromJson,
   stateToJson,
 } from "./plan.mjs";
+import { FEE_BOT_KEYS, loadEcon, mergeLocal } from "../../econ/params.mjs";
 
 // The SDK's ESM build fails to import under Node (anchor is CommonJS); its CJS build works.
 const { OnlinePumpSdk } = createRequire(import.meta.url)("@pump-fun/pump-sdk");
@@ -45,15 +46,6 @@ const CONFIG_KEYS = {
   mode: "string", // "dry" | "live"
   fee_mode: "string", // "sharing" (fee sharing config pays this wallet) | "creator" (this wallet is the creator)
   mint: "string",
-  pot_bps: "number",
-  slippage_bps: "number",
-  max_price_impact_pct: "number",
-  min_swap_lamports: "string",
-  max_per_swap_lamports: "string",
-  max_per_run_lamports: "string",
-  max_per_day_lamports: "string",
-  min_reserve_lamports: "string",
-  payout_rent_target_lamports: "string", // D46: free SOL kept for holders' new token accounts
   index_max_age_hours: "number",
   index_out_dir: "string",
   state_dir: "string",
@@ -63,18 +55,36 @@ const CONFIG_KEYS = {
 const log = (event, data = {}) => console.log(JSON.stringify({ t: new Date().toISOString(), event, ...data }));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export function loadConfig(file) {
-  const cfg = JSON.parse(fs.readFileSync(file, "utf8"));
-  for (const k of Object.keys(cfg)) if (!(k in CONFIG_KEYS)) throw new Error(`unknown config key ${k}`);
-  for (const [k, t] of Object.entries(CONFIG_KEYS)) {
-    if (typeof cfg[k] !== t) throw new Error(`config ${k} must be ${t}`);
+// Caps a local config may lower (smoke test), never raise. Every other rule is public only.
+const LOWERABLE = ["max_per_swap_lamports", "max_per_run_lamports", "max_per_day_lamports"];
+
+/**
+ * Local config (paths, mode, mint) + the public rules in force (#345): split, caps and slippage
+ * come from econ/params.json with its 72h timelock. Returns the merged config and `econ` info.
+ */
+export function loadConfig(file, { econFile, seenFile, nowMs } = {}) {
+  const local = JSON.parse(fs.readFileSync(file, "utf8"));
+  const own = {};
+  for (const [k, v] of Object.entries(local)) {
+    if (k in FEE_BOT_KEYS) continue; // checked by mergeLocal below
+    if (k === "pot_bps" || k === "burn_bps") throw new Error(`${k} is a public rule (econ/params.json, 72h timelock)`);
+    if (!(k in CONFIG_KEYS)) throw new Error(`unknown config key ${k}`);
+    own[k] = v;
   }
-  if (!["dry", "live"].includes(cfg.mode)) throw new Error("mode must be dry or live");
-  if (!["sharing", "creator"].includes(cfg.fee_mode)) throw new Error("fee_mode must be sharing or creator");
-  if (cfg.slippage_bps > 300) throw new Error("slippage_bps above 300 (3%) is not allowed");
-  if (cfg.pot_bps !== 3000) throw new Error("pot_bps must be 3000 (D43: 70/30)");
-  new PublicKey(cfg.mint); // throws on a bad mint
-  return cfg;
+  for (const [k, t] of Object.entries(CONFIG_KEYS)) {
+    if (typeof own[k] !== t) throw new Error(`config ${k} must be ${t}`);
+  }
+  if (!["dry", "live"].includes(own.mode)) throw new Error("mode must be dry or live");
+  if (!["sharing", "creator"].includes(own.fee_mode)) throw new Error("fee_mode must be sharing or creator");
+  new PublicKey(own.mint); // throws on a bad mint
+  const econ = loadEcon({ file: econFile, seenFile: seenFile ?? path.join(own.state_dir, "econ_seen.json"), nowMs });
+  const local_rules = Object.fromEntries(Object.entries(local).filter(([k]) => k in FEE_BOT_KEYS));
+  const { rules, tightened } = mergeLocal(local_rules, econ.active.fee_bot, LOWERABLE);
+  const split = econ.active.fee_split_bps;
+  if (split.burn > 0 && own.mode === "live") {
+    throw new Error("econ burn share > 0 but buyback & burn (D49, #344) is not implemented yet: live mode refused");
+  }
+  return { ...own, ...rules, pot_bps: split.pot, burn_bps: split.burn, econ: { ...econ.public, local_lower_caps: tightened } };
 }
 
 /** Read the keypair only from a private file owned by this user. Never logs it. */
@@ -219,7 +229,7 @@ export async function main(argv = process.argv.slice(2)) {
   }
   try {
     const wallet = loadKeypair(keyFile);
-    log("start", { mode: cfg.mode, fee_mode: cfg.fee_mode, wallet: wallet.publicKey.toBase58(), mint: cfg.mint });
+    log("start", { mode: cfg.mode, fee_mode: cfg.fee_mode, wallet: wallet.publicKey.toBase58(), mint: cfg.mint, econ: cfg.econ });
     const connection = new Connection(`https://mainnet.helius-rpc.com/?api-key=${key}`, "confirmed");
     const sdk = new OnlinePumpSdk(connection);
     let state = loadState(cfg.state_dir);
@@ -283,7 +293,7 @@ export async function main(argv = process.argv.slice(2)) {
       }
     }
 
-    const pub = { as_of: new Date().toISOString(), wallet: wallet.publicKey.toBase58(), mode: cfg.mode, ...stateToJson(state) };
+    const pub = { as_of: new Date().toISOString(), wallet: wallet.publicKey.toBase58(), mode: cfg.mode, econ: cfg.econ, ...stateToJson(state) };
     if (cfg.public_log_path) writeAtomic(cfg.public_log_path, JSON.stringify(pub));
     log("done", pub);
     return 0;

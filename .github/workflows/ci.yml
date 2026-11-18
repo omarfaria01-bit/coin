@@ -43,3 +43,7 @@ jobs:
           node-version: 22
       - run: node --test
         working-directory: ops/payout-bot
+      - run: node --test
+        working-directory: econ
+      - run: npm ci --ignore-scripts && node --test
+        working-directory: ops/fee-bot

@@ -16,17 +16,29 @@ const writeCfg = (over) => {
   return f;
 };
 
-test("example config loads", () => {
-  assert.equal(loadConfig(writeCfg({})).mode, "dry");
+const seenFile = path.join(dir, "econ_seen.json");
+const load = (over) => loadConfig(writeCfg(over), { seenFile });
+
+test("example config loads; split, caps and slippage come from econ/params.json", () => {
+  const cfg = load({});
+  assert.equal(cfg.mode, "dry");
+  assert.equal(cfg.pot_bps, 2800);
+  assert.equal(cfg.burn_bps, 500);
+  assert.equal(cfg.slippage_bps, 300);
+  assert.match(cfg.econ.sha256, /^[0-9a-f]{64}$/);
 });
 
-test("config rejects unknown keys, wrong types, high slippage, other splits, bad mint", () => {
-  assert.throws(() => loadConfig(writeCfg({ extra: 1 })), /unknown config key/);
-  assert.throws(() => loadConfig(writeCfg({ max_per_run_lamports: 5 })), /must be string/);
-  assert.throws(() => loadConfig(writeCfg({ slippage_bps: 301 })), /slippage/);
-  assert.throws(() => loadConfig(writeCfg({ pot_bps: 2000 })), /pot_bps/);
-  assert.throws(() => loadConfig(writeCfg({ mode: "yolo" })), /mode/);
-  assert.throws(() => loadConfig(writeCfg({ mint: "not-a-mint" })));
+test("config rejects unknown keys, bad mode or mint, and any local change of a public rule", () => {
+  assert.throws(() => load({ extra: 1 }), /unknown config key/);
+  assert.throws(() => load({ mode: "yolo" }), /mode/);
+  assert.throws(() => load({ mint: "not-a-mint" }));
+  assert.throws(() => load({ pot_bps: 3000 }), /public rule/);
+  assert.throws(() => load({ slippage_bps: 100 }), /public rule/);
+  assert.throws(() => load({ max_per_run_lamports: "9000000000" }), /public rule/);
+  const smoke = load({ max_per_run_lamports: "20000000" }); // lowering a cap is allowed and public
+  assert.equal(smoke.max_per_run_lamports, "20000000");
+  assert.deepEqual(smoke.econ.local_lower_caps, { max_per_run_lamports: "20000000" });
+  assert.throws(() => load({ mode: "live" }), /burn/); // D49 burn not implemented yet (#344)
 });
 
 test("keypair must be a private file; loaded key matches", () => {

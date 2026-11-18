@@ -523,3 +523,17 @@ kiwi: "il 5% va nei buybacks e burns dei nostri tokens: togli 3% dai rewards e 2
    0% to the team." (the hero line "100% of fees go to holders" changes to stay literally true).
 5. Manipulation check (CLAUDE.md rule 6): a disclosed, fixed-share, automatic buyback-and-burn is not wash trading;
    no discretionary buys, no selling, no hidden wallet.
+
+## D50 · 2026-11-18 · Economic rules are public and timelocked (kiwi 22:16 Rome, #345)
+kiwi: the dev must not be able to change fees or rewards on his own.
+1. The fee split (D49), the fee-bot caps, slippage and reserves, and the payout-bot caps live only in
+   `econ/params.json` on `main`. The bots refuse these keys in their local config; a local config may only
+   **lower** a cap (smoke test), and that is published (`local_lower_caps`).
+2. **72h timelock.** A version applies only when its `effective_from` has passed **and** the server first saw it
+   at least 72 hours earlier (`econ_seen.json` in the bot's state dir). Until then the bots keep the previous
+   version. Editing a version counts as a new one. Versions are appended, never edited.
+3. The sha256 of the version in force (canonical JSON) and the upcoming versions are in the public `fee-bot.json`
+   and `payouts.json`, so anyone can check them against GitHub.
+4. Honest limit: the bots run on our server; a server admin could still change the code. Full on-chain enforcement
+   (multisig with time lock) is #342 B.
+
