@@ -18,11 +18,16 @@ sys.path.insert(0, str(ROOT / "reports"))
 
 import index_redteam_replay as rt  # noqa: E402
 
-from engine.hourly_draw import MIN_POT_LAMPORTS_DEFAULT, plan_hourly_draw  # noqa: E402
+from engine.hourly_draw import (  # noqa: E402
+    CAP_DEFAULT,
+    MIN_POT_LAMPORTS_DEFAULT,
+    cap_weights,
+    plan_hourly_draw,
+)
 from engine.params import HoldParams  # noqa: E402
 from engine.scoring import h_of_age  # noqa: E402
 from index.filters import first_failed_filter  # noqa: E402
-from index.select import run_index, select_members  # noqa: E402
+from index.select import run_index, select_members, weights_bps  # noqa: E402
 
 P = rt.PARAMS
 HOLD = HoldParams()
@@ -185,3 +190,21 @@ def test_splitting_one_score_across_wallets_does_not_help_when_merged() -> None:
     weights = cap_weights({"whale": 10**9, **{f"c{i}": 10 for i in range(40)}})
     total = sum(weights.values())
     assert Fraction(weights["whale"], total) <= CAP_DEFAULT + Fraction(1, 1000)
+
+
+def test_basket_sandwich_weights_and_draw_caps() -> None:
+    """Prize-basket sandwiching is bounded by weights.cap_pct and the 5% draw odds cap."""
+    mints = [rt.mint(i) for i in range(1, 31)]
+    log_scores = {m: 5.0 for m in mints}
+    log_scores[mints[0]] = 20.0
+    mc_volume = {m: (2_000_000.0, 300_000.0) for m in mints}
+    mc_volume[mints[0]] = (50_000_000.0, 10_000_000.0)
+    bps = weights_bps(mints, log_scores, rt.PARAMS, mc_volume)
+    assert max(bps.values()) <= int(rt.PARAMS.weights.cap_pct * 100)
+
+    scores = {m: 1000 for m in mints}
+    scores[mints[0]] = 10_000_000
+    draw_capped = cap_weights({m: score for m, score in scores.items()}, CAP_DEFAULT)
+    total_draw_weight = sum(draw_capped.values())
+    max_draw_share = Fraction(max(draw_capped.values()), total_draw_weight)
+    assert max_draw_share <= CAP_DEFAULT + Fraction(1, 1000)
