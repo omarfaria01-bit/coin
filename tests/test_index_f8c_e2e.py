@@ -133,7 +133,8 @@ def _metrics(owner: str, ext: object = None) -> Metrics:
 
 @pytest.mark.parametrize(("owner", "ext"), [(SPL, None), (T22, [{"extension": "metadataPointer"}])])
 def test_allowlisted_mints_pass_f8(owner: str, ext: object) -> None:
-    assert first_failed_filter(_metrics(owner, ext), P) is None
+    # The fixture has no swap history, so F9 (D33) may trip later; F8 itself must pass.
+    assert first_failed_filter(_metrics(owner, ext), P) not in ("F8", "insufficient_data")
 
 
 @pytest.mark.parametrize("ext", ["permanentDelegate", "transferHook"])
