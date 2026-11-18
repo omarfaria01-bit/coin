@@ -60,17 +60,25 @@ def main(
             return 2
         client = HeliusClient(key, max_history_pages=args.max_history_pages)
     try:
-        if args.mode != "rebalance":
-            raise RuntimeError("mode")
-        _rebalance(
-            args,
-            client,
-            params,
-            overrides,
-            as_of,
-            measure or measure_mints,
-            discover or discover_mints,
-        )
+        found = discover or discover_mints
+        if args.mode == "sample":
+            from tools.index_watch import run_sample
+
+            run_sample(args, client, params, overrides, as_of, found)
+        elif args.mode == "emergency":
+            from tools.index_watch import run_emergency
+
+            run_emergency(args, client, params, as_of)
+        else:
+            _rebalance(
+                args,
+                client,
+                params,
+                overrides,
+                as_of,
+                measure or measure_mints,
+                found,
+            )
     except OfficialRefusal as exc:
         print(f"official run refused: {exc}", file=sys.stderr)
         return 3
@@ -120,6 +128,10 @@ def _rebalance(args, client, params, overrides, as_of, measure, discover) -> Non
             raise OfficialRefusal(f"{len(missing)} candidate(s) with insufficient_data")
     prev = [row["mint"] for row in (previous or {}).get("members") or []]
     payload = run_index(rows, prev, params, overrides, _iso(as_of), _commit(), ())
+    if params.rebalance_hours == 1:
+        from tools.index_watch import defer_exit
+
+        payload = defer_exit(payload, previous, params)
     if held:
         payload["data_hold"] = held
     _atomic(Path(args.out) / _out_name(as_of, params, bool(payload["dry_run"])), payload)
@@ -284,7 +296,7 @@ def _parser() -> argparse.ArgumentParser:
         action="store_true",
         help="official run: self_mint set and no insufficient_data candidate; else exit 3",
     )
-    parser.add_argument("--mode", choices=("rebalance",), default="rebalance")
+    parser.add_argument("--mode", choices=("rebalance", "sample", "emergency"), default="rebalance")
     return parser
 
 
