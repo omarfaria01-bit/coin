@@ -50,9 +50,18 @@ def good(i: int = 1, **kw: object) -> Metrics:
     return Metrics(**base)  # type: ignore[arg-type]
 
 
-def _run(tmp: Path, measure, samples: Path | None = None, mints: str | None = None) -> int:
+def _run(
+    tmp: Path,
+    measure,
+    samples: Path | None = None,
+    mints: str | None = None,
+    extra: tuple[str, ...] = (),
+    self_mint: str | None = None,
+) -> int:
     params = tmp / "params.json"
-    hourly = P.model_copy(update={"rebalance_hours": 1}).model_dump(mode="json")
+    hourly = P.model_copy(update={"rebalance_hours": 1, "self_mint": self_mint}).model_dump(
+        mode="json"
+    )
     params.write_text(json.dumps(hourly))
     argv = [
         "--as-of",
@@ -69,6 +78,7 @@ def _run(tmp: Path, measure, samples: Path | None = None, mints: str | None = No
     if mints:
         (tmp / "mints.txt").write_text(mints + "\n")
         argv.extend(["--mints-file", str(tmp / "mints.txt")])
+    argv.extend(extra)
     return main(argv, client=Fake(), measure=measure, discover=lambda *_a, **_k: [])
 
 
@@ -118,3 +128,22 @@ def test_missing_hour_keeps_the_member_and_a_crash_keeps_the_file(tmp_path: Path
 
     assert _run(tmp_path, boom) == 1
     assert json.loads((out / "2026-11-18T19.json").read_text())["data_hold"] == [mint(1)]
+
+
+def test_official_refuses_without_self_mint_and_writes_nothing(tmp_path: Path) -> None:
+    assert _run(tmp_path, lambda *_a, **_k: [good()], extra=("--official",)) == 3
+    assert not (tmp_path / "out").exists()
+
+
+def test_official_refuses_insufficient_data_and_keeps_previous_file(tmp_path: Path) -> None:
+    out = tmp_path / "out"
+    out.mkdir()
+    (out / "2026-11-18T18.json").write_text("{}")
+    bad = lambda *_a, **_k: [good(coverage=0.0)]  # noqa: E731
+    assert _run(tmp_path, bad, mints=mint(1), extra=("--official",), self_mint=mint(9)) == 3
+    assert sorted(p.name for p in out.iterdir()) == ["2026-11-18T18.json"]
+
+
+def test_official_with_self_mint_and_full_data_writes_a_file(tmp_path: Path) -> None:
+    assert _run(tmp_path, lambda *_a, **_k: [good()], extra=("--official",), self_mint=mint(9)) == 0
+    assert (tmp_path / "out" / "2026-11-18T19.json").is_file()

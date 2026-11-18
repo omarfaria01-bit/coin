@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
+from urllib.parse import urlparse
 
 import base58
 
@@ -56,3 +57,11 @@ def load_hubs(path: Path | str = DEFAULT_PATH) -> frozenset[str]:
             seen[address] = logical
             out.add(_require_pubkey(address, logical))
     return frozenset(out)
+
+
+def require_https(url: str) -> str:
+    """Return url if it is an https URL with a host; else ValueError (blocks file:, http:, ...)."""
+    parsed = urlparse(url) if isinstance(url, str) else None
+    if parsed is None or parsed.scheme != "https" or not parsed.netloc:
+        raise ValueError(f"only https URLs are allowed, got {url!r}")
+    return url

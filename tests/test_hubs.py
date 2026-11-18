@@ -53,3 +53,17 @@ def test_load_hubs_skips_comments_and_rejects_duplicates_and_bad_keys(tmp_path: 
     )
     with pytest.raises(ValueError, match="base58|32 bytes"):
         load_hubs(bad)
+
+
+def test_require_https_blocks_other_schemes() -> None:
+    import pytest
+
+    from adapters.hubs import require_https
+
+    assert (
+        require_https("https://api.mainnet-beta.solana.com")
+        == "https://api.mainnet-beta.solana.com"
+    )
+    for bad in ("http://x.example", "file:///etc/passwd", "https://", "ftp://x"):
+        with pytest.raises(ValueError):
+            require_https(bad)

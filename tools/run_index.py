@@ -38,6 +38,10 @@ from index.params import IndexParams, Overrides  # noqa: E402
 from index.select import canonical_json, run_index  # noqa: E402
 
 
+class OfficialRefusal(Exception):
+    """An official run was refused; nothing is written and the previous file stays (issue #166)."""
+
+
 def main(
     argv: list[str] | None = None,
     *,
@@ -67,6 +71,9 @@ def main(
             measure or measure_mints,
             discover or discover_mints,
         )
+    except OfficialRefusal as exc:
+        print(f"official run refused: {exc}", file=sys.stderr)
+        return 3
     except Exception as exc:  # leave any previous output file in place
         print(f"index run failed: {type(exc).__name__}", file=sys.stderr)
         return 1
@@ -80,6 +87,8 @@ def main(
 
 
 def _rebalance(args, client, params, overrides, as_of, measure, discover) -> None:
+    if args.official and not params.self_mint:  # refuse before any network call or write
+        raise OfficialRefusal("official run needs params.self_mint (the index coin mint)")
     mints = _mints(args, client, params, overrides, discover)
     window = as_of - params.window_hours * 3600
     if not mints and _latest(Path(args.out)) is not None:
@@ -100,6 +109,15 @@ def _rebalance(args, client, params, overrides, as_of, measure, discover) -> Non
         raise RuntimeError("no measurements")
     previous = _latest_payload(Path(args.out))
     rows, held = _hold_missing(rows, previous, params, overrides)
+    if args.official:
+        missing = [
+            row.mint
+            for row in rows
+            if (candidate_status(row, params, overrides) or first_failed_filter(row, params))
+            == "insufficient_data"
+        ]
+        if missing:
+            raise OfficialRefusal(f"{len(missing)} candidate(s) with insufficient_data")
     prev = [row["mint"] for row in (previous or {}).get("members") or []]
     payload = run_index(rows, prev, params, overrides, _iso(as_of), _commit(), ())
     if held:
@@ -261,6 +279,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--mints-file")
     parser.add_argument("--discover-pages", type=int, default=25)
     parser.add_argument("--max-history-pages", type=int, default=30)
+    parser.add_argument(
+        "--official",
+        action="store_true",
+        help="official run: self_mint set and no insufficient_data candidate; else exit 3",
+    )
     parser.add_argument("--mode", choices=("rebalance",), default="rebalance")
     return parser
 
