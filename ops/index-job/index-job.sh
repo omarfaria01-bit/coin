@@ -90,6 +90,9 @@ if [[ "$MODE" != "hourly" ]]; then
   exit 2
 fi
 
+# Disk hygiene: prune old cache files; the warning exit (3 at >=85% used) must not stop the job.
+uv run python tools/prune_index_cache.py --cache-dir "$REPO/data/index/cache" --disk-path "$REPO" || true
+
 prepare_worktree
 AS_OF="$(date -u +%Y-%m-%dT%H:00:00Z)"
 run --mode rebalance --as-of "$AS_OF"

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -164,3 +166,58 @@ def fetch_mint_history_incremental(
     truncated = truncated or bool(cached_truncated)  # D37: pruned history is a lower bound
     save_cache(mint, combined, truncated, as_of, window_seconds, cache_dir)
     return combined, truncated
+
+
+DEFAULT_MAX_AGE_SECONDS = 48 * 3600
+DEFAULT_MAX_TOTAL_BYTES = 1_500_000_000
+DISK_WARN_PCT = 85.0
+
+
+def prune_cache_dir(
+    now: float,
+    cache_dir: Path | None = None,
+    max_age_seconds: int = DEFAULT_MAX_AGE_SECONDS,
+    max_total_bytes: int = DEFAULT_MAX_TOTAL_BYTES,
+) -> list[Path]:
+    """Delete cache files not written for max_age_seconds, then oldest-first until the
+    directory is <= max_total_bytes. The cache is only an accelerator; a miss means a full
+    refetch, so deleting is always safe. Returns removed paths. Uses file mtimes."""
+    d = cache_dir or DEFAULT_CACHE_DIR
+    if not d.is_dir():
+        return []
+    entries: list[tuple[float, int, Path]] = []
+    for p in d.iterdir():
+        if p.is_file() and p.suffix in (".json", ".tmp"):
+            try:
+                st = p.stat()
+            except OSError:
+                continue
+            entries.append((st.st_mtime, st.st_size, p))
+    removed: list[Path] = []
+    keep: list[tuple[float, int, Path]] = []
+    for mtime, size, p in entries:
+        if now - mtime > max_age_seconds:
+            try:
+                p.unlink()
+                removed.append(p)
+            except OSError:
+                keep.append((mtime, size, p))
+        else:
+            keep.append((mtime, size, p))
+    total = sum(size for _, size, _ in keep)
+    for _mtime, size, p in sorted(keep):  # oldest first
+        if total <= max_total_bytes:
+            break
+        try:
+            p.unlink()
+            removed.append(p)
+            total -= size
+        except OSError:
+            continue
+    return removed
+
+
+def disk_used_pct(path: str | os.PathLike[str] = ".") -> float:
+    """Percent of the filesystem containing path that is used."""
+    u = shutil.disk_usage(path)
+    return 100.0 * u.used / u.total if u.total else 0.0
