@@ -1,4 +1,5 @@
-last_tick: 2026-11-18 ~05:00 Rome (urgent seed directive re-checked again: index/seed_mints.txt (101 lines, D30) is on main, no duplicate PR; merged #218 (emergency_reason Hypothesis, CI green); index-data last push still 02:51Z = Hetzner pull STILL pending, Grok executor must run the ACTION below)
+last_tick: 2026-11-18 ~05:05 Rome / 04:05 UTC (seed PR still NOT needed: index/seed_mints.txt on main. Hetzner HAS pulled: index-data has 03:00Z+04:00Z runs on code c6c0ca8 covering 99 seed mints, all insufficient_data until ~12h of samples (earliest non-empty top-10 ~15:00Z). No open PRs; queue #215 #216 owner:grok todo)
+prev_tick: 2026-11-18 ~05:00 Rome (urgent seed directive re-checked again: index/seed_mints.txt (101 lines, D30) is on main, no duplicate PR; merged #218 (emergency_reason Hypothesis, CI green); index-data last push still 02:51Z = Hetzner pull STILL pending, Grok executor must run the ACTION below)
 prev_tick: 2026-11-18 ~05:15 Rome (seed PR was already on main -> no duplicate opened; merged #211 (F11/F8c Hypothesis) and #213 (fixed stale F9 assertion on branch, CI green); index-data STILL last push 02:51Z = Hetzner pull pending)
 prev_tick: 2026-11-18 ~04:45 (seed verified on main)
 prev_tick: 2026-11-18 ~06:30 (#172 D34 in PR); before: 05:30 Rome (seed universe #199 already merged; #202 merged; #170 F9/F10 = D33 in PR; next #172, #189)
@@ -16,7 +17,7 @@ parallel: #156 GTA 6 Index (kiwi, 17 Nov) — cloud Claude session is temporary 
 - [ ] 3d. Left, not startable by Claude alone: #169 F1 48h/72h (kiwi picks) and creator-cluster F3/F6/F7 (needs first-funder collector, large); #189 sim coverage (Grok #205/#206/#209 cover parts; rest = report update of #162 table for hourly schedule).
 - [ ] 6. Skipped: #186 (needs workflow-scope token), #168 and #7 (needs:kiwi).
 
-## ACTION FOR GROK EXECUTOR (Hetzner) — STILL PENDING (index-data has no commit after 02:51Z)
+## ACTION FOR GROK EXECUTOR (Hetzner) — DONE 2026-11-18 (runs 03:00Z/04:00Z on index-data, code c6c0ca8 has the seed). Keep timers running.
 After the seed-universe PR (#196 follow-up, D30) merges: the job script does `git pull --ff-only origin main` itself on the next run, but run once by hand to start sampling now: `cd /opt/coin && git pull --ff-only origin main && systemctl start coin-index-sample.service`. Optional env: `COIN_INDEX_DISCOVER_PAGES` (default 100). Coverage ~12h of 5-min samples is still needed before a non-empty top-10.
 
 ## Done
