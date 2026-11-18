@@ -25,6 +25,8 @@ T0, T1 = 0, DAY
 SUPPLY = 10**18  # 1e9 tokens, 9 decimals → eligibility floor 1e12 base units (1/1e6)
 TOK = 10**9
 PARAMS = CoinParams()
+TS = PARAMS.hold.t_start_seconds  # T_START (D27: 1h)
+H_MAX = max(Fraction(h) for _, h in PARAMS.hold.knots)  # D27: 5x, reached at 4h
 ALPHA = Fraction(str(PARAMS.rewards.alpha_per_day))
 MIN_Q = PARAMS.rewards.push_min_transfer_lamports
 
@@ -99,27 +101,28 @@ def _w(rng: random.Random, label: str) -> str:
 
 
 def row_hold_time(rng: random.Random) -> Outcome:
-    """7d < 30d < 60d < 90d strictly, flat after 90d (same balance, one epoch)."""
+    """Score rises strictly from age 0 to 4h, then is flat (same balance, one epoch; D27)."""
     amt = rng.randint(1_000, 10**6) * TOK
-    ages = (7, 30, 60, 90, 120)
+    ages = (0, HOUR, 2 * HOUR, 3 * HOUR, 4 * HOUR, 7 * DAY, 90 * DAY, 120 * DAY)
     scores = []
-    for d in ages:
-        tr, w = Trades(f"hold{d}"), _w(rng, f"h{d}")
-        tr.buy(w, amt, T0 - d * DAY)
+    for a in ages:
+        tr, w = Trades(f"hold{a}"), _w(rng, f"h{a}")
+        tr.buy(w, amt, T0 - a)
         scores.append(_score(_run(tr)[0], w))
     ok = (
-        all(a < b for a, b in zip(scores[:4], scores[1:4], strict=False)) and scores[3] == scores[4]
+        all(a < b for a, b in zip(scores[:5], scores[1:5], strict=False))
+        and len(set(scores[4:])) == 1
     )
     return Outcome(ok, "h=" + ",".join(f"{float(s / amt):.3f}" for s in scores))
 
 
 def row_scalper(rng: random.Random) -> Outcome:
-    """Churning so no lot reaches 2h: score 0."""
+    """Churning so no lot reaches T_START: score 0."""
     tr, w = Trades("scalp"), _w(rng, "scalp")
     amt, ts = rng.randint(1_000, 10**5) * TOK, T0
-    while ts < T1 - 2 * HOUR:
+    while ts < T1 - TS:
         tr.buy(w, amt, ts)
-        hold = rng.randint(60, 2 * HOUR - 1)
+        hold = rng.randint(60, TS - 1)
         tr.sell(w, amt, ts + hold)
         ts += hold + rng.randint(1, 600)
     s = _score(_run(tr)[0], w)
@@ -127,9 +130,9 @@ def row_scalper(rng: random.Random) -> Outcome:
 
 
 def row_sniper(rng: random.Random) -> Outcome:
-    """Buys shortly before the epoch ends: score 0 for 2h."""
+    """Buys shortly before the epoch ends: score 0 for T_START."""
     tr, w = Trades("snipe"), _w(rng, "snipe")
-    tr.buy(w, rng.randint(1_000, 10**6) * TOK, T1 - rng.randint(1, 2 * HOUR - 1))  # strictly < 2h
+    tr.buy(w, rng.randint(1_000, 10**6) * TOK, T1 - rng.randint(1, TS - 1))  # strictly < T_START
     s = _score(_run(tr)[0], w)
     return Outcome(s == 0, f"score={float(s)}")
 
@@ -152,18 +155,18 @@ def row_partial_sale(rng: random.Random) -> Outcome:
 
 
 def row_new_buy_on_old_bag(rng: random.Random) -> Outcome:
-    """A new buy leaves the old lots' score unchanged (new lot < 2h adds 0)."""
+    """A new buy leaves the old lots' score unchanged (new lot < T_START adds 0)."""
     w, amt = _w(rng, "nb"), rng.randint(1_000, 10**5) * TOK
     a, b = Trades("nb-a"), Trades("nb-b")
     for tr in (a, b):
         tr.buy(w, amt, T0 - 40 * DAY)
-    b.buy(w, rng.randint(1, 10**6) * TOK, T1 - rng.randint(1, 2 * HOUR - 1))
+    b.buy(w, rng.randint(1, 10**6) * TOK, T1 - rng.randint(1, TS - 1))
     sa, sb = _score(_run(a)[0], w), _score(_run(b)[0], w)
     return Outcome(_same(sa, sb), f"before={float(sa):.0f} after={float(sb):.0f}")
 
 
 def row_transfer_age_reset(rng: random.Random) -> Outcome:
-    """Receiver starts at age 0: nothing moved scores before 2h, never the sender's age."""
+    """Receiver starts at age 0: nothing moved scores before T_START, never the sender's age."""
     tr, a, b = Trades("tx"), _w(rng, "tx-a"), _w(rng, "tx-b")
     amt = rng.randint(1_000, 10**5) * TOK
     tr.buy(a, amt, T0 - 90 * DAY)
@@ -172,7 +175,7 @@ def row_transfer_age_reset(rng: random.Random) -> Outcome:
     held = T1 - t
     s, cap = _score(_run(tr)[0], b), _h(held) * amt * held / DAY
     return Outcome(
-        s <= cap and (held >= 2 * HOUR or s == 0), f"recv={float(s):.0f} bound={float(cap):.0f}"
+        s <= cap and (held >= TS or s == 0), f"recv={float(s):.0f} bound={float(cap):.0f}"
     )
 
 
@@ -218,11 +221,11 @@ def row_exact_payout(rng: random.Random) -> Outcome:
 
 
 def row_multiplier_bounds(rng: random.Random) -> Outcome:
-    """Under 2h scores 0; never above 2.8× without boost."""
-    ages = [rng.randint(0, 2 * HOUR - 1), *(rng.randint(0, 400 * DAY) for _ in range(20))]
+    """Under T_START scores 0; never above the 5× curve cap (D27)."""
+    ages = [rng.randint(0, TS - 1), *(rng.randint(0, 400 * DAY) for _ in range(20))]
     hs = [_h(a) for a in ages]
-    ok = hs[0] == 0 and all(Fraction(0) <= h <= Fraction(14, 5) for h in hs)
-    return Outcome(ok, f"h(<2h)={hs[0]} max_h={float(max(hs)):.3f}")
+    ok = hs[0] == 0 and all(Fraction(0) <= h <= H_MAX for h in hs)
+    return Outcome(ok, f"h(<T_START)={hs[0]} max_h={float(max(hs)):.3f}")
 
 
 def row_pending(rng: random.Random) -> Outcome:
@@ -273,16 +276,16 @@ def row_small_holder(rng: random.Random) -> Outcome:
 
 
 ROWS: tuple[tuple[str, str, Callable[[random.Random], Outcome]], ...] = (
-    ("Holding time 7d/30d/60d/90d", "strictly increasing, flat after 90d", row_hold_time),
-    ("Scalper churning < 2h", "score = 0", row_scalper),
-    ("Snapshot sniper", "score = 0 for 2h", row_sniper),
+    ("Holding time 0h–4h then flat", "strictly increasing to 4h, flat after (D27)", row_hold_time),
+    ("Scalper churning < T_START (1h)", "score = 0", row_scalper),
+    ("Snapshot sniper", "score = 0 for T_START (1h)", row_sniper),
     ("Partial sale", "loses exactly the sold lots' score (newest first)", row_partial_sale),
     ("New buy on an old bag", "old lots' score unchanged", row_new_buy_on_old_bag),
     ("Transfer to another owner", "receiver starts at age 0", row_transfer_age_reset),
     ("Whale cap, 10 clusters", "π ≤ 5%, ≤ 2× proportional, rest in pot", row_cap),
     ("S = 0", "nothing paid, pot unchanged", row_zero_score),
     ("Exact payout", "Σ payouts + rollover == R_e", row_exact_payout),
-    ("Multiplier bounds", "< 2h → 0, ≤ 2.8× without boost", row_multiplier_bounds),
+    ("Multiplier bounds", "< 1h → 0, ≤ 5× (D27)", row_multiplier_bounds),
     ("Small balance below MIN_PAYOUT_Q", "pending never decreases, paid at threshold", row_pending),
     ("Any split, 2–10 wallets, boost off", "total score never higher", row_split_never_gains),
     ("€100 holder at $50k..$50M", "eligible in every case", row_small_holder),

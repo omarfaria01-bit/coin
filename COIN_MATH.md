@@ -8,7 +8,7 @@ All parameters below are **defaults**. They live in `config/coin.json` and are t
 > **Parameters are not frozen.** The holding curve, the start time, the eligibility shares and the draw period below are defaults. The simulator compares them with the listed variants before launch.
 
 > **v0.3.3 changes (faster rewards, small holders, fifth review):**
-> - **Fast start.** Tokens start earning after 2 hours instead of 48. The holding curve is steeper in the first 3 days and keeps growing up to 90 days (max 2.8×).
+> - **Fast start (D27, kiwi 18 Nov).** Tokens start earning after 1 hour. The multiplier climbs from 1× at 1h to 5× at 4h and stays there.
 > - **Eligibility no longer uses any price.** It is a minimum share of supply held on average. The base reward path (sections 1–4, 6–8) is now price-free, so it works from the first minute on any pool, and nobody's trades can affect it.
 > - **Small balances are never lost.** Every wallet has a running reward balance that is paid out when it passes a small threshold.
 > - A shared fee payer is informational only and can never contribute to a merge.
@@ -103,14 +103,14 @@ B̄_c  ≥  MIN_ELIGIBLE_SHARE · total supply        (default 1/1,000,000 of su
 
 ## 3. Hold multiplier (age): fast start, long-term loyalty
 
-`h(a)` is **0 below `T_START` = 6 hours** (kiwi, 2026-11-14, D21), then **piecewise linear** between published knots, flat after 90 days:
+`h(a)` is **0 below `T_START` = 1 hour** (kiwi, 2026-11-18, D27; supersedes 6h / D21 and the 90-day curve), then **piecewise linear** between published knots, flat from 4 hours:
 
-| age | < 6h | 2h | 6h | 12h | 24h | 48h | 72h | 7d | 14d | 30d | 60d | 90d+ |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| h | 0 | 1.00 | 1.15 | 1.30 | 1.50 | 1.75 | 1.90 | 2.10 | 2.30 | 2.50 | 2.70 | 2.80 |
+| age | < 1h | 1h | 1h30 | 1h45 | 2h | 2h30 | 3h | 4h+ |
+|---|---|---|---|---|---|---|---|---|
+| h | 0 | 1.00 | 1.00 | 1.50 | 2.00 | 3.00 | 4.00 | 5.00 |
 
-- After 6 hours a token earns, starting at 1.15× (knots below T_START are not used). After one day it counts 1.5×, after three days 1.9×, and it keeps growing for three months.
-- The multiplier acts on the **score** (your share of the pot). It is not a yield: 1.5× does not mean +50% on your money.
+- After 1 hour a token earns 1×; the multiplier reaches its maximum of 5× at 4 hours and stays there.
+- The multiplier acts on the **score** (your share of the pot). It is not a yield: 5× does not mean +400% on your money.
 - Each lot has its own age. Buying more never resets the age of what you already hold.
 
 For each lot, its age-weighted time in the epoch is split at 48h, the age where the underwater boost can start (section 5):
@@ -126,12 +126,12 @@ Because `h` is linear between knots, the sum over each segment has a closed form
 
 ## 4. The start rule (replaces the flipper discount)
 
-**A token starts earning when it has been held for `T_START` (6 hours).** Lot-time below that scores zero, and nothing is paid back later for it.
+**A token starts earning when it has been held for `T_START` (1 hour).** Lot-time below that scores zero, and nothing is paid back later for it.
 
 What the rule and the curve do together:
-- **Scalping earns nothing.** Under LIFO, a token bought and sold within 6 hours never counts.
-- **Short holds earn little.** Someone who holds in 4-hour cycles averages 0.51× per hour held, about a quarter of a 7-day holder (2.1×). In 12-hour cycles it is 0.96×, under half.
-- **Snapshot sniping is useless.** Everything is time-weighted, and the first 6 hours count zero.
+- **Scalping earns nothing.** Under LIFO, a token bought and sold within 1 hour never counts.
+- **Short holds earn a lot more than before.** The curve saturates at 4 hours, so a trader in ~5-hour cycles earns about 0.53 of a long holder's reward per token-hour (measured, seed 0). This is a consequence of kiwi's curve, not a bug; the loyalty advantage now comes only from staying past 4 hours, not from age.
+- **Snapshot sniping is useless.** Everything is time-weighted, and the first hour counts zero.
 - **No cluster-level factor.** A lot's score depends only on that lot, so a wrong cluster merge can't change it.
 - **Splitting can't help.** `h` never falls as a lot ages, so keeping the oldest lots (what LIFO does) is the best a holder can do. No arrangement of the same trades across several wallets scores more than one wallet. (The one bounded exception is in section 5.)
 - **A bag is never penalized for trading around it.**
@@ -176,7 +176,7 @@ S   = Σ s_c over eligible clusters
 ```
 
 - The score is a sum over lots. No factor is computed at cluster level.
-- **Multiplier bounds (published):** a token younger than 2h counts 0; from 2h to 48h it counts 1.0× to 1.75×; after 48h, 1.75× to 2.8×, and up to 4.2× with the full underwater boost. Changing a parameter that moves these bounds needs a DECISIONS.md entry.
+- **Multiplier bounds (published, D27):** a token younger than 1h counts 0; from 1h to 4h it counts 1.0× to 5.0×; after 4h it stays at 5.0×, and up to 7.5× with the full underwater boost. Changing a parameter that moves these bounds needs a DECISIONS.md entry.
 - **If `S = 0`** (nobody has an eligible token older than 2h): nothing is distributed, `R_e` stays in the pot, and no division is performed.
 
 **Whale cap with bounded redistribution** (when `S > 0`). Parameters: `CAP = 1/20` (5%), uplift limit `G = 2`.
@@ -461,9 +461,9 @@ The simulator is a pure off-chain model (no blockchain, no UI) built on the refe
 |---|---|
 | Whale splits into 50 wallets funded from one wallet | Rewards gain ≤ 0%, 1 draw entry, cap still applies |
 | Scalper keeping a balance by churning (no lot reaches 2h) | Score = 0 |
-| Snapshot sniper (buys before the epoch ends) | Score = 0 for 2h, then only time-weighted |
-| Holding time 7d vs 30d vs 60d vs 90d, same balance | Score strictly increasing, then flat after 90d |
-| Trader in 4h cycles vs a 7-day holder | Reward per token-hour ≤ 30% of the holder's |
+| Snapshot sniper (buys before the epoch ends) | Score = 0 for 1h, then only time-weighted |
+| Holding time 0h to 4h, same balance | Score strictly increasing to 4h, then flat |
+| Trader in ~5h cycles vs a long holder | Reward per token-hour ≤ 60% of the holder's (D27; was 30% with the old curve) |
 | Partial sale | Score lost is exactly that of the lots sold (newest first) |
 | New buy on top of an old bag | Age and score of the old lots unchanged |
 | Transfer to another owner | Receiver starts from age 0 with no cost basis; no advantage moves with the tokens |
@@ -497,7 +497,7 @@ The simulator is a pure off-chain model (no blockchain, no UI) built on the refe
 | Retroactive merge | Past epochs unchanged; current epoch equals a from-genesis rebuild |
 | Exact payout | `Σ payouts + rollover_units == R_e`, all in Q base units, on every seed |
 | Draw payout | Prizes sum to ≤ `D`; unassigned prizes and rounding units stay in the draw pot |
-| Multiplier bounds | Tokens under 2h score 0; never above 2.8× without boost, 4.2× with it |
+| Multiplier bounds | Tokens under 1h score 0; never above 5× without boost, 7.5× with it |
 | Higher multiplier vs. concentration | With the 2.8× curve the top-10% reward share is not higher than with the 2.0× curve by more than 5 points (first target) |
 | Volume −90% overnight | Payouts ≥ 45% of the prior level after 7 days |
 | Informed agent vs. simple holder | First target: informed agent's reward per token ≤ 1.25× the simple holder's |

@@ -9,9 +9,9 @@ from engine.params import CoinParams
 
 def test_defaults_untouched_and_variants_differ() -> None:
     assert var.VARIANTS["default"][1] == CoinParams()
-    assert CoinParams().hold.t_start_seconds == 21_600
+    assert CoinParams().hold.t_start_seconds == 3_600
     t_starts = {p.hold.t_start_seconds for _, p in var.VARIANTS.values()}
-    assert t_starts == {2 * 3600, 6 * 3600, 12 * 3600, 48 * 3600}
+    assert t_starts == {3600, 2 * 3600, 12 * 3600, 48 * 3600}
 
 
 def test_rows_under_restores_params() -> None:
@@ -19,7 +19,7 @@ def test_rows_under_restores_params() -> None:
     old_curve = var.VARIANTS["curve old (48h, 2.0× @30d)"][1]
     fails = var.row_failures(old_curve, 1)
     assert acc.PARAMS is before
-    assert "Holding time 7d/30d/60d/90d" in fails  # flat after 30d: fails by design
+    assert "Holding time 0h–4h then flat" in fails  # flat after 30d: fails by design
     assert var.row_failures(CoinParams(), 1) == []
 
 

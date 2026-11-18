@@ -69,17 +69,13 @@ class OutsideParams:
 
 
 _HOLD_KNOTS = (
-    (2 * _HOUR, Fraction(1)),
-    (6 * _HOUR, Fraction(23, 20)),
-    (12 * _HOUR, Fraction(13, 10)),
-    (24 * _HOUR, Fraction(3, 2)),
-    (48 * _HOUR, Fraction(7, 4)),
-    (72 * _HOUR, Fraction(19, 10)),
-    (7 * _DAY, Fraction(21, 10)),
-    (14 * _DAY, Fraction(23, 10)),
-    (30 * _DAY, Fraction(5, 2)),
-    (60 * _DAY, Fraction(27, 10)),
-    (90 * _DAY, Fraction(14, 5)),
+    (1 * _HOUR, Fraction(1)),
+    (90 * 60, Fraction(1)),
+    (105 * 60, Fraction(3, 2)),
+    (2 * _HOUR, Fraction(2)),
+    (150 * 60, Fraction(3)),
+    (3 * _HOUR, Fraction(4)),
+    (4 * _HOUR, Fraction(5)),
 )
 
 SPEC_DEFAULTS: tuple[SpecDefault, ...] = (
@@ -90,7 +86,7 @@ SPEC_DEFAULTS: tuple[SpecDefault, ...] = (
         "eligibility.min_eligible_share",
         Fraction(1, 10**6),
     ),
-    SpecDefault("3", "T_START = 6 hours", "hold.t_start_seconds", 6 * _HOUR),
+    SpecDefault("3", "T_START = 1 hour", "hold.t_start_seconds", 1 * _HOUR),
     SpecDefault("3", "h(a) knot table", "hold.knots", _HOLD_KNOTS),
     SpecDefault("3", "E1/E2 split at 48h", "hold.boost_age_seconds", 48 * _HOUR),
     SpecDefault("5", "P-bar window = the epoch's 86,400 s", "underwater.twap_hours", 24),

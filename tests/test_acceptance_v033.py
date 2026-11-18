@@ -27,7 +27,7 @@ def test_failing_row_is_reported_with_worst_seed_and_exit_1(
     assert main(["--acceptance", "--seeds", "2", "--out", str(report)]) == 1
     text = report.read_text(encoding="utf-8")
     assert "| Broken row | never | FAIL (2/2 seeds) | seed 0: boom |" in text
-    assert "| Holding time 7d/30d/60d/90d |" in text and "| PASS |" in text
+    assert "| Holding time 0h–4h then flat |" in text and "| PASS |" in text
 
 
 def test_all_rows_pass_exit_0(tmp_path: Path) -> None:

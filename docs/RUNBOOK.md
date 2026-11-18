@@ -257,7 +257,7 @@ Targeted tests may cover a row more than once.
 
 | §14 rows (all PASS) | Condition | Covered by |
 |---|---|---|
-| Holding time 7d/30d/60d/90d; Scalper churning < 2h | score strictly rises then flattens; churn scores 0 | `tests/test_acceptance_v033.py::test_every_row_passes_on_three_seeds` |
+| Holding time 0h–4h then flat; Scalper churning < T_START (1h) | score strictly rises to 4h then flattens; churn scores 0 | `tests/test_acceptance_v033.py::test_every_row_passes_on_three_seeds` |
 | Snapshot sniper; Partial sale | 0 below `T_START`; sold lots leave newest first | `tests/test_acceptance_v033.py::test_every_row_passes_on_three_seeds` |
 | New buy on an old bag; Transfer to another owner | old lots unchanged; receiver age resets | `tests/test_acceptance_v033.py::test_every_row_passes_on_three_seeds` |
 | Whale cap, 10 clusters; S = 0; Exact payout; Multiplier bounds | π ≤ 5%, ≤ 2× proportional; Σ payouts + rollover == R_e; < 6h → 0, ≤ 2.8× | `tests/test_acceptance_v033.py::test_every_row_passes_on_three_seeds` |
