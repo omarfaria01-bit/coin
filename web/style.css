@@ -9,9 +9,21 @@ a{color:inherit}
 .logo b{color:var(--pink);text-shadow:0 0 12px var(--pink)}
 .brand{display:inline-flex;align-items:center;gap:.55rem;text-decoration:none;min-width:0}
 .brand-img{width:40px;height:40px;border-radius:10px;object-fit:cover;box-shadow:0 0 14px rgba(255,45,149,.45);flex:none}
-.links{display:none;gap:1.2rem;margin-left:auto;font-weight:600;font-size:.9rem}
-.links a{text-decoration:none;opacity:.85}.links a:hover{opacity:1;color:var(--hot)}
-@media(min-width:900px){.links{display:flex}}
+.links{display:none;gap:.7rem;margin-left:auto;font-weight:700;font-size:.84rem}
+.links a{text-decoration:none;opacity:.82;padding:.35rem .05rem}
+.links a:hover,.links a.active{opacity:1;color:var(--yellow)}
+.nav-toggle{margin-left:auto;width:44px;height:44px;border:1px solid var(--line);border-radius:12px;background:#ffffff12;color:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.burger,.burger:before,.burger:after{display:block;width:18px;height:2px;background:#fff;position:relative;border-radius:2px}
+.burger:before,.burger:after{content:"";position:absolute;left:0}
+.burger:before{top:-6px}.burger:after{top:6px}
+.nav.open .burger{background:transparent}
+.nav.open .burger:before{top:0;transform:rotate(45deg)}
+.nav.open .burger:after{top:0;transform:rotate(-45deg)}
+@media(max-width:1099px){
+  .nav.open .links{display:flex;flex-direction:column;position:absolute;top:100%;left:0;right:0;margin:0;padding:.35rem 1rem 1rem;background:rgba(12,3,22,.97);border-bottom:1px solid var(--line);z-index:40;gap:0}
+  .nav.open .links a{padding:.75rem .15rem;border-bottom:1px solid #ffffff12;font-size:1.02rem}
+}
+@media(min-width:1100px){.links{display:flex;align-items:center}.nav-toggle{display:none}}
 
 .hero{position:relative;min-height:100svh;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;padding:6rem 1.2rem 9rem}
 .sky{position:absolute;inset:0;background:linear-gradient(180deg,#12052a 0%,#3a0d5c 30%,#a3167a 55%,#ff4f6d 72%,#ff9a3d 86%,#ffd166 100%)}
@@ -361,3 +373,29 @@ h2{line-height:1.08;letter-spacing:.01em}
   #cands td[data-l="Vol 24h"]{text-align:right}
 }
 @media(max-width:420px){.fee-line{font-size:.8em;padding:.3rem .7rem}}
+
+/* Multi-page shell (18 Nov) */
+.page-hero{position:relative;padding:6.6rem 1.2rem 1.5rem;background:linear-gradient(180deg,rgba(10,2,20,.5),rgba(10,2,20,.78) 72%,#0d0418),url(wallpaper.jpg) center 32%/cover no-repeat}
+@media(max-width:700px){.page-hero{padding:6.2rem 1rem 1.2rem;background:linear-gradient(180deg,rgba(10,2,20,.58),rgba(10,2,20,.82) 72%,#0d0418),url(wallpaper-m.jpg) center 30%/cover no-repeat}}
+.page-hero h1{margin:.15rem 0 .45rem;font-family:Bungee,sans-serif;font-weight:400;font-size:clamp(2rem,8vw,3.3rem);line-height:1.02;background:linear-gradient(90deg,#fff,#ffd166);-webkit-background-clip:text;background-clip:text;color:transparent}
+.page-hero p{max-width:70ch;margin:.25rem 0 0}
+.lead{font-size:1.05rem}
+.home-grid{display:grid;gap:1rem;grid-template-columns:1fr}
+@media(min-width:860px){.home-grid{grid-template-columns:repeat(3,1fr)}}
+a.card{display:block;text-decoration:none;color:inherit}
+.foot-links{display:flex;flex-wrap:wrap;gap:.35rem .9rem;justify-content:center;margin-top:.7rem}
+.foot-links a{color:var(--muted);font-size:.8rem;font-weight:700;text-decoration:none}
+.foot-links a:hover{color:var(--hot)}
+.soon-banner{padding:1rem 1.15rem;margin:0 0 1rem;border-color:#ffd16677}
+.soon-banner strong{color:var(--yellow);letter-spacing:.12em}
+.stats-row{display:grid;gap:.7rem;grid-template-columns:1fr 1fr;margin:0 0 1rem}
+@media(min-width:860px){.stats-row{grid-template-columns:repeat(4,1fr)}}
+.chart-card{padding:.8rem .8rem .4rem}
+.chart-svg{width:100%;height:auto;display:block}
+.chart-legend{display:flex;flex-wrap:wrap;gap:.45rem 1rem;margin:.2rem 0 .4rem;font-size:.8rem;font-weight:700}
+.chart-legend i{display:inline-block;width:16px;height:4px;border-radius:2px;margin-right:.35rem;vertical-align:middle}
+.caveat{padding:1rem 1.15rem;border-color:#ffd16666;background:#ffd1660e}
+.caveat ul{margin:.4rem 0 0;padding-left:1.1rem}
+.caveat li{margin:.35rem 0}
+.coin-list{display:flex;flex-wrap:wrap;gap:.4rem;margin:.4rem 0 0}
+.coin-list span{padding:.25rem .6rem;border-radius:999px;border:1px solid var(--line);font-size:.8rem;font-weight:700}

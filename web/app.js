@@ -27,7 +27,7 @@
         cols:["#","Coin","Status","Market cap","Liquidity","Vol 24h"],
         excl:(n,r)=>`${n} candidates evaluated, ${r} waiting for data`, out:"GTA 6 is out!", newb:"new"};
 
-  const REASON = {insufficient_data:"collecting data",F1:"too young",F2:"liquidity < $50k",F3:"top holders outside 13–27%",F4:"fees < 8 SOL",F5:"bundle > 30%",F7:"serial creator",F8:"authorities active",F8c:"token program",F9:"< 200 traders",F10:"zero volume",F11:"MC > 100× liq",deny:"excluded (scam)"};
+  const REASON = {insufficient_data:"collecting data",F1:"too young",F2:"liquidity < $50k",F3:"top 10 holders > 30%",F4:"fees < 8 SOL / 24h",F5:"bundle > 30%",F8:"authorities active",F9:"< 50 traders",F10:"zero volume",F11:"MC > 100× liquidity",deny:"excluded"};
 
 
   // formatting
@@ -51,41 +51,62 @@
 
   // countdowns — RELEASE is a fixed UTC instant, identical for every visitor
   function tick() {
+    const rel = $("#cd-release"), hour = $("#cd-hour"), hour2 = $("#cd-hour2");
+    if (!rel && !hour && !hour2) return;
     const now = new Date();
     let d = RELEASE - now;
-    if (d <= 0) $("#cd-release").textContent = t.out;
-    else {
-      const days = Math.floor(d / 864e5); d -= days * 864e5;
-      const h = Math.floor(d / 36e5); d -= h * 36e5;
-      const m = Math.floor(d / 6e4); const s = Math.floor((d - m * 6e4) / 1e3);
-      $("#cd-release").textContent = (days ? days + t.days + " " : "") + `${pad(h)}:${pad(m)}:${pad(s)}`;
+    if (rel) {
+      if (d <= 0) rel.textContent = t.out;
+      else {
+        const days = Math.floor(d / 864e5); d -= days * 864e5;
+        const h = Math.floor(d / 36e5); d -= h * 36e5;
+        const m = Math.floor(d / 6e4); const s = Math.floor((d - m * 6e4) / 1e3);
+        rel.textContent = (days ? days + t.days + " " : "") + `${pad(h)}:${pad(m)}:${pad(s)}`;
+      }
     }
     const next = new Date(now); next.setMinutes(60, 0, 0);
     const r = next - now, mm = Math.floor(r / 6e4), ss = Math.floor((r % 6e4) / 1e3);
     const txt = `${pad(mm)}:${pad(ss)}`;
-    $("#cd-hour").textContent = txt; $("#cd-hour2").textContent = txt;
+    if (hour) hour.textContent = txt;
+    if (hour2) hour2.textContent = txt;
   }
-  setInterval(tick, 1000); tick();
+  if ($("#cd-release") || $("#cd-hour") || $("#cd-hour2")) { setInterval(tick, 1000); tick(); }
 
   // charts
   function curve() {
-    const pts = [[0,0],[1,0],[1,1],[1.5,1],[1.75,1.5],[2,2],[2.5,3],[3,4],[4,5],[5,5]];
+    const el = $("#curve");
+    if (!el) return;
+    const hold = (window.RULES && RULES.hold) || {};
+    const knots = hold.knots || [[1,1],[1.5,1],[1.75,1.5],[2,2],[2.5,3],[3,4],[4,5]];
+    const maxM = hold.chart_max || knots[knots.length - 1][1] || 5;
+    const maxH = knots[knots.length - 1][0];
+    const pts = [[0,0]].concat(knots.map((k) => [k[0], 0])).slice(0, 1);
+    const start = (hold.t_start_seconds || 3600) / 3600;
+    const plot = [[0, 0], [start, 0]];
+    knots.forEach((k) => plot.push([k[0], k[1]]));
+    plot.push([maxH, knots[knots.length - 1][1]]);
+    const cap = hold.max_multiplier || knots[knots.length - 1][1];
+    const capH = hold.log_cap_hours;
     const W = 640, H = 260, L = 44, R = 20, Tp = 20, B = 36;
-    const x = (h) => L + (h / 5) * (W - L - R), y = (m) => H - B - (m / 5) * (H - Tp - B);
+    const x = (h) => L + (h / maxH) * (W - L - R), y = (m) => H - B - (m / maxM) * (H - Tp - B);
     let s = `<defs><linearGradient id="cg" x1="0" x2="1"><stop offset="0" stop-color="#ff2d95"/><stop offset=".6" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ffd166"/></linearGradient>
       <linearGradient id="cf" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ff2d95" stop-opacity=".35"/><stop offset="1" stop-color="#ff2d95" stop-opacity="0"/></linearGradient>
       <filter id="gl"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
-    for (let m = 0; m <= 5; m++) s += `<line x1="${L}" x2="${W - R}" y1="${y(m)}" y2="${y(m)}" stroke="#ffffff14"/><text x="${L - 10}" y="${y(m) + 4}" text-anchor="end">${m}×</text>`;
-    for (let h = 0; h <= 5; h++) s += `<text x="${x(h)}" y="${H - 12}" text-anchor="middle">${h}h</text>`;
-    const d = pts.map((p, i) => (i ? "L" : "M") + x(p[0]) + " " + y(p[1])).join(" ");
-    s += `<path d="${d} L${x(5)} ${y(0)} L${x(0)} ${y(0)}Z" fill="url(#cf)"/>`;
+    for (let m = 0; m <= maxM; m++) s += `<line x1="${L}" x2="${W - R}" y1="${y(m)}" y2="${y(m)}" stroke="#ffffff14"/><text x="${L - 10}" y="${y(m) + 4}" text-anchor="end">${m}×</text>`;
+    for (let h = 0; h <= maxH; h++) s += `<text x="${x(h)}" y="${H - 12}" text-anchor="middle">${h}h</text>`;
+    const d = plot.map((p, i) => (i ? "L" : "M") + x(p[0]) + " " + y(p[1])).join(" ");
+    s += `<path d="${d} L${x(maxH)} ${y(0)} L${x(0)} ${y(0)}Z" fill="url(#cf)"/>`;
     s += `<path d="${d}" fill="none" stroke="url(#cg)" stroke-width="4" stroke-linejoin="round" filter="url(#gl)"/>`;
-    [[1,1],[1.75,1.5],[2,2],[2.5,3],[3,4],[4,5]].forEach(([h, m]) => {
-      s += `<circle cx="${x(h)}" cy="${y(m)}" r="5" fill="#fff" stroke="#ff2d95" stroke-width="3"/><text class="lab" x="${x(h) - 6}" y="${y(m) - 12}" text-anchor="middle">${m}×</text>`;
+    knots.forEach(([h, m]) => {
+      s += `<circle cx="${x(h)}" cy="${y(m)}" r="5" fill="#fff" stroke="#ff2d95" stroke-width="3"/><text class="lab" x="${x(h)}" y="${y(m) - 12}" text-anchor="middle">${m}×</text>`;
     });
-    $("#curve").innerHTML = s;
+    if (capH && cap > knots[knots.length - 1][1]) {
+      s += `<text x="${W - R}" y="${Tp + 4}" text-anchor="end">then ${cap}× at ${Math.round(capH / 24)}d</text>`;
+    }
+    el.innerHTML = s;
   }
-  curve();
+  if ($("#curve")) curve();
+  if (!$("#board")) return;
 
   const COLORS = ["#ff2d95","#ff8a3d","#ffd166","#8b5cf6","#22e3ff","#ff4fd8","#4ade80","#f472b6","#fb923c","#a78bfa"];
   function donut(members) {
@@ -99,31 +120,40 @@
     $("#donut").innerHTML = s; $("#donut-n").textContent = members.length;
   }
 
-  function capWeights(rows) {
+  function sqrtWeights(rows) {
     const n = rows.length;
     if (!n) return rows;
-    if (n < 4) {
-      const w = 100 / n;
-      rows.forEach((r) => { r.weight = w; });
+    const capPct = (window.RULES && RULES.weights && RULES.weights.cap_pct) || 18;
+    const floorPct = (window.RULES && RULES.weights && RULES.weights.floor_pct) || 5;
+    const cap0 = capPct / 100, floor0 = floorPct / 100;
+    if (n * cap0 <= 1 || n * floor0 >= 1) {
+      rows.forEach((r) => { r.weight = 100 / n; });
       return rows;
     }
-    const mcSum = rows.reduce((a, r) => a + (r.mc || 0), 0) || 1;
-    const volSum = rows.reduce((a, r) => a + (r.vol24h || 0), 0) || 1;
-    let raw = rows.map((r) => 0.5 * ((r.mc || 0) / mcSum) + 0.5 * ((r.vol24h || 0) / volSum));
-    const CAP = 0.25;
-    for (let pass = 0; pass < 10; pass++) {
-      let excess = 0, free = 0;
-      raw = raw.map((w) => {
-        if (w > CAP) { excess += w - CAP; return CAP; }
-        free += w;
-        return w;
-      });
-      if (excess < 1e-12) break;
-      if (free <= 0) break;
-      raw = raw.map((w) => (w < CAP ? w + excess * (w / free) : w));
+    const cap = Math.max(cap0, 1 / n), floor = Math.min(floor0, 1 / n);
+    let raw = rows.map((r) => (isFinite(+r.mc) && +r.mc > 0 ? Math.sqrt(+r.mc) : 0));
+    if (Math.max(...raw) <= 0) {
+      rows.forEach((r) => { r.weight = 100 / n; });
+      return rows;
     }
-    const sum = raw.reduce((a, b) => a + b, 0) || 1;
-    rows.forEach((r, i) => { r.weight = (raw[i] / sum) * 100; });
+    const smallest = Math.min(...raw.filter((v) => v > 0));
+    raw = raw.map((v) => (v > 0 ? v : smallest));
+    const total = (lam) => raw.reduce((s, v) => s + Math.min(cap, Math.max(floor, lam * v)), 0);
+    let lo = 0, hi = 1;
+    while (total(hi) < 1 && hi < 1e300) hi *= 2;
+    for (let i = 0; i < 80; i++) {
+      const mid = (lo + hi) / 2;
+      if (total(mid) < 1) lo = mid; else hi = mid;
+    }
+    const w = raw.map((v) => Math.min(cap, Math.max(floor, hi * v)));
+    const sum = w.reduce((a, b) => a + b, 0);
+    const free = [];
+    w.forEach((v, i) => { if (v > floor + 1e-9 && v < cap - 1e-9) free.push(i); });
+    if (free.length && Math.abs(sum - 1) > 1e-9) {
+      const adj = (1 - sum) / free.length;
+      free.forEach((i) => { w[i] += adj; });
+    }
+    rows.forEach((r, i) => { r.weight = w[i] * 100; });
     return rows;
   }
 
@@ -202,7 +232,7 @@
     rows = rows.filter((r) => (r.liq == null || r.liq >= MIN_LIQ) && (r.mc || 0) > 0);
     rows.sort((a, b) => (b.mc || 0) - (a.mc || 0));
     rows = rows.slice(0, 10).map((r, i) => ({ ...r, rank: i + 1 }));
-    return capWeights(rows);
+    return sqrtWeights(rows);
   }
 
   // CSP (no inline handlers): a broken coin logo falls back to its initials.
@@ -277,7 +307,8 @@
     if (latest) {
       const asof = latest.as_of ? new Date(latest.as_of) : null;
       $("#asof").textContent = asof ? `${t.asof}: ${asof.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}${latest.dry_run ? " · dry-run" : ""}` : "";
-      $("#hashes").textContent = latest.params_hash ? `params ${latest.params_hash.slice(0, 16)}… · inputs ${(latest.inputs_hash || "").slice(0, 16)}… · code ${(latest.code_commit || "").slice(0, 7)}` : "";
+      const hashes = $("#hashes");
+      if (hashes) hashes.textContent = latest.params_hash ? `params ${latest.params_hash.slice(0, 16)}… · inputs ${(latest.inputs_hash || "").slice(0, 16)}… · code ${(latest.code_commit || "").slice(0, 7)}` : "";
     }
     const official = officialRows();
     if (official.length) {
@@ -369,6 +400,7 @@
 // ---------- Chart & Buy + Check your rewards ----------
 (() => {
   "use strict";
+  if (!document.getElementById("venues") && !document.getElementById("rw-form") && !document.getElementById("curve")) return;
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
   const B58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
@@ -383,10 +415,11 @@
     { name: "Raydium", url: (m) => `https://raydium.io/swap/?inputMint=sol&outputMint=${enc(m)}` },
     { name: "DexScreener", url: (m) => `https://dexscreener.com/solana/${enc(m)}` },
   ];
-  $("#venues").innerHTML = VENUES.map((v) => ca
+  const venues = $("#venues");
+  if (venues) venues.innerHTML = VENUES.map((v) => ca
     ? `<a class="venue" href="${v.url(ca)}" target="_blank" rel="noopener noreferrer"><b>${v.name}</b><span>Open ↗</span></a>`
     : `<button class="venue" type="button" disabled aria-disabled="true"><b>${v.name}</b><span>Available at launch</span></button>`).join("");
-  if (ca) {
+  if (ca && $("#ca-text") && $("#chart-body")) {
     $("#ca-text").textContent = ca;
     $("#chart-body").innerHTML = `<iframe title="GTASP10 chart" loading="lazy" src="https://dexscreener.com/solana/${enc(ca)}?embed=1&theme=dark&trades=0&info=0"></iframe>`;
     $("#chart-panel").classList.add("live");
@@ -396,16 +429,28 @@
 
   // Rewards
   const SUPPLY_MIN = 1e-6; // 1 / 1,000,000 of supply
-  const CURVE = [[0,0],[1,0],[1,1],[1.5,1],[1.75,1.5],[2,2],[2.5,3],[3,4],[4,5]];
   function multiplier(h) {
-    if (h < 1) return 0;
-    if (h >= 4) return 5;
-    for (let i = 1; i < CURVE.length; i++) {
-      const [h0, m0] = CURVE[i - 1], [h1, m1] = CURVE[i];
-      if (h >= h0 && h < h1) return h1 === h0 ? m1 : m0 + ((m1 - m0) * (h - h0)) / (h1 - h0);
+    const hold = (window.RULES && RULES.hold) || {};
+    const start = (hold.t_start_seconds || 3600) / 3600;
+    const knots = hold.knots || [[1,1],[1.5,1],[1.75,1.5],[2,2],[2.5,3],[3,4],[4,5]];
+    const cap = hold.max_multiplier || knots[knots.length - 1][1];
+    const capH = hold.log_cap_hours;
+    if (h < start) return 0;
+    const last = knots[knots.length - 1][0];
+    if (capH && h > last) {
+      if (h >= capH) return cap;
+      const base = knots[knots.length - 1][1];
+      const extra = (cap - base) * Math.log(h / last) / Math.log(capH / last);
+      return Math.min(cap, base + Math.max(0, extra));
     }
-    return 5;
+    if (h >= last) return knots[knots.length - 1][1];
+    for (let i = 1; i < knots.length; i++) {
+      const [h0, m0] = knots[i - 1], [h1, m1] = knots[i];
+      if (h >= h0 && h <= h1) return h1 === h0 ? m1 : m0 + ((m1 - m0) * (h - h0)) / (h1 - h0);
+    }
+    return cap;
   }
+  const maxMult = () => ((window.RULES && RULES.hold && RULES.hold.max_multiplier) || 5);
   const fmtHold = (sec) => { const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60); return h ? `${h}h ${String(m).padStart(2, "0")}m` : `${m}m`; };
   const fmtPct = (x, d = 4) => (x * 100).toLocaleString("en-US", { maximumFractionDigits: d }) + "%";
 
@@ -428,7 +473,7 @@
     $("#rw-who").textContent = example ? `${d.address} (demo wallet)` : `${d.address.slice(0, 4)}…${d.address.slice(-4)}`;
     $("#rw-hold").textContent = fmtHold(d.holding_seconds || 0);
     $("#rw-mult").textContent = mult.toFixed(mult % 1 ? 2 : 0) + "×";
-    $("#rw-meter").style.width = (mult / 5) * 100 + "%";
+    $("#rw-meter").style.width = Math.max(0, Math.min(100, (mult / maxMult()) * 100)) + "%";
     $("#rw-elig").textContent = eligible ? "Eligible" : hours < 1 && share >= SUPPLY_MIN ? "Warming up" : "Not eligible";
     $("#rw-elig").className = eligible ? "ok" : "no";
     $("#rw-share").textContent = `holds ${fmtPct(share)} of supply · min 0.0001%`;
@@ -442,10 +487,11 @@
       : `Read-only data${d.as_of ? " as of " + new Date(d.as_of).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : ""}. Rewards depend on fees actually generated and are not guaranteed.`;
     $("#rw-result").classList.toggle("is-example", example);
   }
-  show(EXAMPLE, true);
+  if ($("#rw-result")) show(EXAMPLE, true);
 
-  const msg = (text, kind) => { const el = $("#rw-msg"); el.textContent = text; el.className = "rw-msg " + (kind || ""); };
-  $("#rw-form").addEventListener("submit", async (e) => {
+  const msg = (text, kind) => { const el = $("#rw-msg"); if (!el) return; el.textContent = text; el.className = "rw-msg " + (kind || ""); };
+  const form = $("#rw-form");
+  if (form) form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const addr = $("#rw-addr").value.trim();
     if (!isAddr(addr)) {

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Backtest — GTASP10</title>
+<meta name="description" content="Simulated hourly replay of the GTASP10 rules. Past simulated performance is not a promise of results.">
+<meta name="theme-color" content="#1a0b2e">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="logo-400.png">
+<link rel="stylesheet" href="style.css?v=20261118f">
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="index.html"><img class="brand-img" src="logo-400.png" alt="GTASP10 logo" width="40" height="40"><span class="logo">GTASP<b>10</b></span></a>
+  <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav"><span class="sr">Menu</span><span class="burger" aria-hidden="true"></span></button>
+  <nav id="site-nav" class="links">
+    <a href="index.html">Home</a>
+    <a href="index-table.html">Index</a>
+    <a href="rewards.html">Rewards</a>
+    <a href="backtest.html">Backtest</a>
+    <a href="docs.html">Docs</a>
+    <a href="faq.html">FAQ</a>
+    <a href="disclaimer.html">Disclaimer</a>
+  </nav>
+</header>
+<div class="page-hero">
+  <p class="kicker">Simulation</p>
+  <h1>Backtest</h1>
+  <p>Hourly replay of the current rules: square-root market-cap weights, 18% cap, 5% floor. Past simulated performance is not a promise of future results.</p>
+</div>
+<main>
+<section class="section" id="bt-root">
+  <div class="glass caveat">
+    <strong>Read this first</strong>
+    <ul id="bt-caveats">
+      <li>Past simulated performance. It is not a promise of future results.</li>
+      <li>The history is short. The live index has only a few official hours.</li>
+      <li>Today's filter-passing basket is replayed backward. That is survivorship.</li>
+    </ul>
+  </div>
+  <p class="muted" id="bt-status" style="margin-top:1rem"></p>
+  <div class="stats-row" style="margin-top:1rem">
+    <div class="stat glass"><span class="lbl">Window</span><b id="bt-window">—</b></div>
+    <div class="stat glass"><span class="lbl">History length</span><b id="bt-hours">—</b></div>
+    <div class="stat glass"><span class="lbl">Rebalances</span><b id="bt-rebalances">—</b></div>
+    <div class="stat glass"><span class="lbl">Max drawdown</span><b id="bt-dd">—</b></div>
+  </div>
+  <div class="stats-row">
+    <div class="stat glass"><span class="lbl">Index, start = 1</span><b id="bt-index">—</b></div>
+    <div class="stat glass"><span class="lbl">Equal weight, start = 1</span><b id="bt-equal">—</b></div>
+    <div class="stat glass"><span class="lbl">Largest coin, start = 1</span><b id="bt-top">—</b></div>
+    <div class="stat glass"><span class="lbl">SOL, start = 1</span><b id="bt-sol">—</b></div>
+  </div>
+  <p class="muted small" id="bt-top-name"></p>
+  <div class="glass chart-card">
+    <svg id="bt-chart" class="chart-svg" viewBox="0 0 720 280" role="img" aria-label="Simulated index, equal weight, largest coin and SOL"></svg>
+    <div class="chart-legend" id="bt-legend"></div>
+    <p class="muted small">Log scale. Each line starts at 1. A higher line is a larger simulated multiple, not a forecast.</p>
+  </div>
+  <div class="glass card" style="margin-top:1rem">
+    <h3>Coins in the replay</h3>
+    <div class="coin-list" id="bt-coins"></div>
+    <p class="muted small" id="bt-published" style="margin-top:.8rem"></p>
+  </div>
+</section>
+</main>
+<footer class="foot">
+  <div class="logo small">GTASP<b>10</b></div>
+  <nav class="foot-links">
+    <a href="index.html">Home</a><a href="index-table.html">Index</a><a href="rewards.html">Rewards</a>
+    <a href="backtest.html">Backtest</a><a href="docs.html">Docs</a><a href="faq.html">FAQ</a><a href="disclaimer.html">Disclaimer</a>
+  </nav>
+  <p>This site is informational. Nothing here is financial advice. GTASP10 is a memecoin index: it is high risk and you can lose everything you put in. No returns are promised. GTASP10 is not affiliated with Rockstar Games or Take-Two Interactive. Grand Theft Auto and GTA are trademarks of their respective owners.</p>
+</footer>
+<script src="nav.js?v=20261118f"></script>
+<script src="backtest.js?v=20261118f"></script>
+</body>
+</html>
