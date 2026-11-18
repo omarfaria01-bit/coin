@@ -2,7 +2,6 @@
   "use strict";
   const $ = (s) => document.querySelector(s);
   const DATA = "data/";
-<<<<<<< HEAD
   // GTA 6: 19 Nov 2026 00:00 America/New_York (EST, UTC-5) = 2026-11-19T05:00:00Z
   const RELEASE = new Date("2026-11-19T05:00:00.000Z");
   const MIN_LIQ = 10000;
@@ -26,25 +25,11 @@
 
   const t = {asof:"Last run", days:"d", none:"No candidate with enough data", member:"member", nodata:"collecting data",
         cols:["#","Coin","Status","Market cap","Liquidity","Vol 24h"],
-=======
-  const RELEASE = new Date(2026, 10, 19, 0, 0, 0); // 19 Nov 2026 00:00 local time
-  let latest = null, cands = null, sortKey = "vol24h";
-
-
-  const t = {asof:"Last run", days:"d", none:"No candidate with enough data", member:"member", nodata:"collecting data",
-        cols:["#","Coin","Status","Market cap","Liquidity","Vol 24h"], mcols:["#","Coin","Weight","Market cap","Liquidity","Volume","Δ"],
->>>>>>> origin/main
         excl:(n,r)=>`${n} candidates evaluated, ${r} waiting for data`, out:"GTA 6 is out!", newb:"new"};
 
   const REASON = {insufficient_data:"collecting data",F1:"too young",F2:"liquidity < $50k",F3:"top holders outside 13–27%",F4:"fees < 8 SOL",F5:"bundle > 30%",F7:"serial creator",F8:"authorities active",F8c:"token program",F9:"< 200 traders",F10:"zero volume",F11:"MC > 100× liq",deny:"excluded (scam)"};
 
 
-<<<<<<< HEAD
-=======
-  // i18n
-
-
->>>>>>> origin/main
   // formatting
   const usd = (v) => {
     if (v == null || !isFinite(v)) return "—";
@@ -57,7 +42,6 @@
   const short = (m) => m.slice(0, 4) + "…" + m.slice(-4);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
   const pad = (n) => String(n).padStart(2, "0");
-<<<<<<< HEAD
   const pct = (v) => {
     if (v == null || !isFinite(+v)) return "—";
     const n = +v;
@@ -66,10 +50,6 @@
   };
 
   // countdowns — RELEASE is a fixed UTC instant, identical for every visitor
-=======
-
-  // countdowns
->>>>>>> origin/main
   function tick() {
     const now = new Date();
     let d = RELEASE - now;
@@ -109,24 +89,16 @@
 
   const COLORS = ["#ff2d95","#ff8a3d","#ffd166","#8b5cf6","#22e3ff","#ff4fd8","#4ade80","#f472b6","#fb923c","#a78bfa"];
   function donut(members) {
-<<<<<<< HEAD
     const total = members.reduce((a, m) => a + (m.weight || 0), 0) || 1;
     const r = 80, c = 2 * Math.PI * r; let off = 0, s = "";
     members.forEach((m, i) => {
       const f = (m.weight || 0) / total;
-=======
-    const total = members.reduce((a, m) => a + (m.weight_bps || 0), 0) || 1;
-    const r = 80, c = 2 * Math.PI * r; let off = 0, s = "";
-    members.forEach((m, i) => {
-      const f = (m.weight_bps || 0) / total;
->>>>>>> origin/main
       s += `<circle cx="110" cy="110" r="${r}" fill="none" stroke="${COLORS[i % 10]}" stroke-width="30" stroke-dasharray="${f * c} ${c}" stroke-dashoffset="${-off * c}" transform="rotate(-90 110 110)"><title>${esc(m.ticker)} ${(f * 100).toFixed(1)}%</title></circle>`;
       off += f;
     });
     $("#donut").innerHTML = s; $("#donut-n").textContent = members.length;
   }
 
-<<<<<<< HEAD
   function capWeights(rows) {
     const n = rows.length;
     if (!n) return rows;
@@ -299,15 +271,10 @@
 
   function render() {
     if (!latest && !cands && !logoMeta) return;
-=======
-  function render() {
-    if (!latest && !cands) return;
->>>>>>> origin/main
     if (latest) {
       const asof = latest.as_of ? new Date(latest.as_of) : null;
       $("#asof").textContent = asof ? `${t.asof}: ${asof.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}${latest.dry_run ? " · dry-run" : ""}` : "";
       $("#hashes").textContent = latest.params_hash ? `params ${latest.params_hash.slice(0, 16)}… · inputs ${(latest.inputs_hash || "").slice(0, 16)}… · code ${(latest.code_commit || "").slice(0, 7)}` : "";
-<<<<<<< HEAD
     }
     const official = officialRows();
     if (official.length) {
@@ -323,24 +290,6 @@
         $("#board-banner").hidden = true;
         $("#building").hidden = false;
         const ex = (latest && latest.excluded) || [];
-=======
-      const members = (latest.members || []).slice().sort((a, b) => a.rank - b.rank);
-      const entered = new Set((latest.changes && latest.changes.entered) || []);
-      if (members.length) {
-        $("#members-wrap").hidden = false; $("#building").hidden = true;
-        donut(members);
-        let h = `<thead><tr>${t.mcols.map((c, i) => `<th class="${i > 4 ? "hidemob" : ""}">${c}</th>`).join("")}</tr></thead><tbody>`;
-        members.forEach((m, i) => {
-          const mt = m.metrics || {}, w = (m.weight_bps || 0) / 100;
-          const prev = m.prev_rank;
-          const delta = entered.has(m.mint) ? `<span class="tag ok">${t.newb}</span>` : prev ? (prev > m.rank ? `<span class="up">▲${prev - m.rank}</span>` : prev < m.rank ? `<span class="down">▼${m.rank - prev}</span>` : "•") : "•";
-          h += `<tr><td class="rk" style="color:${COLORS[i % 10]}">${m.rank}</td><td class="tk"><b>${esc(m.ticker || "?")}</b><small>${short(m.mint)}</small></td><td><b>${w.toFixed(1)}%</b><span class="vbar" style="width:${w * 2}px"></span></td><td>${usd(mt.mc_usd)}</td><td>${usd(mt.liquidity_usd)}</td><td class="hidemob">${usd(mt.volume_usd)}</td><td class="hidemob">${delta}</td></tr>`;
-        });
-        $("#members").innerHTML = h + "</tbody>";
-      } else {
-        $("#members-wrap").hidden = true; $("#building").hidden = false;
-        const ex = latest.excluded || [];
->>>>>>> origin/main
         $("#excl-summary").textContent = t.excl(ex.length, ex.filter((e) => e.reason === "insufficient_data").length);
       }
     }
@@ -364,7 +313,6 @@
     b.classList.add("on"); sortKey = b.dataset.sort; render();
   }));
 
-<<<<<<< HEAD
   async function enrichDex(mints) {
     const need = mints.filter((m) => !dexCache[m]);
     if (!need.length) return false;
@@ -411,14 +359,6 @@
     const official = officialRows();
     const mints = official.length ? official.map((r) => r.mint) : previewPoolMints();
     if (mints.length && await enrichDex(mints)) render();
-=======
-  async function load() {
-    const get = (f) => fetch(DATA + f + "?t=" + Date.now()).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    const [l, c] = await Promise.all([get("latest.json"), get("candidates.json")]);
-    if (l) latest = l; if (c) cands = c;
-    if (!latest) { $("#building").hidden = false; }
-    render();
->>>>>>> origin/main
   }
   load(); setInterval(load, 60000);
 })();
@@ -447,12 +387,8 @@
     $("#ca-text").textContent = ca;
     $("#chart-body").innerHTML = `<iframe title="GTASP10 chart" loading="lazy" src="https://dexscreener.com/solana/${enc(ca)}?embed=1&theme=dark&trades=0&info=0"></iframe>`;
     $("#chart-panel").classList.add("live");
-<<<<<<< HEAD
     const note = document.querySelector(".chart-note");
     if (note) note.remove();
-=======
-    document.querySelector(".chart-note").remove();
->>>>>>> origin/main
   }
 
   // Rewards
