@@ -244,3 +244,8 @@ a.venue:hover{border-color:var(--pink);box-shadow:0 0 22px #ff2d9544;transform:t
   .section{padding-left:.85rem;padding-right:.85rem}
   #buy.section{padding-left:.75rem;padding-right:.75rem}
 }
+
+/* real wallpaper replaces drawn sky/sun/grid/palms (18 Nov) */
+.hero .sun,.hero .grid,.hero .palms,.hero .palms-m{display:none!important}
+.hero .sky{background:linear-gradient(180deg,rgba(10,2,20,.45) 0%,rgba(10,2,20,.25) 35%,rgba(10,2,20,.55) 72%,#0b0214 100%),url(wallpaper.jpg) center 40%/cover no-repeat}
+@media(max-width:700px){.hero .sky{background:linear-gradient(180deg,rgba(10,2,20,.55) 0%,rgba(10,2,20,.35) 40%,rgba(10,2,20,.65) 75%,#0b0214 100%),url(wallpaper-m.jpg) center 35%/cover no-repeat}}
