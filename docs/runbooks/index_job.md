@@ -6,10 +6,11 @@ prints `HELIUS_API_KEY`, and only writes `index/out/` on `index-data`.
 
 | What | Default |
 |---|---|
-| Repo, pulled by every run | `/opt/coin` (`COIN_REPO`) |
+| Repo, pulled by every hourly run (never by the sampler) | `/opt/coin` (`COIN_REPO`) |
 | Published worktree, branch `index-data` | `/var/lib/coin/index-data` (`COIN_INDEX_WORKTREE`) |
 | Env file, mode 600 | `/etc/coin/index.env` (`COIN_INDEX_ENV`) |
-| Lock | `/var/lib/coin/index-job.lock` (`COIN_INDEX_LOCK`) |
+| Hourly lock | `/var/lib/coin/index-job.lock` (`COIN_INDEX_LOCK`) |
+| Sampler lock | `/var/lib/coin/index-job.lock.sample` (`$COIN_INDEX_LOCK.sample`) |
 | 5-minute sampler | `coin-index-sample.timer` |
 | Hourly build | `coin-index-hourly.timer` |
 
@@ -25,9 +26,20 @@ sudo git fetch origin main
 sudo git pull --ff-only origin main
 ```
 
-`index-job.sh` runs the same pull before every tick and refuses a dirty tree
+`index-job.sh hourly` runs the same pull before every run. The sampler
+(`index-job.sh sample`) never pulls. Both refuse a dirty tree
 (`repo is dirty; published index left unchanged`, exit 1). Edit on a branch and
 open a PR; never edit files in `/opt/coin`.
+
+**After a merge to `main` (D35 and later).** On the Hetzner box:
+
+```bash
+cd /opt/coin && git pull --ff-only origin main
+sudo systemctl daemon-reload   # only if files in ops/index-job/*.service or *.timer changed
+```
+
+`index-job.sh` itself needs no restart: each timer tick starts a fresh process
+that reads the current file.
 
 ## 2. Timers
 
@@ -44,9 +56,13 @@ sudo systemctl start coin-index-hourly.service  # one tick by hand
 Stop the job now with `sudo systemctl stop coin-index-sample.service
 coin-index-hourly.service`; stopping a timer alone does not stop an in-flight run.
 
-The hourly run records one sample in the closing window, runs `--mode rebalance`,
-then `--mode emergency`, then pushes `index/out/` to `index-data` if it changed.
-Keep the sample timer running: a 24 h window has 288 five-minute buckets.
+The two modes use two separate locks, so a slow hourly run never makes a
+sample tick skip (`index job already running`, exit 1, now only means the same
+mode is still running). The sampler appends one line per mint to
+`data/index/samples/*.jsonl`; the hourly reader skips a torn last line. The
+hourly run does not take a sample: it pulls, runs `--mode rebalance`, then
+`--mode emergency`, then pushes `index/out/` to `index-data` if it changed.
+Keep the sample timer running: it is the only source of samples.
 
 ## 3. Check the last run
 
@@ -75,17 +91,18 @@ the live index.
 
 `members: []` is a valid output. Check the reason before touching anything.
 
-1. **Coverage (usual cause).** An `excluded` reason of `insufficient_data` means
-   fewer than 50% of the scoring window's five-minute buckets had a sample. Keep
-   `coin-index-sample.timer` running: 288 buckets/day, 144 needed for the
-   minimum, so the first full top-10 needs at least 12 h of samples.
+1. **No samples (usual cause).** An `excluded` reason of `insufficient_data` means
+   the mint has zero samples in the scoring window. There is no coverage
+   minimum (D35): one sample is enough for "samples exist". Keep
+   `coin-index-sample.timer` running.
    ```bash
    sudo ls -lt /opt/coin/data/index/samples | head
    sudo wc -l /opt/coin/data/index/samples/*.jsonl | tail -1
    ```
 2. **No candidates.** If `excluded` is also empty, discovery found nothing. Seed
-   mints (section 5) are the intended source; raising `COIN_INDEX_DISCOVER_PAGES`
-   (default `10`) is not a fix by itself.
+   mints (section 5) are the intended source (D30); discovery reads
+   `COIN_INDEX_DISCOVER_PAGES` pages (default `10`, was 100), and raising it is
+   not a fix by itself.
 3. **Other reasons.** `F1`…`F11`, and `denied` are real filter
    results (`INDEX_RULES.md` §3); `dry_run: true` is never an official index.
 
@@ -101,7 +118,7 @@ hot edit in `/opt/coin` makes the tree dirty and stops publishing. Verify with:
 grep -n '<mint>' /opt/coin/index/seed_mints.txt
 ```
 
-`allow` / `deny` in `index/overrides.json` need a reason and kiwi's approval.
+`deny` in `index/overrides.json` (scams only) needs a reason and kiwi's approval.
 
 ## 6. Rollback
 
@@ -116,7 +133,7 @@ sudo git -C /var/lib/coin/index-data push origin HEAD:index-data
 The next hourly run does `reset --hard origin/index-data`, so the revert sticks.
 A failed rebalance/emergency run never publishes; the previous remote file stays.
 
-**A bad code deploy on `main`.** Stop the timers first: every run pulls
+**A bad code deploy on `main`.** Stop the timers first: every hourly run pulls
 `origin/main` and would undo a local checkout.
 
 ```bash
