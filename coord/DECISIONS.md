@@ -508,3 +508,18 @@ old average for hours.
 1. MC and liquidity are now `min(window mean, latest reading)`: a crash counts at the next run, a sudden pump only
    counts gradually (anti-manipulation unchanged). F2 (liquidity floor), ranking and weights all use these values.
 2. No threshold changed; no sim re-run needed beyond the test suite. Tests: `tests/test_d48_latest_cap.py`.
+
+## D49 · 2026-11-18 · 5% of creator fees to buyback & burn of GTASP10 (kiwi, chat 22:15 Rome)
+kiwi: "il 5% va nei buybacks e burns dei nostri tokens: togli 3% dai rewards e 2% dal pot".
+1. New fee split (fee bot, D45): **67% basket rewards / 28% SOL prize pot / 5% buyback & burn / 0% team**
+   (was 70/30, D28/D43/D45).
+2. The burn slice buys GTASP10 via Jupiter with the same safety gates as basket buys (slippage ≤ 3%, price impact
+   gate, caps), then burns the bought tokens with an SPL `burn` in the same run. This is the only exception to
+   D45's "never buys its own mint", and only for immediate burning: bought tokens are never held, sold or paid out.
+3. Fully automatic, rule-based and public: every buyback and burn tx in the fee-bot ledger and on the site
+   (amount bought, tokens burned, signature). No discretionary timing; it runs in the hourly fee-bot run like the
+   basket buys.
+4. Public wording: "100% of fees go back to the community: 67% holder rewards, 28% prize pot, 5% buyback & burn.
+   0% to the team." (the hero line "100% of fees go to holders" changes to stay literally true).
+5. Manipulation check (CLAUDE.md rule 6): a disclosed, fixed-share, automatic buyback-and-burn is not wash trading;
+   no discretionary buys, no selling, no hidden wallet.
