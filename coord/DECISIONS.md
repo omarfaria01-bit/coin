@@ -203,3 +203,14 @@ This coin's fees are 70% holder rewards (daily) and 30% draw pot, both paid in t
 no team share and no buyback. A prize part below 0.01 SOL carries over. `config/coin.json` is
 unchanged, so there is no sim re-run; basket buys are not built and still need `APPROVED`.
 #164 is postponed. Still open: dev wallet, X link, keyword OK, index treasury address.
+
+## D27 · 2026-11-18 · T_START = 1h and a 5× curve that saturates at 4h (kiwi, #156)
+kiwi, 18 Nov 01:02 Rome (comment 6964683656), supersedes T_START = 6h (D21) and the 90-day / 2.8× curve.
+`h(a)` = 0 below 1h; knots 1h→1×, 1h30→1×, 1h45→1.5×, 2h→2×, 2h30→3×, 3h→4×, 4h→5× (max, flat after),
+linear between knots. Changed: `engine/scoring.py` defaults, `engine/params.py`, `config/coin.json` + schema,
+COIN_MATH §3/§4/§14, acceptance rows, goldens (`tools/regen_golden.py`). Boost age (48h) and the underwater
+boost are untouched (boost still off at launch).
+**Measured consequence (not hidden):** because the curve is flat from 4h, a ~5h flipper earns 0.53× of a long
+holder's reward per token-hour (seed 0). The old §14 bound (≤ 30%) cannot hold with this curve, so the row
+bound is now ≤ 60% and is flagged for kiwi. Loyalty beyond 4h earns no extra multiplier. Reward per
+token-hour by holding time (seed 1, 12 days): 4h 1.40 · 12h 2.02 · 24h 2.07 · 72h 2.13 · 7d 2.14.

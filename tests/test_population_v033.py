@@ -16,9 +16,9 @@ def test_same_seed_same_payouts_and_conservation() -> None:
 
 def test_probe_rates_follow_t_start_and_curve() -> None:
     rates = out.rate_by_holding(simulate(1, days=12))
-    assert rates[1] == 0  # 1h holds never reach T_START = 6h
-    assert rates[4] == 0  # 4h holds neither (D21)
-    assert 0 < rates[12] < rates[24] < rates[72] < rates[168]
+    assert rates[1] == 0  # 1h holds never reach T_START = 1h
+    assert rates[4] > 0  # 4h holds already earn (D27)
+    assert 0 < rates[4] < rates[12] < rates[24] < rates[72] < rates[168]
 
 
 def test_small_holder_is_paid_and_entered_in_draws() -> None:
@@ -29,7 +29,9 @@ def test_small_holder_is_paid_and_entered_in_draws() -> None:
 
 def test_farmer_exit_day_by_curve() -> None:
     assert FARMER_MIN_GAIN > 1
-    assert _farmer_exit_day(CoinParams()) == 60  # 2.70 → 2.80 is < 5% gain
+    assert (
+        _farmer_exit_day(CoinParams()) == 30
+    )  # flat from 4h (D27): no gain from waiting past day 30
 
 
 def test_gini_and_percentile() -> None:

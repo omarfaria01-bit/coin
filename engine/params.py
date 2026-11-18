@@ -41,17 +41,13 @@ class EligibilityParams(_Strict):
 # v0.3.3 §3 knot table: [age_seconds, h as an exact rational string]. Strings, not
 # floats, so the payout path stays exact (§0). Mirrors engine.scoring.DEFAULT_HOLD_KNOTS.
 _DEFAULT_KNOTS: tuple[tuple[int, str], ...] = (
-    (7_200, "1"),
-    (21_600, "23/20"),
-    (43_200, "13/10"),
-    (86_400, "3/2"),
-    (172_800, "7/4"),
-    (259_200, "19/10"),
-    (604_800, "21/10"),
-    (1_209_600, "23/10"),
-    (2_592_000, "5/2"),
-    (5_184_000, "27/10"),
-    (7_776_000, "14/5"),
+    (3_600, "1"),
+    (5_400, "1"),
+    (6_300, "3/2"),
+    (7_200, "2"),
+    (9_000, "3"),
+    (10_800, "4"),
+    (14_400, "5"),
 )
 
 
@@ -69,7 +65,7 @@ class HoldParams(_Strict):
     knots: tuple[tuple[int, str], ...] = Field(
         _DEFAULT_KNOTS, description="v0.3.3 h(a) knots [age_s, 'num/den'], linear between (§3)"
     )
-    t_start_seconds: int = Field(21_600, ge=0, description="T_START: lot-time below scores 0 (§4)")
+    t_start_seconds: int = Field(3_600, ge=0, description="T_START: lot-time below scores 0 (§4)")
     boost_age_seconds: int = Field(172_800, ge=0, description="E1/E2 split, boost start (§3, §5)")
 
     @model_validator(mode="after")

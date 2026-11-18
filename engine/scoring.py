@@ -17,20 +17,16 @@ _DAY = 86_400
 
 HOUR = 3_600
 # _DAY already defined above as 86_400.
-DEFAULT_T_START_SECONDS = 6 * HOUR
+DEFAULT_T_START_SECONDS = 1 * HOUR  # D27 (kiwi 18 Nov): was 6h (D21)
 DEFAULT_BOOST_AGE_SECONDS = 48 * HOUR  # E1/E2 split; §5 boost may start here
 DEFAULT_HOLD_KNOTS: tuple[tuple[int, Fraction], ...] = (
-    (2 * HOUR, Fraction(1)),
-    (6 * HOUR, Fraction(23, 20)),  # 1.15
-    (12 * HOUR, Fraction(13, 10)),  # 1.30
-    (24 * HOUR, Fraction(3, 2)),  # 1.50
-    (48 * HOUR, Fraction(7, 4)),  # 1.75
-    (72 * HOUR, Fraction(19, 10)),  # 1.90
-    (7 * _DAY, Fraction(21, 10)),  # 2.10
-    (14 * _DAY, Fraction(23, 10)),  # 2.30
-    (30 * _DAY, Fraction(5, 2)),  # 2.50
-    (60 * _DAY, Fraction(27, 10)),  # 2.70
-    (90 * _DAY, Fraction(14, 5)),  # 2.80
+    (1 * HOUR, Fraction(1)),
+    (90 * 60, Fraction(1)),  # 1h-1h30: 1x
+    (105 * 60, Fraction(3, 2)),  # 1h45: 1.5x
+    (2 * HOUR, Fraction(2)),
+    (150 * 60, Fraction(3)),
+    (3 * HOUR, Fraction(4)),
+    (4 * HOUR, Fraction(5)),  # max, flat after (D27)
 )
 
 
