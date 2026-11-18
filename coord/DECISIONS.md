@@ -277,3 +277,20 @@ sample). Now `emergency_reason` removes for `liquidity_drop` only if the previou
 earlier, vs its own 1h-ago value) also shows >= 50%; missing earlier data = no removal. Authority re-enabled and rug flag stay
 immediate. New param default 900 (no params.json change, no golden change). Not done (in #172): second data source,
 price-recovery check, manual confirm above a size, basket-buy TWAP/private path (mainnet, needs kiwi).
+
+## D35 · 2026-11-18 · kiwi's index rule changes (#156, chat 08:22 Rome relayed by Grok; Claude)
+Source: kiwi in chat 18 Nov 08:22, relayed by the Grok executor (not a cloud-agent comment). Supersedes D30 "keyword and
+min_coverage still apply" and the F1/F4/F5/F6/F10 parts of D31/D33 where they differ.
+1. Universe: one keyword tier, 35 words (INDEX_RULES §1); weak tier and `overrides.allow` removed; `deny` stays (scams).
+2. `min_coverage` removed: any samples in the window count; zero samples = `insufficient_data`.
+3. F1 6h -> 4h. 4. F4 10 -> 8 SOL. 5. F6 removed; F5 `max_bundle_pct` 10 -> 30.
+6. Volume = Helius raw as-is; F10 = volume > 0. Round-trip/turnover/30-wallet/median-trade params removed. F9 (200) and F11 kept.
+7. Weights: NOT changed, waiting for kiwi's choice.
+Risk, said plainly: with no coverage minimum and no wash cleanup, a coin with one hour of samples can enter, and wash volume
+is no longer filtered (F9 200 independent traders is the remaining check). Collector still publishes `roundtrip_share` etc.
+as data. `sim/index_coverage.py` keeps its own `min_coverage` argument as a pure what-if tool. Params unknown keys are
+rejected, so old configs with the removed keys fail loudly. Hetzner: pull /opt/coin after merge.
+Job speed (same PR): `coin-index-sample` uses its own lock (`$LOCK.sample`) and never pulls code, so it is no longer skipped
+while the hourly run holds the flock; hourly no longer repeats a sample pass (the 5-min timer owns sampling); default
+`COIN_INDEX_DISCOVER_PAGES` 100 -> 10 (the seed file is the universe, D30). `_load_samples` skips a torn last jsonl line.
+
