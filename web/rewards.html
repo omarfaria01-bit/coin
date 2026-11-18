@@ -40,6 +40,7 @@
   <div class="glass card">
     <h3>Daily rewards</h3>
     <p>Rewards accrue with the holding score and are paid once a day in the basket. A position worth less than 0.00151384 SOL (the rent of a token account) stays pending, and no token account is opened for dust.</p>
+    <p><strong>Payouts are automatic.</strong> Once a day a bot sends holder rewards from the public system wallet. The dev does not sign, pick or change any payment. Every payout is public on-chain and listed on this page. The only manual control is an emergency stop that pauses payouts for everyone; any use is announced.</p>
     <p class="muted">You need at least 1/1,000,000 of the supply for rewards to count. The multiplier changes your share of the fees that were actually collected.</p>
   </div>
   <div class="glass card curve-card">
@@ -47,6 +48,13 @@
     <p>Nothing before 1h. The multiplier is 1× from 1h to 1h30, 1.5× at 1h45, 2× at 2h, 3× at 2h30, 4× at 3h and 5× at 4h, then rises with the logarithm of holding time to 10× at 30 days.</p>
     <svg id="curve" viewBox="0 0 640 260" role="img" aria-label="Holding multiplier, 5× at 4 hours then 10× at 30 days"></svg>
   </div>
+</section>
+<section class="section">
+  <div class="sec-head">
+    <h2>Latest payouts</h2>
+    <p class="muted">Sent automatically from the public system wallet. Amounts in token base units.</p>
+  </div>
+  <div class="glass card rw-list" id="payouts"><p class="muted small">No payouts yet. The first ones go out the day after launch.</p></div>
 </section>
 <section class="section">
   <div class="sec-head">
@@ -88,5 +96,6 @@
 <script src="rules.js?v=20261118f"></script>
 <script src="nav.js?v=20261118f"></script>
 <script src="app.js?v=20261118f"></script>
+<script src="payouts.js?v=20261118f"></script>
 </body>
 </html>

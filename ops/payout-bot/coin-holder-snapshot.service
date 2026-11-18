@@ -1,0 +1,17 @@
+[Unit]
+Description=GTASP10 holder snapshot for payouts (D46), read-only
+After=network-online.target
+[Service]
+Type=oneshot
+User=coinbot
+Group=coinbot
+EnvironmentFile=/etc/coin/payout-bot/env
+WorkingDirectory=/opt/coin
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+TimeoutStartSec=20min
+ReadWritePaths=/var/lib/coin/payout-bot
+ReadOnlyPaths=/etc/coin/payout-bot
+ExecStart=/opt/coin/.venv/bin/python tools/payout_inputs.py snapshot --config /etc/coin/payout-bot/inputs.json
