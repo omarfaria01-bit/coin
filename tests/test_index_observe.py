@@ -13,6 +13,7 @@ FACTS = {
     "volume_usd": 1_000.0,
     "top10_pct": 20.0,
     "total_fees_sol": 0.003005,
+    "trading_fees_24h_sol": 0.003005,
     "window_fees_sol": 0.003005,
     "unique_traders": 1,
     "bundle_pct": 0.0,

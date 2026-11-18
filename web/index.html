@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>GTASP10 — The top 10 GTA 6 memecoins on Solana, in one index</title>
+<meta name="description" content="GTASP10 tracks the top 10 GTA 6 memecoins on Solana, rebalanced every hour by a public formula. 100% of creator fees go back to holders.">
+<meta property="og:title" content="GTASP10 — GTA 6 index on Solana">
+<meta property="og:description" content="The top 10 GTA 6 memecoins on Solana, in one index. Rebalanced hourly by a public formula.">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://desk.linkgox.com/gtasp10/logo.png">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1a0b2e">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Monoton&family=Bungee&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="logo-400.png">
+<link rel="apple-touch-icon" href="logo-400.png">
+<link rel="stylesheet" href="style.css?v=20261118c">
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="#top"><img class="brand-img" src="logo-400.png" alt="GTASP10 logo" width="40" height="40"><span class="logo">GTASP<b>10</b></span></a>
+  <nav class="links">
+    <a href="#index">Index</a>
+    <a href="#buy">Chart &amp; Buy</a>
+    <a href="#rewards">Rewards</a>
+    <a href="#how">How it works</a>
+    <a href="#rules">Rules</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+  <a class="nav-cta" href="#rewards">Check rewards</a>
+</header>
+
+<section class="hero" id="top">
+  <div class="sky"></div>
+  <div class="sun"></div>
+  <div class="grid"></div>
+  <svg class="palms" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+    <defs><linearGradient id="pg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#14051f"/><stop offset="1" stop-color="#05010a"/></linearGradient></defs>
+    <g fill="url(#pg)"><g id="pl"><path d="M120 300 C125 220 128 170 140 110 L146 112 C136 170 134 230 134 300Z"/><path d="M142 108 c-40-10-80 0-110 30 c35-18 70-22 108-14z M142 108 c-20-35-55-55-95-55 c40 12 68 30 92 60z M142 108 c15-38 45-60 85-62 c-38 14-62 36-80 66z M142 108 c38-8 78 4 104 34 c-34-16-68-20-102-12z M142 108 c-5-30 5-60 25-80 c-12 25-16 50-18 80z"/></g><g id="pr"><path d="M1040 300 C1036 230 1030 170 1012 96 L1018 94 C1036 160 1046 230 1052 300Z"/><path d="M1014 94 c-42-6-82 8-108 40 c34-20 70-26 106-20z M1014 94 c-24-34-60-50-100-48 c40 10 70 26 96 54z M1014 94 c12-40 40-64 80-70 c-36 16-58 40-74 72z M1014 94 c40-6 78 10 102 42 c-34-18-68-24-100-18z"/><path d="M1130 300 C1128 250 1124 210 1112 170 L1117 169 C1130 210 1136 250 1140 300Z"/><path d="M1113 168 c-30-6-58 4-78 26 c26-14 50-18 76-14z M1113 168 c10-28 32-44 60-48 c-26 12-42 28-56 50z M1113 168 c28-2 54 10 70 32 c-24-14-46-18-68-16z"/></g><rect x="0" y="286" width="1200" height="14"/></g>
+  </svg>
+  <svg class="palms-m" viewBox="0 0 420 300" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+    <g fill="#0b0214"><use href="#pl" transform="translate(-30,60) scale(.8)"/><use href="#pr" transform="translate(-495,60) scale(.8)"/><rect x="0" y="292" width="420" height="8"/></g>
+  </svg>
+  <div class="hero-inner">
+    <p class="kicker">On-chain index · Solana · GTA 6 narrative</p>
+    <h1 class="title"><span class="neon">GTASP</span><span class="neon ten">10</span></h1>
+    <p class="sub">The top 10 GTA 6 memecoins on Solana, bundled into one coin. Rebalanced every hour by a public, verifiable formula. 100% of creator fees flow back to holders.</p>
+    <div class="counters">
+      <div class="counter glass">
+        <span class="lbl">GTA 6 launches in</span>
+        <span class="val" id="cd-release">--</span>
+        <span class="when">Launch: Nov 19, 12:00 AM ET</span>
+      </div>
+      <div class="counter glass">
+        <span class="lbl">Next draw &amp; rebalance</span>
+        <span class="val" id="cd-hour">--:--</span>
+      </div>
+    </div>
+    <div class="ca glass"><span>Contract address</span> <b>Coming soon</b></div>
+    <p class="draft-tag">Preview build · name and ticker are placeholders · live data, dry run</p>
+  </div>
+</section>
+
+<main>
+<section id="index" class="section">
+  <div class="sec-head">
+    <h2>Top 10 ranking</h2>
+    <p class="muted" id="asof"></p>
+  </div>
+
+  <div id="board-banner" class="glass preview-banner" hidden>
+    <p><strong>Preview</strong> — official index publishes after the next hourly rebalance</p>
+    <p class="muted small">Ranked by DexScreener market cap, using the same fallback the live logo uses. Preview weights follow the public 50/50 market-cap and volume formula, capped at 25%. Not a buy signal.</p>
+  </div>
+
+  <div id="members-wrap" hidden>
+    <div class="members-grid">
+      <div class="glass donut-card" id="donut-wrap"><svg id="donut" viewBox="0 0 220 220"></svg><div class="donut-center"><b id="donut-n">10</b><span>coins</span></div></div>
+      <div class="board" id="board"></div>
+    </div>
+  </div>
+
+  <div id="building" class="glass building" hidden>
+    <div class="pulse"></div>
+    <div>
+      <h3>Top 10 loading</h3>
+      <p>Every candidate is sampled every 5 minutes. The moment a coin clears every filter, it joins the top 10.</p>
+      <p class="muted"><span>Next update in</span> <b id="cd-hour2">--:--</b> · <span id="excl-summary"></span></p>
+    </div>
+  </div>
+
+  <div class="cands">
+    <div class="cands-head">
+      <div>
+        <h3>GTA candidates on our radar</h3>
+        <p class="warn">Preview only: these are candidates, NOT index members. Not a buy signal.</p>
+      </div>
+      <div class="seg" role="tablist">
+        <button class="on" data-sort="vol24h">24h volume</button>
+        <button data-sort="mc">Market cap</button>
+        <button data-sort="liq">Liquidity</button>
+      </div>
+    </div>
+    <div class="glass table-card"><table class="tbl" id="cands"></table></div>
+    <p class="muted small">Shows candidates with at least $1K in 24h volume and a realistic market cap vs. liquidity. Status = first filter failed in the latest hourly run.</p>
+  </div>
+</section>
+
+<section id="buy" class="section">
+  <div class="sec-head">
+    <h2>Chart &amp; Buy</h2>
+    <p class="muted">Live chart and trading links go live the moment GTASP10 launches.</p>
+  </div>
+  <div class="buy-grid">
+    <div class="glass chart-panel" id="chart-panel">
+      <div class="chart-top">
+        <div class="pair"><span class="pair-dot"></span><b>GTASP10</b><span class="muted">/ SOL</span></div>
+        <div class="tf" aria-hidden="true"><span>1H</span><span>4H</span><span class="on">1D</span></div>
+      </div>
+      <div class="chart-frame">
+        <div class="chart-body" id="chart-body">
+          <svg class="ghost" viewBox="0 0 600 240" preserveAspectRatio="none" aria-hidden="true">
+            <defs><linearGradient id="gf" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ff2d95" stop-opacity=".35"/><stop offset="1" stop-color="#ff2d95" stop-opacity="0"/></linearGradient>
+            <linearGradient id="gl2" x1="0" x2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset=".5" stop-color="#ff2d95"/><stop offset="1" stop-color="#ff8a3d"/></linearGradient></defs>
+            <g class="gridl"><line x1="0" x2="600" y1="60" y2="60"/><line x1="0" x2="600" y1="120" y2="120"/><line x1="0" x2="600" y1="180" y2="180"/></g>
+            <path d="M0 200 C40 190 60 205 90 180 S140 150 170 165 220 120 250 130 300 90 330 105 380 70 410 85 470 50 500 62 560 30 600 40 L600 240 L0 240Z" fill="url(#gf)"/>
+            <path class="line" d="M0 200 C40 190 60 205 90 180 S140 150 170 165 220 120 250 130 300 90 330 105 380 70 410 85 470 50 500 62 560 30 600 40" fill="none" stroke="url(#gl2)" stroke-width="3"/>
+          </svg>
+          <div class="chart-overlay">
+            <span class="badge-soon">Pre-launch</span>
+            <h3>Chart unlocks at launch</h3>
+            <p class="muted">Once the contract address is live, the real-time DexScreener chart appears right here.</p>
+          </div>
+        </div>
+      </div>
+      <p class="muted small chart-note">Illustrative placeholder, not price data.</p>
+    </div>
+    <div class="glass buy-panel">
+      <h3>Buy on</h3>
+      <div class="ca-row"><span class="muted">Contract address</span><code id="ca-text">Coming soon</code></div>
+      <div class="venues" id="venues"></div>
+      <p class="muted small">Always double-check the contract address against the official announcement. Fake tokens with similar names are common.</p>
+    </div>
+  </div>
+</section>
+
+<section id="rewards" class="section">
+  <div class="sec-head">
+    <h2>Check your rewards</h2>
+    <p class="muted">Paste a Solana wallet address to see your holding time, multiplier, draw odds and basket rewards.</p>
+  </div>
+  <div class="glass rw-card">
+    <form id="rw-form" class="rw-form" autocomplete="off" novalidate>
+      <label for="rw-addr" class="sr">Solana wallet address</label>
+      <input id="rw-addr" name="addr" inputmode="text" spellcheck="false" autocapitalize="off" maxlength="44" placeholder="Paste your public Solana address">
+      <button type="submit" class="btn-neon">Check</button>
+    </form>
+    <p class="safety"><span aria-hidden="true">🔒</span> We will never ask for your seed phrase or private key. Public address only, no wallet connection, no signatures.</p>
+    <p class="rw-msg" id="rw-msg" role="status"></p>
+    <div id="rw-result" class="rw-result">
+      <div class="rw-head"><span class="badge-ex" id="rw-badge">Example</span><span class="mono small muted" id="rw-who">7xKX…9fQa (demo wallet)</span></div>
+      <div class="stats">
+        <div class="stat"><span class="lbl">Holding time</span><b id="rw-hold">—</b></div>
+        <div class="stat"><span class="lbl">Multiplier</span><b id="rw-mult">—</b><div class="meter"><i id="rw-meter"></i></div></div>
+        <div class="stat"><span class="lbl">Eligibility</span><b id="rw-elig">—</b><span class="small muted" id="rw-share"></span></div>
+        <div class="stat"><span class="lbl">Hourly draw odds</span><b id="rw-odds">—</b><span class="small muted">estimated share of this hour's odds</span></div>
+      </div>
+      <h4>Accrued basket rewards</h4>
+      <div class="rw-list" id="rw-list"></div>
+      <p class="muted small" id="rw-foot">Example values for illustration only. Rewards depend on fees actually generated and are not guaranteed.</p>
+    </div>
+  </div>
+</section>
+
+<section id="how" class="section">
+  <div class="sec-head"><h2>How it works</h2></div>
+  <div class="cards3">
+    <div class="glass card">
+      <h3>100% of fees go back</h3>
+      <div class="split">
+        <div class="bar"><span class="a" style="width:70%">70%</span><span class="b" style="width:30%">30%</span></div>
+        <ul class="legend">
+          <li><i class="dot a"></i><span>Holder rewards, paid in the basket tokens (not in GTASP10)</span></li>
+          <li><i class="dot b"></i><span>Hourly draw prize pot</span></li>
+        </ul>
+        <p class="muted small">No team share.</p>
+      </div>
+    </div>
+    <div class="glass card">
+      <h3>A draw every hour</h3>
+      <ul class="ticks">
+        <li>Your odds are proportional to your holder score, so splitting into many wallets never helps</li>
+        <li>No holder can count more than 5% of supply; linked wallets are grouped</li>
+        <li>All draw inputs are committed before the randomness; anyone can re-check the winners</li>
+        <li>Pot too small, or fewer than 100 holders in? It rolls over to the next hour</li>
+      </ul>
+    </div>
+    <div class="glass card">
+      <h3>Who's in</h3>
+      <ul class="ticks">
+        <li>Hold at least 1/1,000,000 of the supply (0.01% for the hourly draw)</li>
+        <li>Nothing accrues during your first hour</li>
+        <li>Hold longer, earn a bigger multiplier — up to 5× after 4 hours</li>
+        <li>Public dev wallet; every payout is reproducible from on-chain data</li>
+      </ul>
+    </div>
+  </div>
+  <div class="glass card curve-card">
+    <h3>Holding multiplier</h3>
+    <svg id="curve" viewBox="0 0 640 260" role="img" aria-label="Holding multiplier curve"></svg>
+  </div>
+</section>
+
+<section id="rules" class="section">
+  <div class="sec-head"><h2>Rules &amp; transparency</h2><p class="muted">A public formula, recalculated every hour over the previous 24 hours.</p></div>
+  <div class="rules">
+    <div class="glass card">
+      <h3>1 · Universe</h3>
+      <p>Any Solana coin with a GTA reference in its name, ticker or description: GTA, GTA 6, Grand Theft Auto, Vice City, Leonida, Lucia, Jason Duval, Rockstar, Vercetti and a broad vocabulary from across the series. Manual exclusions are for scams only.</p>
+    </div>
+    <div class="glass card">
+      <h3>2 · Filters (all must pass)</h3>
+      <div class="chips">
+        <span>Age ≥ 4h</span><span>Liquidity ≥ $50K</span><span>Top 10 holders 13–27%</span><span>Fees ≥ 8 SOL</span><span>Launch bundle ≤ 30%</span><span>Creator ≤ 3 tokens in 7 days</span><span>Authorities revoked</span><span>200+ traders</span><span>Volume &gt; 0</span><span>Market cap ≤ 100× liquidity</span>
+      </div>
+    </div>
+    <div class="glass card">
+      <h3>3 · Score</h3>
+      <code class="formula">log S = 0.4·ln(MC) + 0.3·ln(Liq) + 0.2·ln(Fee) + 0.1·ln(Trader)</code>
+      <p class="muted small">Log scale, so one giant coin can't drown out the rest.</p>
+    </div>
+    <div class="glass card">
+      <h3>4 · Entry &amp; exit</h3>
+      <p>A new coin gets in by reaching the top 8. A member drops out if it falls below 12th, or instantly if it fails a filter. Emergency removal kicks in if liquidity drops 50% within an hour or authorities are re-enabled.</p>
+    </div>
+    <div class="glass card">
+      <h3>5 · Weights</h3>
+      <p>50% market-cap share + 50% volume share, capped at 25% per coin. With fewer than 4 members, weights are equal.</p>
+    </div>
+    <div class="glass card">
+      <h3>6 · Verifiable</h3>
+      <p>Every hourly run publishes a hash of its parameters and inputs, so anyone can recompute the index.</p>
+      <p class="muted small mono" id="hashes"></p>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="section">
+  <div class="sec-head"><h2>FAQ</h2></div>
+  <div class="faq">
+    <details class="glass"><summary>What is GTASP10?</summary><p>An index coin on Solana that tracks the top 10 memecoins of the GTA 6 narrative, picked every hour by public rules.</p></details>
+    <details class="glass"><summary>How do holder rewards work?</summary><p>Hold at least 1/1,000,000 of the supply. 70% of creator fees is distributed to holders in the basket tokens, based on your holder score and holding multiplier.</p></details>
+    <details class="glass"><summary>How does the hourly draw work?</summary><p>Every hour, 30% of fees goes into a prize pot. Odds are proportional to your score, so splitting into many wallets never helps. No holder can count more than 5% of supply, linked wallets are grouped, and you need at least 0.01% of the supply to enter. All inputs are committed before the randomness, so anyone can re-check the winners. If the pot is too small or fewer than 100 holders qualify, it rolls over to the next hour.</p></details>
+    <details class="glass"><summary>Why is the official top 10 empty?</summary><p>The filters are strict and data for each coin is still being collected. Until the next hourly rebalance publishes official members, the ranking above shows a clearly labelled market-cap preview — not the live index.</p></details>
+    <details class="glass"><summary>Where's the contract address?</summary><p>Not published yet. Be wary of anyone sharing one before the official announcement.</p></details>
+    <details class="glass"><summary>Does the team take a cut of the fees?</summary><p>No. 100% of creator fees go back to the community: 70% rewards, 30% draw. No team share.</p></details>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="logo small">GTASP<b>10</b></div>
+  <p>This site is an informational preview. Nothing here is financial advice. No returns are promised or guaranteed: memecoins are extremely volatile and you can lose everything you put in. GTASP10 is not affiliated with Rockstar Games or Take-Two Interactive. Grand Theft Auto and GTA are trademarks of their respective owners.</p>
+</footer>
+<script src="config.js"></script>
+<script src="app.js?v=20261118d"></script>
+</body>
+</html>

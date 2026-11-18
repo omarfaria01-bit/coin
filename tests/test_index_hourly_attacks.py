@@ -59,12 +59,19 @@ def test_wash_volume_and_fake_traders_blocked_every_hour() -> None:
         prev = [m["mint"] for m in out["members"]]
 
 
+def test_d38_dust_sybil_is_an_accepted_risk() -> None:
+    # D38 (calibrated on kiwi's reference coins): F9 counts distinct window wallets of any size,
+    # so 250 dust wallets (each < 0.05 SOL) now pass F9. Said plainly in DECISIONS.md D38.
+    dust = rt.base(rt.mint(22), "DUST", "GTA 6 Dust", independent_traders=0, unique_traders=250)
+    assert first_failed_filter(dust, P) is None
+
+
 def test_round_trip_wash_is_not_filtered_after_d35() -> None:
     # kiwi 18 Nov (D35): raw volume as-is, F10 is only volume > 0. Wash volume is an accepted
     # risk; F9 (200 independent traders) is what still has to be faked.
     wash = rt.base(rt.mint(20), "WASH", "GTA 6 Wash", roundtrip_share=0.9)
     assert first_failed_filter(wash, P) is None
-    few = rt.base(rt.mint(21), "WASH2", "GTA 6 Wash", roundtrip_share=0.9, independent_traders=5)
+    few = rt.base(rt.mint(21), "WASH2", "GTA 6 Wash", roundtrip_share=0.9, unique_traders=5)
     assert first_failed_filter(few, P) == "F9"
 
 

@@ -46,8 +46,9 @@ order as stated below. Files are never edited after the next hour is published.
   "top_level_required": ["as_of", "changes", "code_commit", "dry_run", "emergency", "excluded", "inputs_hash", "members", "params_hash", "skipped_filters"],
   "top_level_conditional": ["data_hold", "exit_notice"],
   "member": ["log_s", "metrics", "mint", "rank", "ticker", "weight_bps"],
-  "member_metrics": ["age_hours", "bundle_pct", "coverage", "creator_launches_7d", "description", "dev_pct", "extensions", "freeze_authority_revoked", "independent_traders", "liquidity_usd", "mc_usd", "median_trade_sol", "mint", "mint_authority_revoked", "name", "roundtrip_share", "sources", "ticker", "token_program", "total_fees_sol", "top10_pct", "unique_traders", "volume_usd", "volume_wallets", "window_fees_sol"],
+  "member_metrics": ["age_hours", "bundle_pct", "coverage", "creator_launches_7d", "description", "dev_pct", "extensions", "freeze_authority_revoked", "independent_traders", "liquidity_usd", "mc_usd", "median_trade_sol", "mint", "mint_authority_revoked", "name", "roundtrip_share", "sources", "ticker", "token_program", "total_fees_sol", "top10_pct", "trading_fees_24h_sol", "unique_traders", "volume_usd", "volume_wallets", "window_fees_sol"],
   "excluded": ["mint", "reason", "ticker"],
+  "excluded_conditional": ["mc_usd", "missing"],
   "changes": ["entered", "exited"],
   "change_exited": ["mint", "reason"],
   "emergency": ["at", "mint", "reason"]
@@ -64,7 +65,7 @@ order as stated below. Files are never edited after the next hour is published.
 | `params_hash` | string | sha256 hex | Hash of the canonical params JSON (`index/params.json` model). Changes with any param. |
 | `inputs_hash` | string | sha256 hex | Hash of `{candidates, prev_members, overrides}` (candidates sorted by mint bytes). Same inputs + params ⇒ same file. |
 | `members` | array[object] | — | Current members, rank order, `0..membership.size`. Empty is valid: no coin passed the filters. |
-| `excluded` | array[object] | — | Candidates that are not members, with the first reason. `no_keyword` coins are omitted. |
+| `excluded` | array[object] | — | Candidates that are not members, with the first reason. `no_keyword` coins are omitted. D37: `mc_usd` when known, and for `insufficient_data` a `missing` list naming the missing metric(s) (or `helius ...` error / `skipped: dexscreener liquidity below prescreen`). |
 | `changes` | object | — | Difference against the previous published file. |
 | `emergency` | array[object] | — | Emergency removals applied to this file; `[]` normally. |
 | `exit_notice` | array[string] | mint | **Conditional**, present (possibly `[]`) iff `rebalance_hours` == 1. Mints whose rank exit is deferred one hour. |
@@ -192,7 +193,7 @@ Member object from the offline dry-run test fixture (`tests/test_index_e2e_offli
 `2026-11-18.dryrun.json`); the `metrics` object is shown on one line for width:
 
 ```json
-{"log_s": 10.272375497948, "metrics": {"age_hours": 12.0, "bundle_pct": 2.0, "coverage": 1.0, "creator_launches_7d": 1, "description": "", "dev_pct": 1.0, "extensions": [], "freeze_authority_revoked": true, "independent_traders": 500, "liquidity_usd": 80000.0, "mc_usd": 1000000.0, "median_trade_sol": 0.1, "mint": "G9ZMir6uh66Y7viPkXAy7myA9jjE4T1YgheVUmGDpump", "mint_authority_revoked": true, "name": "Good To Ape", "roundtrip_share": 0.0, "sources": {}, "ticker": "GTA", "token_program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", "top10_pct": null, "total_fees_sol": 150.0, "unique_traders": 500, "volume_usd": 200000.0, "volume_wallets": 100, "window_fees_sol": 40.0}, "mint": "G9ZMir6uh66Y7viPkXAy7myA9jjE4T1YgheVUmGDpump", "rank": 1, "ticker": "GTA", "weight_bps": 10000}
+{"log_s": 10.272375497948, "metrics": {"age_hours": 12.0, "bundle_pct": 2.0, "coverage": 1.0, "creator_launches_7d": 1, "description": "", "dev_pct": 1.0, "extensions": [], "freeze_authority_revoked": true, "independent_traders": 500, "liquidity_usd": 80000.0, "mc_usd": 1000000.0, "median_trade_sol": 0.1, "mint": "G9ZMir6uh66Y7viPkXAy7myA9jjE4T1YgheVUmGDpump", "mint_authority_revoked": true, "name": "Good To Ape", "roundtrip_share": 0.0, "sources": {}, "ticker": "GTA", "token_program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", "top10_pct": null, "total_fees_sol": 150.0, "trading_fees_24h_sol": 150.0, "unique_traders": 500, "volume_usd": 200000.0, "volume_wallets": 100, "window_fees_sol": 40.0}, "mint": "G9ZMir6uh66Y7viPkXAy7myA9jjE4T1YgheVUmGDpump", "rank": 1, "ticker": "GTA", "weight_bps": 10000}
 ```
 
 The fixture run is a dry run (F3 skipped), so its member's `top10_pct` is `null`.

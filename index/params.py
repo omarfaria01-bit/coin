@@ -10,7 +10,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-FILTER_CODES = ("F1", "F2", "F3", "F4", "F5", "F7", "F8", "F9", "F10", "F11")
+FILTER_CODES = ("F1", "F2", "F3", "F4", "F5", "F8", "F9", "F10", "F11")  # F6 D35, F7 D38
 
 Num = int | str
 
@@ -34,11 +34,17 @@ class _Strict(BaseModel):
 
 
 class Keywords(_Strict):
-    """One single tier (D35): any coin matching any word is a candidate."""
+    """One GTA vocabulary (D35, D37). Any `strong` word makes a coin a candidate.
+
+    `needs_context` words are ambiguous outside GTA (Jason, Vice, Trevor...): they count only when
+    the same name/ticker/description also has a strong word or a second, different
+    `needs_context` word (GTA context). This is not a weaker tier: a match is a full candidate.
+    """
 
     strong: tuple[str, ...]
+    needs_context: tuple[str, ...] = ()
 
-    @field_validator("strong")
+    @field_validator("strong", "needs_context")
     @classmethod
     def _non_empty_words(cls, v: tuple[str, ...]) -> tuple[str, ...]:
         if any(not w.strip() for w in v):
@@ -49,16 +55,23 @@ class Keywords(_Strict):
 class Filters(_Strict):
     min_age_hours: Num = 4
     min_liquidity_usd: Num = 50_000
-    top10_min_pct: Num = 13
-    top10_max_pct: Num = 27
+    top10_min_pct: Num = 0  # D38: no minimum
+    top10_max_pct: Num = 30  # D38: kiwi 18 Nov 12:34
     min_total_fees_sol: Num = 8
     max_bundle_pct: Num = 30
-    max_creator_launches_7d: int = Field(3, ge=1)
     require_authorities_revoked: bool = True
     min_unique_traders: int = Field(200, ge=0)
     # F9 (D33): a trader needs this much SOL volume to count. F10 is volume > 0 (D35).
     min_trader_volume_sol: Num = "1/20"
     max_mc_liquidity_ratio: Num = 100  # F11 (#167, D29)
+    # D38 (calibrated on kiwi's reference coins): how F4 and F9 are measured.
+    # F4 "lifetime_network": tx+priority+tips since launch (needs the whole history).
+    # F4 "dex_24h_trading": DexScreener h24 volume of all pools x dex_fee_rate, in SOL.
+    fees_measure: Literal["lifetime_network", "dex_24h_trading"] = "lifetime_network"
+    dex_fee_rate: Num = "1/400"
+    # F9 "independent": wallets >= min_trader_volume_sol in the window (D33).
+    # F9 "window_wallets": distinct fee payers of the window's swaps (lower bound if capped).
+    traders_measure: Literal["independent", "window_wallets"] = "independent"
     # F8c (#171, D32): Token-2022 mint extensions allowed (jsonParsed names); all others fail.
     token2022_allowed_extensions: tuple[str, ...] = (
         "metadataPointer",
@@ -97,7 +110,7 @@ class Score(_Strict):
     w_liquidity: Num = "3/10"
     w_fees: Num = "1/5"
     w_traders: Num = "1/10"
-    score_fees_window: Literal["window", "lifetime"] = "window"
+    score_fees_window: Literal["window", "lifetime", "dex_24h"] = "window"  # dex_24h: D38
     round_decimals: int = Field(12, ge=6, le=15)
 
     @model_validator(mode="after")
@@ -174,6 +187,17 @@ class Payout(_Strict):
         return self
 
 
+class Discovery(_Strict):
+    """D37: top-down discovery from DexScreener search, by market cap, never new launches."""
+
+    search_terms: tuple[str, ...] = ("GTA", "GTA 6", "GTA VI", "Vice City", "Leonida")
+    max_by_mc: int = Field(40, ge=1)  # most established first
+    max_trending: int = Field(10, ge=0)  # plus the top h24-volume coins, measured first
+    # Hourly speed: a coin whose best DexScreener pool has less than this share of F2's minimum
+    # is not walked on chain; it is listed as F2 from DexScreener alone.
+    prescreen_liquidity_share: Num = "1/2"
+
+
 class IndexParams(_Strict):
     version: str
     rebalance_hour_utc: int = Field(18, ge=0, le=23)
@@ -182,6 +206,7 @@ class IndexParams(_Strict):
     sample_minutes: int = Field(5, ge=1)
     holder_sample_minutes: int = Field(60, ge=1)
     keywords: Keywords
+    discovery: Discovery = Discovery()
     filters: Filters = Filters()
     score: Score = Score()
     membership: Membership = Membership()

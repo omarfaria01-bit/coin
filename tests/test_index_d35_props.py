@@ -41,6 +41,7 @@ def good(i: int = 1, **kw: object) -> Metrics:
         mc_usd=1_500_000.0,
         top10_pct=20.0,
         total_fees_sol=40.0,
+        trading_fees_24h_sol=40.0,
         window_fees_sol=12.0,
         bundle_pct=3.0,
         dev_pct=1.0,
@@ -122,8 +123,8 @@ def test_d35_boundaries_f1_f4_f5(
 ) -> None:
     assert first_failed_filter(good(age_hours=age_bad), P) == "F1"
     assert first_failed_filter(good(age_hours=age_good), P) is None
-    assert first_failed_filter(good(total_fees_sol=fees_bad), P) == "F4"
-    assert first_failed_filter(good(total_fees_sol=fees_good), P) is None
+    assert first_failed_filter(good(trading_fees_24h_sol=fees_bad), P) == "F4"  # D38 measure
+    assert first_failed_filter(good(trading_fees_24h_sol=fees_good), P) is None
     assert first_failed_filter(good(bundle_pct=bundle_bad), P) == "F5"
     assert first_failed_filter(good(bundle_pct=bundle_good), P) is None
 

@@ -37,6 +37,7 @@ def good(i: int = 1, **kw: object) -> Metrics:
         mc_usd=1_000_000.0,
         top10_pct=20.0,
         total_fees_sol=40.0,
+        trading_fees_24h_sol=40.0,
         window_fees_sol=12.0,
         bundle_pct=2.0,
         dev_pct=1.0,

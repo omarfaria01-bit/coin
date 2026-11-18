@@ -1,0 +1,7 @@
+[Unit]
+Description=GTASP10 live logo hourly at :07 (after the index job)
+[Timer]
+OnCalendar=*-*-* *:07:00
+Persistent=true
+[Install]
+WantedBy=timers.target

@@ -1,3 +1,9 @@
 {
-  "deny": []
+  "deny": [
+    {
+      "mint": "6wiaCq8oQiupFfeDU4ouAuYnCKXCch581HAmpvrxpump",
+      "reason": "GTA Vice Inu: kiwi flagged scam in chat 18 Nov 13:19 Rome (D38)",
+      "issue": 156
+    }
+  ]
 }

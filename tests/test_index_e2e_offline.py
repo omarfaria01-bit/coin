@@ -34,6 +34,7 @@ SAMPLE_SECONDS = 300  # params_small: sample_minutes=5
 # stand in for the Helius RPC/parsed-events readings; no network is used.
 CHAIN_FACTS = {
     "total_fees_sol": 150.0,
+    "trading_fees_24h_sol": 150.0,
     "window_fees_sol": 40.0,
     "bundle_pct": 2.0,
     "dev_pct": 1.0,
