@@ -28,6 +28,9 @@ The first payout of a basket token to a holder opens their token account (~0.002
   (`low_reserve`, exit 2) before it would go below; `max_transfers_per_day` caps accounts opened per day.
 
 ## Safety
+- **Public rules (#345, D50):** `max_transfers_per_day`, `max_transfers_per_tx` and `min_reserve_lamports` come only
+  from `econ/params.json` (72h timelock); `payouts.json` shows the sha256 in force. `config.json` may only lower
+  `max_transfers_per_day` (shown as `local_lower_caps`).
 - Same key as the fee bot (`/etc/coin/fee-bot/keypair.json`, owner `coinbot`, mode 600). Never printed.
 - Kill switch: `touch /etc/coin/payout-bot/STOP` pauses payouts for everyone (announce any use), or `"enabled": false`.
 - `"mode": "dry"` in `config.json` simulates and never sends.
@@ -47,7 +50,7 @@ systemctl enable --now coin-holder-snapshot.timer
 ## Go live
 1. Let snapshots run until the next UTC midnight (`journalctl -u coin-holder-snapshot`: at least 2 runs that day).
 2. Keep `"mode": "dry"`, `systemctl start coin-payout`, read `plan-<day>.json` and the `dry` ledger lines.
-3. Smoke test: `"mode": "live"`, `"max_transfers_per_day": 1`; run once; check the tx and memo on Solscan.
-4. Normal caps, then `systemctl enable --now coin-payout.timer`.
+3. Smoke test: `"mode": "live"`, add `"max_transfers_per_day": 1` to `config.json`; run once; check the tx and memo on Solscan.
+4. Remove the local cap, then `systemctl enable --now coin-payout.timer`.
 
 Tests: `uv run pytest tests/test_payout_inputs.py tests/test_payout_run_sh.py` · `cd ops/payout-bot && npm test`.

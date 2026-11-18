@@ -7,7 +7,7 @@ import { test } from "node:test";
 
 import { MINT_A, MINT_B, SYS, makePlan } from "./fixtures.mjs";
 import { TOKEN, TOKEN_2022 } from "./payout.mjs";
-import { loadConfig, main, readSecret, run } from "./send.mjs";
+import { loadConfig, main, readSecret, run, withEcon } from "./send.mjs";
 
 /** Mock chain: records sends; memos it sent count as on-chain afterwards. */
 function mockChain(over = {}) {
@@ -122,6 +122,22 @@ test("STOP file and enabled=false stop before reading the plan or the key", asyn
   assert.equal(loadConfig(cfgFile).mode, "dry");
   fs.writeFileSync(cfgFile, JSON.stringify({ ...example, extra: 1 }));
   assert.throws(() => loadConfig(cfgFile), /unknown config key/);
+});
+
+test("caps and reserve come from econ/params.json; local config may only lower the day cap", () => {
+  const dir = tmp();
+  const seenFile = path.join(dir, "econ_seen.json");
+  const example = JSON.parse(fs.readFileSync(new URL("./config.example.json", import.meta.url), "utf8"));
+  const cfg = withEcon(example, { seenFile });
+  assert.equal(cfg.max_transfers_per_day, 500);
+  assert.equal(cfg.max_transfers_per_tx, 3);
+  assert.equal(cfg.min_reserve_lamports, "50000000");
+  assert.match(cfg.econ.sha256, /^[0-9a-f]{64}$/);
+  const smoke = withEcon({ ...example, max_transfers_per_day: 1 }, { seenFile });
+  assert.deepEqual(smoke.econ.local_lower_caps, { max_transfers_per_day: 1 });
+  assert.throws(() => withEcon({ ...example, max_transfers_per_day: 501 }, { seenFile }), /public rule/);
+  assert.throws(() => withEcon({ ...example, min_reserve_lamports: "0" }, { seenFile }), /public rule/);
+  assert.throws(() => withEcon({ ...example, max_transfers_per_tx: 4 }, { seenFile }), /public rule/);
 });
 
 test("Token-2022 mint takes the Token-2022 program", async () => {

@@ -8,14 +8,12 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { PAYOUT_BOT_KEYS, loadEcon, mergeLocal } from "../../econ/params.mjs";
 import { batches, fitBalances, publicSummary, selectTodo, solNeeded, transferInstructions, validatePlan } from "./payout.mjs";
 
 const CONFIG_KEYS = {
   enabled: "boolean",
   mode: "string", // "dry" | "live"
-  max_transfers_per_day: "number",
-  max_transfers_per_tx: "number",
-  min_reserve_lamports: "string",
   fee_bot_state_path: "string",
   state_dir: "string",
   public_path: "string",
@@ -23,15 +21,25 @@ const CONFIG_KEYS = {
 
 const defaultLog = (event, data = {}) => console.log(JSON.stringify({ t: new Date().toISOString(), event, ...data }));
 
+// The only public rule a local config may set, and only lower (smoke test: 1 transfer/day).
+const LOWERABLE = ["max_transfers_per_day"];
+
+/** Local config: paths and mode. Caps and reserve are public rules (econ/params.json, #345). */
 export function loadConfig(file) {
   const cfg = JSON.parse(fs.readFileSync(file, "utf8"));
-  for (const k of Object.keys(cfg)) if (!(k in CONFIG_KEYS)) throw new Error(`unknown config key ${k}`);
+  for (const k of Object.keys(cfg)) if (!(k in CONFIG_KEYS) && !(k in PAYOUT_BOT_KEYS)) throw new Error(`unknown config key ${k}`);
   for (const [k, t] of Object.entries(CONFIG_KEYS)) if (typeof cfg[k] !== t) throw new Error(`config ${k} must be ${t}`);
   if (!["dry", "live"].includes(cfg.mode)) throw new Error("mode must be dry or live");
-  if (!(cfg.max_transfers_per_tx >= 1 && cfg.max_transfers_per_tx <= 4)) throw new Error("max_transfers_per_tx must be 1..4");
-  if (!(cfg.max_transfers_per_day >= 0)) throw new Error("max_transfers_per_day must be >= 0");
-  BigInt(cfg.min_reserve_lamports);
   return cfg;
+}
+
+/** Adds the public rules in force (72h timelock) to a local config; refuses local overrides. */
+export function withEcon(cfg, { econFile, seenFile, nowMs } = {}) {
+  const econ = loadEcon({ file: econFile, seenFile: seenFile ?? path.join(cfg.state_dir, "econ_seen.json"), nowMs });
+  const local = Object.fromEntries(Object.entries(cfg).filter(([k]) => k in PAYOUT_BOT_KEYS));
+  const { rules, tightened } = mergeLocal(local, econ.active.payout_bot, LOWERABLE);
+  if (!(rules.max_transfers_per_tx >= 1 && rules.max_transfers_per_tx <= 4)) throw new Error("max_transfers_per_tx must be 1..4");
+  return { ...cfg, ...rules, econ: { ...econ.public, local_lower_caps: tightened } };
 }
 
 /** Secret key bytes from a private file owned by this user. Never logged. */
@@ -127,7 +135,10 @@ export async function run({ cfg, plan, chain, now = Date.now, log = defaultLog }
   let ok = true;
   for (const b of batches(items, cfg.max_transfers_per_tx)) if (!(ok = await sendBatch(b))) break;
 
-  if (live) writeAtomic(cfg.public_path, JSON.stringify(publicSummary(readLedger(dir), chain.wallet, new Date(now()).toISOString())));
+  if (live) {
+    const pub = publicSummary(readLedger(dir), chain.wallet, new Date(now()).toISOString());
+    writeAtomic(cfg.public_path, JSON.stringify({ ...pub, econ: cfg.econ ?? null }));
+  }
   if (!ok) return 4;
   if (sel.skipped.some((s) => s.reason === "day_cap")) return 3;
   return fit.short.length ? 2 : 0;
@@ -208,6 +219,7 @@ export async function main(argv = process.argv.slice(2)) {
     defaultLog("stopped", { reason: cfg.enabled ? "STOP file" : "enabled=false" });
     return 0;
   }
+  const rules = withEcon(cfg);
   const plan = validatePlan(JSON.parse(fs.readFileSync(planPath, "utf8")));
   const heliusKey = process.env.HELIUS_API_KEY;
   if (!heliusKey && !process.env.PAYOUT_RPC_URL) throw new Error("HELIUS_API_KEY is not set");
@@ -224,7 +236,7 @@ export async function main(argv = process.argv.slice(2)) {
     const secret = readSecret(process.env.PAYOUT_BOT_KEYPAIR ?? "/etc/coin/fee-bot/keypair.json");
     // PAYOUT_RPC_URL is for the devnet end-to-end test only; mainnet goes through Helius.
     const chain = await web3Chain(secret, process.env.PAYOUT_RPC_URL ?? `https://mainnet.helius-rpc.com/?api-key=${heliusKey}`);
-    return await run({ cfg, plan, chain });
+    return await run({ cfg: rules, plan, chain });
   } finally {
     fs.closeSync(fd);
     fs.rmSync(lock, { force: true });
