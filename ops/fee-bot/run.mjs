@@ -28,6 +28,7 @@ import {
   basketFromIndex,
   conserved,
   emptyState,
+  owedLamports,
   planBuys,
   quoteAcceptable,
   rentTopUp,
@@ -81,9 +82,6 @@ export function loadConfig(file, { econFile, seenFile, nowMs } = {}) {
   const local_rules = Object.fromEntries(Object.entries(local).filter(([k]) => k in FEE_BOT_KEYS));
   const { rules, tightened } = mergeLocal(local_rules, econ.active.fee_bot, LOWERABLE);
   const split = econ.active.fee_split_bps;
-  if (split.burn > 0 && own.mode === "live") {
-    throw new Error("econ burn share > 0 but buyback & burn (D49, #344) is not implemented yet: live mode refused");
-  }
   return { ...own, ...rules, pot_bps: split.pot, burn_bps: split.burn, econ: { ...econ.public, local_lower_caps: tightened } };
 }
 
@@ -237,7 +235,7 @@ export async function main(argv = process.argv.slice(2)) {
 
     // Reserve check: the wallet must hold pot + basket + a reserve for tx fees and rent.
     const balance = BigInt(await connection.getBalance(wallet.publicKey, "confirmed"));
-    const owed = state.potLamports + state.basketLamports;
+    const owed = owedLamports(state);
     if (balance < owed + BigInt(cfg.min_reserve_lamports)) {
       log("low_reserve", { balance: String(balance), owed: String(owed), reserve: cfg.min_reserve_lamports });
       ledger(cfg.state_dir, { t: Date.now(), event: "low_reserve" });
@@ -246,7 +244,8 @@ export async function main(argv = process.argv.slice(2)) {
 
     const got = await collect(cfg, connection, sdk, wallet);
     if (got.received > 0n) {
-      state = applyIncoming(state, got.received, BigInt(cfg.pot_bps));
+      // D49: the burn share is held (burnLamports) until buyback & burn ships (#344); never spent otherwise.
+      state = applyIncoming(state, got.received, BigInt(cfg.pot_bps), BigInt(cfg.burn_bps));
       saveState(cfg.state_dir, state);
       ledger(cfg.state_dir, { t: Date.now(), event: "collected", sig: got.sig, lamports: String(got.received) });
     }

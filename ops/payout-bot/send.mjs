@@ -63,11 +63,11 @@ function writeAtomic(file, text) {
   fs.renameSync(`${file}.tmp`, file);
 }
 
-/** SOL the fee bot still owes (pot + basket budget, D45); must not be spent on payouts. */
+/** SOL the fee bot still owes (pot + burn share + basket budget, D45/D49); must not be spent on payouts. */
 function feeBotOwed(file) {
   if (!file || !fs.existsSync(file)) return 0n;
   const s = JSON.parse(fs.readFileSync(file, "utf8"));
-  return BigInt(s.potLamports ?? 0) + BigInt(s.basketLamports ?? 0);
+  return BigInt(s.potLamports ?? 0) + BigInt(s.burnLamports ?? 0) + BigInt(s.basketLamports ?? 0);
 }
 
 /**
