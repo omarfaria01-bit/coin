@@ -1,6 +1,6 @@
 """#311 follow-up: the prune script must import when run as a plain script (systemd/cron)."""
 
-import subprocess
+import subprocess  # nosec B404 - test runs our own script
 import sys
 from pathlib import Path
 
@@ -8,7 +8,7 @@ SCRIPT = Path(__file__).resolve().parents[1] / "tools" / "prune_index_cache.py"
 
 
 def test_prune_script_runs_from_another_cwd(tmp_path):
-    r = subprocess.run(
+    r = subprocess.run(  # nosec B603 - fixed argv, no shell
         [sys.executable, str(SCRIPT), "--cache-dir", str(tmp_path / "c")]
         + ["--disk-path", str(tmp_path)],
         cwd=tmp_path,
