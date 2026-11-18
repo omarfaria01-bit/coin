@@ -165,12 +165,12 @@
     <p>Holder rewards are paid <strong>automatically, once a day</strong>, in the basket coins the fee bot bought (D46). Nobody signs, picks or changes a payment by hand: the dev never chooses who gets paid or how much.</p>
     <h3>The daily flow (all times UTC)</h3>
     <ul class="ticks">
-      <li><strong>Hourly at :40</strong> a snapshot records every holder of the coin, minus excluded wallets. A transfer restarts the holding clock at 0, and the day's <strong>minimum</strong> balance is what counts.</li>
+      <li><strong>Hourly at :40</strong> a snapshot records every holder of the coin, minus excluded wallets. Selling to 0 restarts the holding clock. For each hour between two snapshots you earn on the <strong>lower</strong> of the two balances (D47 balance-hours), so you earn from your first full hour and buying just before a snapshot earns nothing.</li>
       <li><strong>Daily at 00:10</strong> the payout job sends what the last plan still owes, exports the finished day, makes one plan for it (carry-over from the previous plan included), and sends the transfers.</li>
-      <li>A day with fewer than 20 of 24 snapshots gets no plan; its budget waits and is split the next day.</li>
+      <li>A missed snapshot means that hour earns nothing for anyone. A day with fewer than 2 snapshots gets no plan; its budget waits and is split the next day.</li>
     </ul>
     <h3>Your share</h3>
-    <p>Your share of the day's budget is proportional to <strong>balance × loyalty multiplier</strong>. Holding longer multiplies the weight of your balance:</p>
+    <p>Your share of the day's budget is proportional to the sum, over the day's hours, of <strong>balance × loyalty multiplier</strong>. Holding longer multiplies the weight of your balance:</p>
     <div class="table-card"><table class="doc-tbl">
       <thead><tr><th>Holding time</th><th>Multiplier</th></tr></thead>
       <tbody>
