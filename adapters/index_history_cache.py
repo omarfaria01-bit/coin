@@ -17,7 +17,9 @@ log = logging.getLogger(__name__)
 DEFAULT_CACHE_DIR = Path("data/index/cache")
 SCHEMA_VERSION = 1
 DEFAULT_WINDOW_SECONDS = 7 * 86_400  # 7 days
-MIN_FREE_BYTES = 1_000_000_000  # #311: below 1 GB free, skip the write (cache is only a speed-up)
+MIN_FREE_BYTES = int(
+    os.environ.get("COIN_MIN_FREE_BYTES", "1_000_000_000")
+)  # #311: below 1 GB free, skip the write (cache is only a speed-up)
 
 
 def _cache_path(mint: str, cache_dir: Path | None = None) -> Path:

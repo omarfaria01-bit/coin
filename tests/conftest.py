@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 from pathlib import Path
 
 import pytest
+
+os.environ.setdefault("COIN_MIN_FREE_BYTES", "1")
 
 
 @pytest.fixture(autouse=True)
