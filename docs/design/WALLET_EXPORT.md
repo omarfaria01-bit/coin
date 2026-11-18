@@ -11,7 +11,7 @@ All numbers come from the engine; the page must not recompute them.
 | `holding_seconds` | age of the wallet's oldest still-held lot |
 | `supply_share` | balance / total supply, 9 decimals, floored |
 | `draw_odds` | share of the hourly draw odds (D39: linear, 5% supply cap, 0.01% min, 5% odds cap); cluster odds split by balance; 9 decimals, floored |
-| `multiplier` | `{exact: "num/den", decimal}` = `engine.scoring.h_of_age(holding_seconds)` (0 below 1h, steps to 5x at 4h) |
+| `multiplier` | `{exact: "num/den", decimal}` = `engine.loyalty.loyalty_multiplier(holding_seconds)` (0 below 1h, 5× at 4h, log to 10× at 30 days) |
 | `eligible` | in the draw (cluster eligible and wallet not excluded) |
 | `excluded_reason` | `null` or reason from `adapters.solana_keys.rewards_excluded` |
 | `accrued` | `[{ticker, amount (base units, string), usd (2 decimals)}]` |

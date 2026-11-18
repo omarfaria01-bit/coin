@@ -80,12 +80,13 @@ def test_d40_golden() -> None:
     assert weights == [1_800, 1_800, 1_800, 1_800, 1_640, 1_160]
     assert sum(weights) == 10_000
 
-    # Canonical JSON is byte-stable and pinned
+    # Canonical JSON is byte-stable. The hash includes the embedded params, so it
+    # moves when vocabulary or payout fields change. The weight vector above does not.
     cj = canonical_json(out)
     assert cj == canonical_json(run_index(candidates, [], P, OVERRIDES, as_of, code_commit))
     raw = cj if isinstance(cj, bytes) else cj.encode()
     assert hashlib.sha256(raw).hexdigest() == (
-        "5b5d98cb2a1057f68c89ec47be0d46c999d44171fb72a8c9fb2eb3026b9edf5d"
+        "4d851ce294ebda09816b81e2dd47789e6fc3ecff935f9cf978df0b30590f9b6b"
     )
 
 

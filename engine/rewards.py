@@ -6,7 +6,13 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from fractions import Fraction
 
+from engine.loyalty import loyalty_scores
 from engine.types import ClusterId, WalletId
+
+# Rent-exempt minimum of a 170-byte Token-2022 ATA (ImmutableOwner), measured on
+# mainnet (reports/research_token2022_claims_2026-11.md). A basket payout worth
+# less than this does not open a token account; the amount carries.
+TOKEN_ACCOUNT_RENT_LAMPORTS = 1_513_840
 
 
 def epoch_budget_v033(pot: int, alpha: Fraction) -> int:
@@ -168,3 +174,69 @@ def split_cluster_payout(
             raise ValueError("a cluster with zero score cannot receive a payout")
         return {wid: 0 for wid in sorted(s_w)}
     return _largest_remainder(payout_c, {w: s / s_c for w, s in s_w.items()}, payout_c)
+
+
+def allocate_holder_rewards(
+    budget: int,
+    balances: Mapping[str, int],
+    hold_seconds: Mapping[str, int],
+) -> dict[str, int]:
+    """Today's holder budget split by `loyalty_weight` (balance × loyalty multiplier).
+
+    Σ == budget when anyone has held for at least 1h. Otherwise nobody is credited
+    and the caller keeps the budget in the pot. Integer, largest remainder.
+    """
+    if isinstance(budget, bool) or not isinstance(budget, int) or budget < 0:
+        raise ValueError(f"budget must be an int >= 0, got {budget!r}")
+    scores = loyalty_scores(balances, hold_seconds)
+    if budget == 0 or not any(scores.values()):
+        return {w: 0 for w in scores}
+    return split_cluster_payout(budget, scores)
+
+
+@dataclass(frozen=True, slots=True)
+class DailyRewards:
+    """One daily settlement. ``paid + carry == previous carry + credit`` per wallet."""
+
+    paid: dict[str, int]
+    carry: dict[str, int]
+    last_paid_day: dict[str, int]
+
+
+def settle_daily_rewards(
+    carry: Mapping[str, int],
+    credit: Mapping[str, int],
+    worth_lamports: Mapping[str, int],
+    *,
+    day_index: int,
+    last_paid_day: Mapping[str, int] | None = None,
+    min_payout_lamports: int = TOKEN_ACCOUNT_RENT_LAMPORTS,
+) -> DailyRewards:
+    """Accrue per holder and pay at most once per `day_index`.
+
+    ``worth_lamports[w]`` is the SOL value of that holder's accrued basket-coin
+    position (carry + credit). Worth below the token-account rent is carried and
+    no account is opened. A configured minimum under the rent is raised to the rent.
+    """
+    if isinstance(day_index, bool) or not isinstance(day_index, int):
+        raise TypeError("day_index must be an int")
+    if min_payout_lamports < 0:
+        raise ValueError("min_payout_lamports must be >= 0")
+    floor = max(min_payout_lamports, TOKEN_ACCOUNT_RENT_LAMPORTS)
+    paid_on = dict(last_paid_day or {})
+    paid: dict[str, int] = {}
+    new_carry: dict[str, int] = {}
+    new_days = dict(paid_on)
+    for w in sorted(set(carry) | set(credit)):
+        prev, add = carry.get(w, 0), credit.get(w, 0)
+        worth = worth_lamports.get(w, 0)
+        if prev < 0 or add < 0 or worth < 0:
+            raise ValueError("amounts and worth must be >= 0")
+        accrued = prev + add
+        if accrued == 0 or paid_on.get(w) == day_index or worth < floor:
+            if accrued:
+                new_carry[w] = accrued
+            continue
+        paid[w] = accrued
+        new_days[w] = day_index
+    return DailyRewards(paid, new_carry, new_days)

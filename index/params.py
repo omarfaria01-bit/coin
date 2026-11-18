@@ -196,6 +196,13 @@ class Payout(_Strict):
     draw_period_hours: int = Field(1, ge=1)
     holder_reward_hours: int = Field(24, ge=1)
     min_prize_lamports: int = Field(10_000_000, ge=0)
+    # D43: the draw is one SOL prize, off until the legal gate. Dust rewards
+    # below a token-account's rent are carried (no account is opened).
+    draw_enabled: bool = False
+    draw_status: Literal["coming_soon", "live"] = "coming_soon"
+    draw_winners: int = Field(1, ge=1)
+    draw_min_pot_lamports: int = Field(100_000_000, ge=0)
+    min_reward_lamports: int = Field(1_513_840, ge=0)
 
     @model_validator(mode="after")
     def _sum(self) -> Payout:
@@ -203,6 +210,16 @@ class Payout(_Strict):
         total += frac(self.team) + frac(self.buyback_burn)
         if total != 1:
             raise ValueError("payout shares must sum to 1")
+        if self.draw_winners != 1:
+            raise ValueError("the draw pays a single prize")
+        if self.draw_enabled and self.draw_status != "live":
+            raise ValueError("an enabled draw is live")
+        if not self.draw_enabled and self.draw_status != "coming_soon":
+            raise ValueError("a disabled draw is coming_soon")
+        if self.min_reward_lamports < 1_513_840:
+            raise ValueError("min reward must cover token-account rent")
+        if self.draw_min_pot_lamports < 100_000_000:
+            raise ValueError("draw pot below 0.1 SOL is not a draw")
         return self
 
 
