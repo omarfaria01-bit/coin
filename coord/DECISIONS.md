@@ -462,3 +462,22 @@ holder-rewards coin, which would drop the basket, loyalty multiplier and prize).
 4. One small live smoke test (0.02 SOL cap) before full caps; no backtest (kiwi: no time).
 5. Not yet built: paying the bought basket tokens out to holders (D43 daily rewards). Until then they stay in the
    public system wallet.
+
+## D46 · 2026-11-18 · Automatic holder payouts, no dev signature (kiwi, chat 19:28 Rome)
+kiwi: "per quanto riguarda i payouts voglio che siano automatici, che siano chiaramente espressi nei docs che io dev
+non tocco quei pagamenti e che sono assolutamente automatici". This extends D45 point 3, which had left holder payouts
+out of the standing approval.
+1. A payout bot on the server settles holder rewards once a day (D43): it sends the basket coins bought by the fee bot
+   (D45) from the public system wallet to holders. Amounts come from `engine/rewards.py` (balance × loyalty
+   multiplier, D43 dust floor and carry); the holder list from the wallet export (#273). Standing approval: no
+   per-payout `APPROVED`, no human signature.
+2. kiwi/the team never sign a payout, never choose recipients, never edit amounts. Excluded wallets (team, system
+   wallet, pools/LP, burn, known CEX) follow a published rule and list; changing that rule needs kiwi + a new D-entry.
+3. Safety: pay only what was accrued (never more than the wallet holds minus the D45 reserve); per-day cap;
+   idempotent memo keys (`engine/payout_guard.py`, M4) so a retry can never pay twice; dry mode; one run at a time;
+   every payout in a public ledger (`/var/www/gtasp10/data/payouts.json`) with signatures. The only manual control is
+   the existing kill switch: it pauses payouts for everyone, and any use is announced in #1 and on the site.
+4. Rollout: dry run on real holder data first, then one small live run, then the daily timer.
+5. Public docs (site Rewards + FAQ, README) say payouts are automatic and the dev does not sign or touch them, and
+   name the kill switch. They must not claim more than is true (for example, that the dev has no access to the server).
+6. Still needs kiwi: raising caps, transfers out of the system wallet other than payouts, changing the exclusion rule.
