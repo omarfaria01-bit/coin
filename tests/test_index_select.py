@@ -157,7 +157,14 @@ def test_run_index_is_deterministic_and_complete() -> None:
     assert a["members"][0]["ticker"] == "GTA13"  # highest MC
     assert sum(m["weight_bps"] for m in a["members"]) == 10_000
     reasons = {e["ticker"]: e["reason"] for e in a["excluded"]}
-    assert reasons == {"GTA50": "F3"}
+    assert reasons == {  # D38: no_keyword and below-top-N coins are listed too
+        "GTA50": "F3",
+        "DOG": "no_keyword",
+        "GTA0": "rank_14",
+        "GTA1": "rank_13",
+        "GTA2": "rank_12",
+        "GTA3": "rank_11",
+    }
     assert a["dry_run"] is False and a["changes"]["exited"] == []
 
 
