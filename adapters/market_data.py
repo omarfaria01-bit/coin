@@ -96,6 +96,18 @@ class WindowStats:
     top10_pct: float | None
 
 
+def _mean_capped_by_latest(rows: Sequence[Sample], attr: str) -> float | None:
+    """D48: min(window mean, latest reading). None when there is no reading."""
+    vals = [s for s in rows if _finite(getattr(s, attr)) is not None]
+    if not vals:
+        return None
+    avg = mean(getattr(s, attr) for s in vals)
+    last = getattr(max(vals, key=lambda s: s.t), attr)
+    if avg is None:
+        return None
+    return min(avg, last)
+
+
 def aggregate_samples(
     samples: Sequence[Sample],
     start: int,
@@ -103,7 +115,9 @@ def aggregate_samples(
     sample_seconds: int,
     holder_seconds: int,
 ) -> WindowStats:
-    """Means of MC and liquidity. Volume is the latest h24 reading, already a window sum.
+    """MC and liquidity: the window mean, capped by the latest reading (D48), so a crash counts
+    at once while a sudden pump only counts gradually. Volume is the latest h24 reading, already
+    a window sum.
 
     Top-10 is the median of the last holder sample in each holder bucket.
     """
@@ -118,8 +132,8 @@ def aggregate_samples(
     latest = max(vol, key=lambda s: s.t).volume_usd if vol else None
     return WindowStats(
         coverage=coverage((s.t for s in rows), start, end, sample_seconds),
-        mc_usd=mean(s.mc_usd for s in rows if s.mc_usd is not None),
-        liquidity_usd=mean(s.liquidity_usd for s in rows if s.liquidity_usd is not None),
+        mc_usd=_mean_capped_by_latest(rows, "mc_usd"),
+        liquidity_usd=_mean_capped_by_latest(rows, "liquidity_usd"),
         volume_usd=latest,
         top10_pct=median(list(per_bucket.values())),
     )
