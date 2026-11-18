@@ -1,8 +1,9 @@
-"""D28 hourly draw fairness simulation (#225): cap, sqrt odds, sybil merge, rollover.
+"""Hourly draw fairness simulation (#225, D28 → D39): cap, linear odds, sybil merge, rollover.
 
 Simulation only: draws stay off in production (legal #8 / §16). Pure and seeded — no clock,
-network, RPC or key. Scores become `isqrt` weights (`engine.draws`), the exact cap and hourly
-plan (`engine.hourly_draw`), and linked wallets are merged by §7 (`engine.sybil_v033`).
+network, RPC or key. Since D39 scores become **linear** weights (`engine.hourly_draw`, was
+`isqrt`), with the exact 5% odds cap and the hourly plan; linked wallets are merged by §7
+(`engine.sybil_v033`). Balances equal scores here and the supply is `SUPPLY`.
 
     uv run python -m sim.hourly_draw_fairness   # prints reports/hourly_draw_fairness_2026-11.md
 """
@@ -16,11 +17,10 @@ from fractions import Fraction
 from hashlib import sha256
 from math import sqrt
 
-from engine.draws import draw_weight
 from engine.hourly_draw import (
     CAP_DEFAULT,
     MIN_POT_LAMPORTS_DEFAULT,
-    cap_weights,
+    draw_weights,
     plan_hourly_draw,
 )
 from engine.sybil_v033 import Edge, Kind, cluster
@@ -31,7 +31,9 @@ DRAWS = 10_000
 POT = 1_000_000_000  # 1 SOL per hourly pot
 INFLOW = 400_000  # 0.0004 SOL/h: 24 hours below the 0.01 SOL minimum
 SMALL_SCORE = 1_000_000
-WHALE_SCORE = 10_000 * SMALL_SCORE  # sqrt weight 100x a small holder -> cap binds
+WHALE_SCORE = 10_000 * SMALL_SCORE  # linear weight 10,000x a small holder -> cap binds
+SUPPLY = 10**12  # whale = 1% of supply: the 5% supply cap does not bind in these populations
+MIN_HOLDING = Fraction(1, 10**9)  # small holders here are 1e-6 of supply
 SEED_SYBIL, SEED_EQUAL = "d28-sybil", "d28-equal"
 GENESIS = sha256(b"coin-sim-genesis").digest()
 MINT = sha256(b"coin-sim-mint").digest()
@@ -80,9 +82,8 @@ def merged(pop: Population) -> tuple[dict[ClusterId, int], dict[ClusterId, str]]
 
 
 def odds(scores: Mapping[ClusterId, int], cap: Fraction = CAP_DEFAULT) -> dict[ClusterId, Fraction]:
-    """Sqrt weights, exact cap, then each cluster's share of the capped odds (Fractions)."""
-    weights = {c: draw_weight(s) for c, s in scores.items()}
-    capped = cap_weights({c: w for c, w in weights.items() if w > 0}, cap)
+    """Linear weights, exact cap, then each cluster's share of the capped odds (Fractions)."""
+    capped = draw_weights(scores, scores, SUPPLY, cap=cap, min_holding_share=MIN_HOLDING)
     total = sum(capped.values())
     return {c: Fraction(w, total) for c, w in capped.items()}
 
@@ -91,7 +92,8 @@ def _plan(scores: Mapping[ClusterId, int], pot: int, index: int, seed: str, **kw
     rho = sha256(f"{seed}:{index}".encode()).digest()
     return plan_hourly_draw(
         scores, pot, kw.pop("prize_bps", PRIZE_BPS), genesis_hash=GENESIS, mint=MINT,
-        draw_index=index, snapshot_hash=SNAPSHOT, rho=rho, **kw,
+        draw_index=index, snapshot_hash=SNAPSHOT, rho=rho, balances=scores,
+        total_supply=SUPPLY, min_holding_share=MIN_HOLDING, **kw,
     )  # fmt: skip
 
 
@@ -224,7 +226,7 @@ def render_report() -> str:
     total_draws = a.draws + b.draws + c.draws
     violations = a.violations + b.violations + c.violations + d.violations
     attack_odds = sum(s for c2, s in odds(attack_scores).items() if attack_classes[c2] == "whale")
-    w_whale, w_small = draw_weight(WHALE_SCORE), draw_weight(SMALL_SCORE)
+    w_whale, w_small = WHALE_SCORE, SMALL_SCORE
     ci_pp = 196 * sqrt(0.05 * 0.95 / a.draws)
     sybil = (
         f"| unsplit | 1 | {_pct(a.class_odds('whale'))} | {_pct(a.class_rank1('whale'))} | — |",
@@ -235,7 +237,7 @@ def render_report() -> str:
         f"| {h} | {pot:,} | {'yes' if ok else 'no'} | {paid:,} | {rolled:,} |"
         for h, pot, ok, paid, rolled in d.cycle
     )
-    return f"""# Hourly draw fairness (D28): cap, sqrt odds, sybil merge, rollover (18 Nov 2026)
+    return f"""# Hourly draw fairness (D39): cap, linear odds, sybil merge, rollover (18 Nov 2026)
 
 Issue: [#225](https://github.com/omarfaria01-bit/coin/issues/225). Model:
 `sim/hourly_draw_fairness.py`. **Simulation only** — draws stay off in production (legal #8 /
@@ -243,8 +245,9 @@ Issue: [#225](https://github.com/omarfaria01-bit/coin/issues/225). Model:
 
 ## Rules
 
-- `w_c = isqrt(score_c)` (`engine/draws.py`), then the exact water-filling 5% cap: with ≥ 20
-  clusters no cluster exceeds {_pct(CAP_DEFAULT)} of the odds.
+- D39: `w_c ∝ score_c` (linear, `engine/hourly_draw.py`; was `isqrt`), score counted on at most
+  5% of supply, then the exact water-filling 5% cap: no cluster exceeds {_pct(CAP_DEFAULT)} of
+  the odds. Fewer than 100 eligible groups → no draw, pot rolls over.
 - Ten prizes per hour, sampled without replacement (at most one per cluster), bps
   `{PRIZE_BPS}`, integer floor, remainder stays in the pot.
 - Below the 0.01 SOL minimum (`{MIN_POT_LAMPORTS_DEFAULT:,}` lamports) the whole pot rolls over.
@@ -256,7 +259,7 @@ Issue: [#225](https://github.com/omarfaria01-bit/coin/issues/225). Model:
 {_class_table(a, ("whale", "small"))}
 
 Max cluster `{a_cap}`: **{_pct(a_odds)}** odds, rank-1 **{_pct(a_rank)}** (±{ci_pp:.2f} pp),
-all-prize share **{_pct(a_slot)}**. The whale's raw sqrt share is
+all-prize share **{_pct(a_slot)}**. The whale's raw linear share is
 {_pct(Fraction(w_whale, w_whale + 500 * w_small))}; the cap turns it into
 {_pct(a.class_odds("whale"))}, the small class keeps {_pct(a.class_odds("small"))}. Rank-1
 wins estimate the capped odds; the all-prize share is lower for a big cluster because the ten
@@ -270,8 +273,9 @@ prizes are drawn without replacement, so it stays under the cap.
 
 The linked split gives the **same capped weights and winner sequences** as the unsplit whale
 (same seed, cluster id `w00`), so merging is exact. With the links missed, the 10 fragments
-would hold **{_pct(attack_odds)}** of the odds — each is below the 5% per-cluster cap, so §7
-clustering, not the cap, is what removes the split advantage.
+would hold **{_pct(attack_odds)}** of the odds: splitting escapes the per-cluster cap, but with
+linear odds never beyond the whale's proportional share
+({_pct(Fraction(w_whale, w_whale + 500 * w_small))}); see `reports/rewards_d39_sybil_2026-11.md`.
 
 ## (c) 1,000 equal holders
 
@@ -300,7 +304,7 @@ split, partially paid below the minimum, or lost.
 ## Acceptance
 
 All four checks pass: cap (highest odds {_pct(a_odds)}, all-prize share {_pct(a_slot)} in (a)
-and {_pct(c_slot)} in (c)), sqrt odds (whale {_pct(a.class_rank1("whale"))} vs
+and {_pct(c_slot)} in (c)), linear odds (whale {_pct(a.class_rank1("whale"))} vs
 {_pct(a.class_odds("whale"))}, small {_pct(a.class_rank1("small"))} vs
 {_pct(a.class_odds("small"))}), sybil merge (linked split == unsplit, identical winners) and
 rollover (whole-pot carry for 24 hours, then a draw, conservation holds).
@@ -308,7 +312,7 @@ rollover (whole-pot carry for 24 hours, then a draw, conservation holds).
 ## Limits
 
 - Rank-1 is a sample (SE 0.22 pp at 5%, 10,000 draws); the cap is exact on the odds.
-- Cap impossible below 20 live clusters (`n · cap < 1`); not an issue here.
+- Below 100 eligible groups (and always below 21) the plan rolls over instead of drawing.
 - Sybil invariance needs detected links; scores are constant, draws off (legal #8).
 
 ## Reproduce

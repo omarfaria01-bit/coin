@@ -147,6 +147,9 @@ def _plan(scores: dict, pot: int, idx: int = 1):
         draw_index=idx,
         snapshot_hash=b"s" * 32,
         rho=b"r" * 32,
+        balances=dict(scores),
+        total_supply=10**18,
+        min_holding_share=Fraction(1, 10**18),
     )
 
 
@@ -163,7 +166,7 @@ def test_below_min_pot_rolls_over_and_conserves() -> None:
     st.integers(0, 10**6),
 )
 def test_draw_conserves_pot(pot: int, whale_score: int, idx: int) -> None:
-    scores = {f"c{i}": 100 for i in range(40)} | {"whale": whale_score}
+    scores = {f"c{i}": 100 for i in range(120)} | {"whale": whale_score}
     plan = _plan(scores, pot, idx)
     assert sum(plan.prizes.values()) + plan.rollover == pot
 

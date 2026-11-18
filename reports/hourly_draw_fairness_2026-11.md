@@ -1,4 +1,4 @@
-# Hourly draw fairness (D28): cap, sqrt odds, sybil merge, rollover (18 Nov 2026)
+# Hourly draw fairness (D39): cap, linear odds, sybil merge, rollover (18 Nov 2026)
 
 Issue: [#225](https://github.com/omarfaria01-bit/coin/issues/225). Model:
 `sim/hourly_draw_fairness.py`. **Simulation only** — draws stay off in production (legal #8 /
@@ -6,8 +6,9 @@ Issue: [#225](https://github.com/omarfaria01-bit/coin/issues/225). Model:
 
 ## Rules
 
-- `w_c = isqrt(score_c)` (`engine/draws.py`), then the exact water-filling 5% cap: with ≥ 20
-  clusters no cluster exceeds 5.00% of the odds.
+- D39: `w_c ∝ score_c` (linear, `engine/hourly_draw.py`; was `isqrt`), score counted on at most
+  5% of supply, then the exact water-filling 5% cap: no cluster exceeds 5.00% of
+  the odds. Fewer than 100 eligible groups → no draw, pot rolls over.
 - Ten prizes per hour, sampled without replacement (at most one per cluster), bps
   `(4000, 1000, 1000, 1000, 500, 500, 500, 500, 500, 500)`, integer floor, remainder stays in the pot.
 - Below the 0.01 SOL minimum (`10,000,000` lamports) the whole pot rolls over.
@@ -18,12 +19,12 @@ Issue: [#225](https://github.com/omarfaria01-bit/coin/issues/225). Model:
 
 | class | clusters | odds share | rank-1 share | slot share |
 |---|---|---|---|---|
-| whale | 1 | 5.00% | 4.93% | 4.07% |
-| small | 500 | 95.00% | 95.07% | 95.93% |
+| whale | 1 | 5.00% | 5.01% | 4.03% |
+| small | 500 | 95.00% | 94.99% | 95.97% |
 
-Max cluster `w00`: **5.00%** odds, rank-1 **4.93%** (±0.43 pp),
-all-prize share **4.07%**. The whale's raw sqrt share is
-16.67%; the cap turns it into
+Max cluster `w00`: **5.00%** odds, rank-1 **5.01%** (±0.43 pp),
+all-prize share **4.03%**. The whale's raw linear share is
+95.24%; the cap turns it into
 5.00%, the small class keeps 95.00%. Rank-1
 wins estimate the capped odds; the all-prize share is lower for a big cluster because the ten
 prizes are drawn without replacement, so it stays under the cap.
@@ -32,13 +33,14 @@ prizes are drawn without replacement, so it stays under the cap.
 
 | case | whale class clusters | whale class odds | rank-1 share | same winners as unsplit |
 |---|---|---|---|---|
-| unsplit | 1 | 5.00% | 4.93% | — |
-| split 10, linked | 1 | 5.00% | 4.93% | True |
+| unsplit | 1 | 5.00% | 5.01% | — |
+| split 10, linked | 1 | 5.00% | 5.01% | True |
 
 The linked split gives the **same capped weights and winner sequences** as the unsplit whale
 (same seed, cluster id `w00`), so merging is exact. With the links missed, the 10 fragments
-would hold **38.74%** of the odds — each is below the 5% per-cluster cap, so §7
-clustering, not the cap, is what removes the split advantage.
+would hold **50.00%** of the odds: splitting escapes the per-cluster cap, but with
+linear odds never beyond the whale's proportional share
+(95.24%); see `reports/rewards_d39_sybil_2026-11.md`.
 
 ## (c) 1,000 equal holders
 
@@ -90,16 +92,16 @@ split, partially paid below the minimum, or lost.
 
 ## Acceptance
 
-All four checks pass: cap (highest odds 5.00%, all-prize share 4.07% in (a)
-and 0.13% in (c)), sqrt odds (whale 4.93% vs
-5.00%, small 95.07% vs
+All four checks pass: cap (highest odds 5.00%, all-prize share 4.03% in (a)
+and 0.13% in (c)), linear odds (whale 5.01% vs
+5.00%, small 94.99% vs
 95.00%), sybil merge (linked split == unsplit, identical winners) and
 rollover (whole-pot carry for 24 hours, then a draw, conservation holds).
 
 ## Limits
 
 - Rank-1 is a sample (SE 0.22 pp at 5%, 10,000 draws); the cap is exact on the odds.
-- Cap impossible below 20 live clusters (`n · cap < 1`); not an issue here.
+- Below 100 eligible groups (and always below 21) the plan rolls over instead of drawing.
 - Sybil invariance needs detected links; scores are constant, draws off (legal #8).
 
 ## Reproduce

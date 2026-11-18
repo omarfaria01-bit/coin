@@ -12,9 +12,13 @@ from hypothesis import strategies as st
 from engine.hourly_draw import CAP_DEFAULT, MIN_POT_LAMPORTS_DEFAULT, plan_hourly_draw
 from sim.hourly_draw_fairness import (
     GENESIS,
+    MIN_HOLDING,
     MINT,
     PRIZE_BPS,
+    SMALL_SCORE,
     SNAPSHOT,
+    SUPPLY,
+    WHALE_SCORE,
     _plan,
     equal_holders,
     merged,
@@ -44,11 +48,13 @@ def test_sybil_split_merges_to_the_same_cluster_and_odds() -> None:
     assert (a.rank1, a.paid, a.rolled, a.violations) == (b.rank1, b.paid, b.rolled, b.violations)
 
 
-def test_the_cap_is_per_cluster_so_unlinked_splits_gain() -> None:
+def test_unlinked_splits_escape_the_cap_but_never_beat_proportional() -> None:
+    """D39: linear odds — a split can at most recover the whale's proportional share."""
     classes = merged(replace(whale_split_and_small(), links=()))[1]
     scores = merged(replace(whale_split_and_small(), links=()))[0]
     whale = sum(s for c, s in odds(scores).items() if classes[c] == "whale")
-    assert Fraction(38, 100) < whale < Fraction(39, 100)
+    proportional = Fraction(WHALE_SCORE, WHALE_SCORE + 500 * SMALL_SCORE)
+    assert whale == Fraction(1, 2) <= proportional  # 10 fragments, each capped at 5%
 
 
 @given(
@@ -59,7 +65,11 @@ def test_the_cap_is_per_cluster_so_unlinked_splits_gain() -> None:
 @settings(max_examples=60, deadline=None)
 def test_every_draw_conserves_in_ints(pot: int, score: int, other: int) -> None:
     kw = {"genesis_hash": GENESIS, "mint": MINT, "snapshot_hash": SNAPSHOT, "rho": GENESIS}
-    plan = plan_hourly_draw({"a": score, "b": other}, pot, PRIZE_BPS, draw_index=0, **kw)
+    scores = {"a": score, "b": other} | {f"c{i:03d}": other for i in range(120)}
+    plan = plan_hourly_draw(
+        scores, pot, PRIZE_BPS, draw_index=0, balances=scores, total_supply=SUPPLY * 10**6,
+        min_holding_share=MIN_HOLDING / 10**9, **kw,
+    )  # fmt: skip
     assert sum(plan.prizes.values()) + plan.rollover == pot
     assert all(type(v) is int for v in plan.prizes.values())
     assert type(plan.rollover) is int and plan.rollover >= 0
@@ -87,7 +97,7 @@ def test_ten_thousand_hours_repeat_the_cycle_and_conserve() -> None:
     assert result.violations == 0
 
 
-def test_rank1_shares_track_the_capped_sqrt_odds() -> None:
+def test_rank1_shares_track_the_capped_linear_odds() -> None:
     result = simulate(whale_and_small(), draws=2_000, seed="share")
     assert abs(float(result.rank1_share("w00")) - 0.05) < 0.015
     assert abs(float(result.class_rank1("small")) - 0.95) < 0.015

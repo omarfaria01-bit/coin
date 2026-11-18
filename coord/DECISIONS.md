@@ -303,3 +303,28 @@ volume; then cap 25% per coin with water-filling; fewer than 4 members -> equal 
 (`equal`, `score_capped` stay as options). Rank/membership still use the score S (§4); only the weights changed.
 Risk, said plainly: volume is raw (no wash cleanup, D35), so a coin with inflated volume gets up to half-weight pull from
 it; the 25% cap and F9 (200 traders) are the only limits. A half whose total is 0 counts as equal. Hetzner: pull /opt/coin.
+
+## D39 · 2026-11-18 · Rewards audit fixes: linear draw odds, 5% supply cap, commit → reveal (kiwi, #156, #271)
+kiwi, 18 Nov 13:12 Rome, on the audit (#271): "risolvi tu tutto questi problemi usando la matematica";
+decisions delegated by kiwi to Grok (orchestrator). Supersedes the sqrt weight of §9/D28.
+- **C1** draw odds ∝ score (linear, exact integers). Proofs in COIN_MATH §9; `tests/test_rewards_d39_math.py`;
+  table `reports/rewards_d39_sybil_2026-11.md`: attacker with 3% of supply → 3.85% odds for 1, 10, 100 wallets
+  (old sqrt: 1.14% → 3.52% → 10.35% → 26.75% at 1,000); 1,000 pieces of 0.003% are below the minimum → 0.
+- **H2** score on min(balance, 5% of supply) (`SUPPLY_CAP`), plus the 5% odds cap. Site wording: "No holder
+  can count more than 5% of supply".
+- **C1/H1** minimum 0.01% of supply per entrant (`MIN_HOLDING_SHARE`, via `is_draw_eligible`); fewer than 100
+  eligible groups (§16) → no draw, pot rolls over (never equal odds).
+- **H3/M1** `engine/draw_commit.py`: snapshot hash over every input (scores, balances, overrides, hubs, excluded,
+  cut-off, params); one ORAO request seeded with it, no retry; `tools/draw_verify.py` + payout guard refuse on
+  mismatch. Offline only; no devnet/mainnet tx.
+- **M2** `cluster(..., s2_two_sided=True)`: S2 merges need an L1/L2 on the same pair, else `funding_review`.
+  Default stays off for the daily epoch (turning it on fails the §14 "same first funder" rows); the hourly draw
+  job must call it with True.
+- **M3** `adapters/solana_keys.py`: off-curve (PDA, program-owned) owners, dev and treasury excluded; run_epoch
+  writes `excluded.json` per epoch (fixture flag `exclude_off_curve`, default true; goldens/test fixture use
+  random addresses so they set it false).
+- **M4** `engine/payout_guard.py`: memo key `GTASP10:e<epoch>:d<draw>:<wallet>`, skip keys done locally or seen
+  on-chain, block on unresolved intents.
+- Params live as constants in `engine/hourly_draw.py` (not `coin.json`, so `params_hash` and goldens of the daily
+  epoch do not move); they are committed in every draw's snapshot hash. Draws stay **off**.
+
