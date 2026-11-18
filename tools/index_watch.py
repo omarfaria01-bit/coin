@@ -56,6 +56,10 @@ def run_emergency(args, client: HeliusClient, params: IndexParams, as_of: int) -
             revoked[1],
             False,
             params,
+            (
+                _liq_at(samples, mint, as_of, params.emergency.confirm_gap_s),
+                _liq_at(samples, mint, as_of, params.emergency.confirm_gap_s + 3600),
+            ),
         )
         if reason:
             output = apply_emergency(output, mint, reason, _iso(as_of), params)

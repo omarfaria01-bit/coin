@@ -270,3 +270,10 @@ trade >= `min_trade_sol` (0.01). Missing/ambiguous swap data (truncated history,
 `volume_wallets`, `median_trade_sol` (source helius-parsed-events). Not done: creator/LP funding-cluster exclusion (needs
 first-funder collection, left in #170); collector uses the default thresholds for these facts. Stricter than before, so
 some coins that passed F9/F10 now fail.
+
+## D34 · 2026-11-18 · Emergency liquidity removal needs two samples (#172, Claude)
+Red team #162: one 1h print at -50% could remove a member (a big holder can fake it by pulling liquidity, or one bad
+sample). Now `emergency_reason` removes for `liquidity_drop` only if the previous sample (`emergency.confirm_gap_s`, 900 s
+earlier, vs its own 1h-ago value) also shows >= 50%; missing earlier data = no removal. Authority re-enabled and rug flag stay
+immediate. New param default 900 (no params.json change, no golden change). Not done (in #172): second data source,
+price-recovery check, manual confirm above a size, basket-buy TWAP/private path (mainnet, needs kiwi).
