@@ -92,7 +92,7 @@ are safe to display.
 | `ticker` | string | — | Same ticker as the member. |
 | `name` | string | — | Token name. |
 | `description` | string | — | Token description; `""` allowed. |
-| `coverage` | float | fraction 0..1 | Share of 5-minute buckets in the window that have a sample. `insufficient_data` below `min_coverage` (1/2). |
+| `coverage` | float | fraction 0..1 | Share of 5-minute buckets in the window that have a sample (D35: any samples count, zero = insufficient_data). |
 | `age_hours` | float | hours | Age since first pool/curve. |
 | `liquidity_usd` | float | USD | Window arithmetic mean pool liquidity (curve reserve for bonding curves). |
 | `mc_usd` | float | USD | Window arithmetic mean market cap. |

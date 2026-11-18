@@ -54,7 +54,7 @@ def _page(i: int) -> dict:
         "parsed": {
             "slot": 9 + i,
             "blockTime": START + 60 * i,
-            "fee": 100_000_000,  # 0.1 SOL each; 200 traders clear F4's 10 SOL
+            "fee": 100_000_000,  # 0.1 SOL each; 200 traders clear F4's 8 SOL
             "feePayer": payer,
             "transactionStatus": "OK",
             "nativeTransfers": [],

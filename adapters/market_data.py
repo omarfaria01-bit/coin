@@ -9,7 +9,7 @@ Tips are `nativeTransfers` whose destination is one of the eight Jito tip
 accounts (`getTipAccounts` on docs.jito.wtf). A succeeded swap that moves the
 mint contributes `fee + tips` once. Sums stay in lamports until the float SOL
 fields. If the history walk stopped early, or a counted swap has no fee, both
-SOL fields stay None, so a short history cannot pass the 10 SOL minimum.
+SOL fields stay None, so a short history cannot pass the 8 SOL minimum.
 
 Price, liquidity and the sample window are applied by the caller. Helius DAS
 has no name search and no pool-liquidity field. DexScreener is only the
