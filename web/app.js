@@ -2,18 +2,32 @@
   "use strict";
   const $ = (s) => document.querySelector(s);
   const DATA = "data/";
-  const RELEASE = new Date(2026, 10, 19, 0, 0, 0); // 19 Nov 2026 00:00 local time
-  let latest = null, cands = null, sortKey = "vol24h";
-
+  // GTA 6: 19 Nov 2026 00:00 America/New_York (EST, UTC-5) = 2026-11-19T05:00:00Z
+  const RELEASE = new Date("2026-11-19T05:00:00.000Z");
+  const MIN_LIQ = 10000;
+  const DEX_IMG = (m) => "https://dd.dexscreener.com/ds-data/tokens/solana/" + m + ".png";
+  const DEX_URL = (m) => "https://dexscreener.com/solana/" + encodeURIComponent(m);
+  // Same static fallback pool used by /usr/local/bin/gtasp10-logo.py
+  const STATIC_TOP = [
+    "4kjruqGHDsSqkMdFfCjV7Vb62HPFhtXyWc2t6JpQzDnz",
+    "nxPqZ4F7ux8Vph5NFu25rEP6Kx9Gr1U6Fmj36Rjpump",
+    "DKYcjobF7HPtL9RyQBRdeRQ2iWvizpfbgWwPWNXdpump",
+    "AKotzk1dhcNangAJBtvNKtT9bhbSVZc2mMhRFgkFpump",
+    "7KBFymfGAe8MmKEuNersoM59TvpiHzZ76jP7rSLrpump",
+    "HsZXb9rppRQarZHHCvuLkKP7sAKPMCwrarf5KTTcpump",
+    "HZbiEpF2oM658EpjNRRqxharz5L9Ddm8akpSH2R5pump",
+    "BsbsB3WLq7vbY5En3MBCAsTrcwaCxNKY2Mp5pGuLpump",
+    "HCNhQCu5nrmWhSE3mo7fRU9eGiGLmi2fnE8omgLpump",
+    "9HFUEab7sompLDPTAaTGkryMNGbtBaFMhHMVpJEBpump",
+  ];
+  let latest = null, cands = null, logoMeta = null, sortKey = "vol24h";
+  const dexCache = {};
 
   const t = {asof:"Last run", days:"d", none:"No candidate with enough data", member:"member", nodata:"collecting data",
-        cols:["#","Coin","Status","Market cap","Liquidity","Vol 24h"], mcols:["#","Coin","Weight","Market cap","Liquidity","Volume","Δ"],
+        cols:["#","Coin","Status","Market cap","Liquidity","Vol 24h"],
         excl:(n,r)=>`${n} candidates evaluated, ${r} waiting for data`, out:"GTA 6 is out!", newb:"new"};
 
   const REASON = {insufficient_data:"collecting data",F1:"too young",F2:"liquidity < $50k",F3:"top holders outside 13–27%",F4:"fees < 8 SOL",F5:"bundle > 30%",F7:"serial creator",F8:"authorities active",F8c:"token program",F9:"< 200 traders",F10:"zero volume",F11:"MC > 100× liq",deny:"excluded (scam)"};
-
-
-  // i18n
 
 
   // formatting
@@ -28,8 +42,14 @@
   const short = (m) => m.slice(0, 4) + "…" + m.slice(-4);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
   const pad = (n) => String(n).padStart(2, "0");
+  const pct = (v) => {
+    if (v == null || !isFinite(+v)) return "—";
+    const n = +v;
+    const sign = n > 0 ? "+" : "";
+    return sign + n.toFixed(Math.abs(n) >= 10 ? 1 : 2) + "%";
+  };
 
-  // countdowns
+  // countdowns — RELEASE is a fixed UTC instant, identical for every visitor
   function tick() {
     const now = new Date();
     let d = RELEASE - now;
@@ -69,38 +89,201 @@
 
   const COLORS = ["#ff2d95","#ff8a3d","#ffd166","#8b5cf6","#22e3ff","#ff4fd8","#4ade80","#f472b6","#fb923c","#a78bfa"];
   function donut(members) {
-    const total = members.reduce((a, m) => a + (m.weight_bps || 0), 0) || 1;
+    const total = members.reduce((a, m) => a + (m.weight || 0), 0) || 1;
     const r = 80, c = 2 * Math.PI * r; let off = 0, s = "";
     members.forEach((m, i) => {
-      const f = (m.weight_bps || 0) / total;
+      const f = (m.weight || 0) / total;
       s += `<circle cx="110" cy="110" r="${r}" fill="none" stroke="${COLORS[i % 10]}" stroke-width="30" stroke-dasharray="${f * c} ${c}" stroke-dashoffset="${-off * c}" transform="rotate(-90 110 110)"><title>${esc(m.ticker)} ${(f * 100).toFixed(1)}%</title></circle>`;
       off += f;
     });
     $("#donut").innerHTML = s; $("#donut-n").textContent = members.length;
   }
 
+  function capWeights(rows) {
+    const n = rows.length;
+    if (!n) return rows;
+    if (n < 4) {
+      const w = 100 / n;
+      rows.forEach((r) => { r.weight = w; });
+      return rows;
+    }
+    const mcSum = rows.reduce((a, r) => a + (r.mc || 0), 0) || 1;
+    const volSum = rows.reduce((a, r) => a + (r.vol24h || 0), 0) || 1;
+    let raw = rows.map((r) => 0.5 * ((r.mc || 0) / mcSum) + 0.5 * ((r.vol24h || 0) / volSum));
+    const CAP = 0.25;
+    for (let pass = 0; pass < 10; pass++) {
+      let excess = 0, free = 0;
+      raw = raw.map((w) => {
+        if (w > CAP) { excess += w - CAP; return CAP; }
+        free += w;
+        return w;
+      });
+      if (excess < 1e-12) break;
+      if (free <= 0) break;
+      raw = raw.map((w) => (w < CAP ? w + excess * (w / free) : w));
+    }
+    const sum = raw.reduce((a, b) => a + b, 0) || 1;
+    rows.forEach((r, i) => { r.weight = (raw[i] / sum) * 100; });
+    return rows;
+  }
+
+  function mergeRow(base) {
+    const d = dexCache[base.mint] || {};
+    return {
+      ...base,
+      name: base.name || d.name || base.ticker || short(base.mint),
+      ticker: base.ticker || d.ticker || "?",
+      mc: d.mc || base.mc,
+      liq: d.liq || base.liq,
+      vol24h: d.vol24h ?? base.vol24h,
+      chg24h: d.chg24h ?? base.chg24h,
+      image: d.image || base.image || DEX_IMG(base.mint),
+    };
+  }
+
+  function officialRows() {
+    const members = ((latest && latest.members) || []).slice().sort((a, b) => a.rank - b.rank);
+    if (!members.length) return [];
+    const entered = new Set((latest.changes && latest.changes.entered) || []);
+    return members.map((m, i) => {
+      const mt = m.metrics || {};
+      return mergeRow({
+        official: true,
+        rank: m.rank || i + 1,
+        mint: m.mint,
+        ticker: m.ticker || mt.ticker,
+        name: mt.name,
+        weight: (m.weight_bps || 0) / 100,
+        mc: mt.mc_usd,
+        liq: mt.liquidity_usd,
+        vol24h: mt.volume_usd,
+        prev: m.prev_rank,
+        isNew: entered.has(m.mint),
+      });
+    });
+  }
+
+  function previewPoolMints() {
+    const fromLogo = ((logoMeta && logoMeta.coins) || []).map((c) => c.mint).filter(Boolean);
+    const have = new Set(fromLogo);
+    const sane = ((cands && cands.candidates) || []).filter((c) =>
+      (c.mc || 0) >= 50000 && (c.liq || 0) >= MIN_LIQ && (c.vol24h || 0) >= 5000 && (c.liq || 0) <= (c.mc || 0)
+    ).sort((a, b) => (b.mc || 0) - (a.mc || 0));
+    const extra = [];
+    for (const c of sane) {
+      if (!have.has(c.mint)) { extra.push(c.mint); have.add(c.mint); }
+    }
+    for (const m of STATIC_TOP) {
+      if (!have.has(m)) { extra.push(m); have.add(m); }
+    }
+    return fromLogo.concat(extra).slice(0, 30);
+  }
+
+  function previewRows() {
+    const byMint = {};
+    ((cands && cands.candidates) || []).forEach((c) => { byMint[c.mint] = c; });
+    ((logoMeta && logoMeta.coins) || []).forEach((c) => {
+      byMint[c.mint] = { ...(byMint[c.mint] || {}), mint: c.mint, ticker: c.ticker || (byMint[c.mint] || {}).ticker, mc: (byMint[c.mint] || {}).mc || c.mcap_usd };
+    });
+    const pool = previewPoolMints();
+    let rows = pool.map((mint, i) => {
+      const c = byMint[mint] || { mint };
+      return mergeRow({
+        official: false,
+        rank: i + 1,
+        mint,
+        ticker: c.ticker,
+        mc: c.mc,
+        liq: c.liq,
+        vol24h: c.vol24h,
+      });
+    });
+    // Prefer DexScreener market cap when present (same rule as the logo fallback)
+    rows = rows.filter((r) => (r.liq == null || r.liq >= MIN_LIQ) && (r.mc || 0) > 0);
+    rows.sort((a, b) => (b.mc || 0) - (a.mc || 0));
+    rows = rows.slice(0, 10).map((r, i) => ({ ...r, rank: i + 1 }));
+    return capWeights(rows);
+  }
+
+  function coinCell(r) {
+    const initial = esc((r.ticker || "?").slice(0, 3).toUpperCase());
+    const name = esc(r.name || r.ticker || "?");
+    const ticker = esc(r.ticker || "?");
+    const img = esc(r.image || DEX_IMG(r.mint));
+    return `<div class="coin"><img class="coin-logo" src="${img}" alt="" width="36" height="36" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('noimg')"><span class="coin-fb" aria-hidden="true">${initial}</span><span class="coin-meta"><b>${name}</b><small>${ticker}</small></span></div>`;
+  }
+
+  function chgCell(v) {
+    if (v == null || !isFinite(+v)) return `<span class="chg">—</span>`;
+    const cls = +v > 0 ? "up" : +v < 0 ? "down" : "";
+    return `<span class="chg ${cls}">${pct(v)}</span>`;
+  }
+
+  function renderBoard(rows, official) {
+    const wrap = $("#members-wrap");
+    const grid = wrap.querySelector(".members-grid");
+    const banner = $("#board-banner");
+    wrap.hidden = false;
+    banner.hidden = official;
+    grid.classList.toggle("preview", !official);
+    $("#building").hidden = true;
+    if (official) donut(rows);
+
+    const head = ["#","Coin","Weight","Market cap","Liquidity","24h volume","24h","Chart"];
+    let table = `<div class="board-tbl-wrap"><table class="board-tbl"><thead><tr>${head.map((c) => `<th>${c}</th>`).join("")}</tr></thead><tbody>`;
+    let cards = `<div class="board-cards">`;
+    rows.forEach((r, i) => {
+      const color = COLORS[i % 10];
+      const w = r.weight != null && isFinite(r.weight) ? r.weight.toFixed(1) + "%" : "—";
+      const bar = r.weight != null ? `<span class="vbar" style="width:${Math.max(4, r.weight * 1.6)}px"></span>` : "";
+      const href = DEX_URL(r.mint);
+      table += `<tr>
+        <td class="rk" style="color:${color}">#${r.rank}</td>
+        <td>${coinCell(r)}</td>
+        <td><span class="wcell"><b>${w}</b>${bar}</span></td>
+        <td>${usd(r.mc)}</td>
+        <td>${usd(r.liq)}</td>
+        <td>${usd(r.vol24h)}</td>
+        <td>${chgCell(r.chg24h)}</td>
+        <td><a class="dex-link" href="${href}" target="_blank" rel="noopener noreferrer">Dex ↗</a></td>
+      </tr>`;
+      cards += `<a class="bcard" href="${href}" target="_blank" rel="noopener noreferrer">
+        <div class="bcard-top"><span class="rk" style="color:${color}">#${r.rank}</span>${coinCell(r)}<span class="chg-wrap">${chgCell(r.chg24h)}</span></div>
+        <div class="bcard-grid">
+          <span><span class="k">${official ? "Index weight" : "Preview weight"}</span><span class="v">${w}</span></span>
+          <span><span class="k">Market cap</span><span class="v">${usd(r.mc)}</span></span>
+          <span><span class="k">Liquidity</span><span class="v">${usd(r.liq)}</span></span>
+          <span><span class="k">24h volume</span><span class="v">${usd(r.vol24h)}</span></span>
+        </div>
+        <div class="bcard-foot"><span class="mono small muted">${short(r.mint)}</span><span class="dex-link">DexScreener ↗</span></div>
+      </a>`;
+    });
+    table += "</tbody></table></div>";
+    cards += "</div>";
+    $("#board").innerHTML = table + cards;
+  }
+
   function render() {
-    if (!latest && !cands) return;
+    if (!latest && !cands && !logoMeta) return;
     if (latest) {
       const asof = latest.as_of ? new Date(latest.as_of) : null;
       $("#asof").textContent = asof ? `${t.asof}: ${asof.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}${latest.dry_run ? " · dry-run" : ""}` : "";
       $("#hashes").textContent = latest.params_hash ? `params ${latest.params_hash.slice(0, 16)}… · inputs ${(latest.inputs_hash || "").slice(0, 16)}… · code ${(latest.code_commit || "").slice(0, 7)}` : "";
-      const members = (latest.members || []).slice().sort((a, b) => a.rank - b.rank);
-      const entered = new Set((latest.changes && latest.changes.entered) || []);
-      if (members.length) {
-        $("#members-wrap").hidden = false; $("#building").hidden = true;
-        donut(members);
-        let h = `<thead><tr>${t.mcols.map((c, i) => `<th class="${i > 4 ? "hidemob" : ""}">${c}</th>`).join("")}</tr></thead><tbody>`;
-        members.forEach((m, i) => {
-          const mt = m.metrics || {}, w = (m.weight_bps || 0) / 100;
-          const prev = m.prev_rank;
-          const delta = entered.has(m.mint) ? `<span class="tag ok">${t.newb}</span>` : prev ? (prev > m.rank ? `<span class="up">▲${prev - m.rank}</span>` : prev < m.rank ? `<span class="down">▼${m.rank - prev}</span>` : "•") : "•";
-          h += `<tr><td class="rk" style="color:${COLORS[i % 10]}">${m.rank}</td><td class="tk"><b>${esc(m.ticker || "?")}</b><small>${short(m.mint)}</small></td><td><b>${w.toFixed(1)}%</b><span class="vbar" style="width:${w * 2}px"></span></td><td>${usd(mt.mc_usd)}</td><td>${usd(mt.liquidity_usd)}</td><td class="hidemob">${usd(mt.volume_usd)}</td><td class="hidemob">${delta}</td></tr>`;
-        });
-        $("#members").innerHTML = h + "</tbody>";
+    }
+    const official = officialRows();
+    if (official.length) {
+      renderBoard(official, true);
+    } else {
+      const preview = previewRows();
+      if (preview.length) {
+        renderBoard(preview, false);
+        const ex = (latest && latest.excluded) || [];
+        if (ex.length) $("#asof").textContent = ($("#asof").textContent ? $("#asof").textContent + " · " : "") + t.excl(ex.length, ex.filter((e) => e.reason === "insufficient_data").length);
       } else {
-        $("#members-wrap").hidden = true; $("#building").hidden = false;
-        const ex = latest.excluded || [];
+        $("#members-wrap").hidden = true;
+        $("#board-banner").hidden = true;
+        $("#building").hidden = false;
+        const ex = (latest && latest.excluded) || [];
         $("#excl-summary").textContent = t.excl(ex.length, ex.filter((e) => e.reason === "insufficient_data").length);
       }
     }
@@ -124,12 +307,52 @@
     b.classList.add("on"); sortKey = b.dataset.sort; render();
   }));
 
+  async function enrichDex(mints) {
+    const need = mints.filter((m) => !dexCache[m]);
+    if (!need.length) return false;
+    let changed = false;
+    for (let i = 0; i < need.length; i += 30) {
+      const chunk = need.slice(i, i + 30);
+      try {
+        const r = await fetch("https://api.dexscreener.com/tokens/v1/solana/" + chunk.join(","));
+        if (!r.ok) continue;
+        const data = await r.json();
+        const list = Array.isArray(data) ? data : data.pairs || [];
+        for (const p of list) {
+          const m = (p.baseToken || {}).address;
+          if (!m || !chunk.includes(m)) continue;
+          const liq = +((p.liquidity || {}).usd || 0);
+          const prev = dexCache[m];
+          if (prev && prev.liq >= liq) continue;
+          dexCache[m] = {
+            name: (p.baseToken || {}).name,
+            ticker: (p.baseToken || {}).symbol,
+            liq,
+            mc: +(p.marketCap || p.fdv || 0),
+            vol24h: +((p.volume || {}).h24 || 0),
+            chg24h: (p.priceChange || {}).h24,
+            image: (p.info || {}).imageUrl || DEX_IMG(m),
+          };
+          changed = true;
+        }
+      } catch (_) { /* public API optional; table still renders from local JSON */ }
+    }
+    return changed;
+  }
+
   async function load() {
-    const get = (f) => fetch(DATA + f + "?t=" + Date.now()).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    const [l, c] = await Promise.all([get("latest.json"), get("candidates.json")]);
-    if (l) latest = l; if (c) cands = c;
-    if (!latest) { $("#building").hidden = false; }
+    const get = (f) => fetch(f + "?t=" + Date.now()).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    const [l, c, logo] = await Promise.all([
+      get(DATA + "latest.json"),
+      get(DATA + "candidates.json"),
+      get("logo.json"),
+    ]);
+    if (l) latest = l; if (c) cands = c; if (logo) logoMeta = logo;
+    if (!latest && !cands && !logoMeta) { $("#building").hidden = false; }
     render();
+    const official = officialRows();
+    const mints = official.length ? official.map((r) => r.mint) : previewPoolMints();
+    if (mints.length && await enrichDex(mints)) render();
   }
   load(); setInterval(load, 60000);
 })();
@@ -158,7 +381,8 @@
     $("#ca-text").textContent = ca;
     $("#chart-body").innerHTML = `<iframe title="GTASP10 chart" loading="lazy" src="https://dexscreener.com/solana/${enc(ca)}?embed=1&theme=dark&trades=0&info=0"></iframe>`;
     $("#chart-panel").classList.add("live");
-    document.querySelector(".chart-note").remove();
+    const note = document.querySelector(".chart-note");
+    if (note) note.remove();
   }
 
   // Rewards
