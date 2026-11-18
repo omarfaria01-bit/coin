@@ -3,112 +3,18 @@
   const $ = (s) => document.querySelector(s);
   const DATA = "data/";
   const RELEASE = new Date(2026, 10, 19, 0, 0, 0); // 19 Nov 2026 00:00 local time
-  let lang = localStorage.getItem("gtasp10_lang") || "en";
   let latest = null, cands = null, sortKey = "vol24h";
 
-  const IT = {
-"nav_index": "Indice",
-"nav_how": "Come funziona",
-"nav_rules": "Regole",
-"kicker": "Indice on-chain · Solana · Narrativa GTA 6",
-"sub": "Le 10 migliori memecoin GTA 6 su Solana, in un'unica coin. Ricalcolato ogni ora con una formula pubblica. Il 100% delle fee del creator torna agli holder.",
-"cd_release": "Uscita GTA 6",
-"cd_hour": "Prossima estrazione e ribilanciamento",
-"ca": "Contract address",
-"soon": "Coming soon",
-"draft": "Bozza · nome e ticker temporanei · dati live in dry-run",
-"idx_title": "Indice live",
-"coins": "coin",
-"building": "Top 10 in costruzione",
-"building_p": "L'indice raccoglie i dati di ogni coin ogni 5 minuti. Appena le coin superano tutti i filtri, entrano nella top 10.",
-"next_update": "Prossimo aggiornamento tra",
-"cand_title": "Candidate GTA monitorate",
-"cand_warn": "Anteprima: queste sono candidate, NON membri dell'indice. Nessun consiglio di acquisto.",
-"by_vol": "Volume 24h",
-"by_mc": "Market cap",
-"by_liq": "Liquidità",
-"cand_note": "Mostrate le candidate con almeno 1.000 $ di volume 24h e un market cap realistico rispetto alla liquidità. Stato = primo filtro non superato nell'ultimo calcolo orario.",
-"how_title": "Come funziona",
-"fees_t": "100% delle fee torna indietro",
-"fees_a": "Reward agli holder, pagati nei token del paniere (non in GTASP10)",
-"fees_b": "Montepremi dell'estrazione oraria",
-"fees_n": "Nessuna quota al team. Nessun buyback.",
-"draw_t": "Estrazione ogni ora",
-"draw_1": "Probabilità proporzionale alla radice quadrata del tuo punteggio holder",
-"draw_2": "Wallet collegati raggruppati, con un tetto del 5%",
-"draw_3": "Casualità verificabile on-chain",
-"draw_4": "Montepremi troppo piccolo? Passa all'ora successiva",
-"elig_t": "Chi partecipa",
-"elig_1": "Basta tenere almeno 1/1.000.000 della supply",
-"elig_2": "Nella prima ora di holding non si matura nulla",
-"elig_3": "Più tieni, più cresce il moltiplicatore, fino a 5× dopo 4 ore",
-"elig_4": "Wallet del dev pubblico, pagamenti riproducibili dai dati on-chain",
-"curve_t": "Moltiplicatore di holding",
-"rules_t": "Regole e trasparenza",
-"rules_s": "Formula pubblica, ricalcolata ogni ora sulle 24 ore precedenti.",
-"r_universe": "1 · Universo",
-"r_universe_p": "Ogni coin Solana con un riferimento a GTA nel nome, nel ticker o nella descrizione: GTA, GTA 6, Grand Theft Auto, Vice City, Leonida, Lucia, Jason Duval, Rockstar, Vercetti e un ampio vocabolario della serie. Esclusioni manuali solo per le truffe.",
-"r_filters": "2 · Filtri (tutti obbligatori)",
-"f1": "Età ≥ 4h",
-"f2": "Liquidità ≥ $50k",
-"f3": "Top 10 holder 13–27%",
-"f4": "Fee ≥ 8 SOL",
-"f5": "Bundle al lancio ≤ 30%",
-"f7": "Creator ≤ 3 token in 7 giorni",
-"f8": "Authority revocate",
-"f9": "200+ trader",
-"f10": "Volume &gt; 0",
-"f11": "Market cap ≤ 100× liquidità",
-"r_score": "3 · Punteggio",
-"r_score_p": "Scala logaritmica: una coin enorme non schiaccia le altre.",
-"r_member": "4 · Entrata e uscita",
-"r_member_p": "Una nuova coin entra se arriva tra le prime 8. Un membro esce se scende sotto il 12° posto o se fallisce un filtro (subito). Rimozione d'emergenza se la liquidità crolla del 50% in un'ora o le authority vengono riattivate.",
-"r_weights": "5 · Pesi",
-"r_weights_p": "50% quota di market cap + 50% quota di volume, con un massimo del 25% per coin. Con meno di 4 membri i pesi sono uguali.",
-"r_verify": "6 · Verificabile",
-"r_verify_p": "Ogni risultato orario pubblica l'hash dei parametri e degli input: chiunque può ricalcolare l'indice.",
-"q1": "Cos'è GTASP10?",
-"a1": "Una coin indice su Solana che segue le 10 migliori memecoin della narrativa GTA 6, scelte ogni ora da regole pubbliche.",
-"q2": "Come ricevo i reward?",
-"a2": "Tenendo almeno 1/1.000.000 della supply. Il 70% delle fee del creator viene distribuito agli holder nei token del paniere, in base al punteggio e al moltiplicatore di holding.",
-"q3": "Come funziona l'estrazione?",
-"a3": "Ogni ora il 30% delle fee va in un montepremi. Le probabilità crescono con la radice quadrata del punteggio, i wallet collegati sono raggruppati con un tetto del 5% e la casualità è verificabile. Se il montepremi è troppo piccolo passa all'ora dopo.",
-"q4": "Perché la top 10 è vuota?",
-"a4": "I filtri sono severi e i dati di ogni coin si stanno ancora raccogliendo. Le coin entrano solo quando li superano tutti.",
-"q5": "Dov'è il contract address?",
-"a5": "Non ancora pubblicato. Diffida di chiunque ne diffonda uno prima dell'annuncio ufficiale.",
-"q6": "Il team tiene una parte delle fee?",
-"a6": "No. Il 100% delle fee del creator torna alla community: 70% reward, 30% estrazione. Nessun buyback.",
-"disc": "Questo sito è una bozza a scopo informativo. Non è un consiglio finanziario. Nessun rendimento è promesso o garantito: le memecoin sono estremamente volatili e puoi perdere tutto. GTASP10 non è affiliato con Rockstar Games o Take-Two Interactive. Grand Theft Auto e GTA sono marchi dei rispettivi proprietari."
-};
-  const T = {
-    it:{asof:"Ultimo calcolo", days:"g", none:"Nessuna candidata con dati sufficienti", member:"membro", nodata:"dati in raccolta",
-        cols:["#","Coin","Stato","Market cap","Liquidità","Vol 24h"], mcols:["#","Coin","Peso","Market cap","Liquidità","Volume","Δ"],
-        excl:(n,r)=>`${n} candidate valutate, ${r} in attesa di dati`, out:"GTA 6 è uscito!", newb:"nuova"},
-    en:{asof:"Last run", days:"d", none:"No candidate with enough data", member:"member", nodata:"collecting data",
+
+  const t = {asof:"Last run", days:"d", none:"No candidate with enough data", member:"member", nodata:"collecting data",
         cols:["#","Coin","Status","Market cap","Liquidity","Vol 24h"], mcols:["#","Coin","Weight","Market cap","Liquidity","Volume","Δ"],
-        excl:(n,r)=>`${n} candidates evaluated, ${r} waiting for data`, out:"GTA 6 is out!", newb:"new"}
-  };
-  const REASON = {
-    it:{insufficient_data:"dati in raccolta",F1:"troppo giovane",F2:"liquidità < $50k",F3:"top holder fuori 13–27%",F4:"fee < 8 SOL",F5:"bundle > 30%",F7:"creator seriale",F8:"authority attive",F8c:"programma token",F9:"< 200 trader",F10:"volume 0",F11:"MC > 100× liq",deny:"escluso (scam)"},
-    en:{insufficient_data:"collecting data",F1:"too young",F2:"liquidity < $50k",F3:"top holders outside 13–27%",F4:"fees < 8 SOL",F5:"bundle > 30%",F7:"serial creator",F8:"authorities active",F8c:"token program",F9:"< 200 traders",F10:"zero volume",F11:"MC > 100× liq",deny:"excluded (scam)"}
-  };
+        excl:(n,r)=>`${n} candidates evaluated, ${r} waiting for data`, out:"GTA 6 is out!", newb:"new"};
+
+  const REASON = {insufficient_data:"collecting data",F1:"too young",F2:"liquidity < $50k",F3:"top holders outside 13–27%",F4:"fees < 8 SOL",F5:"bundle > 30%",F7:"serial creator",F8:"authorities active",F8c:"token program",F9:"< 200 traders",F10:"zero volume",F11:"MC > 100× liq",deny:"excluded (scam)"};
+
 
   // i18n
-  const TITLE_EN = document.title;
-  const enText = {};
-  document.querySelectorAll("[data-i18n]").forEach((el) => (enText[el.dataset.i18n] = el.innerHTML));
-  function applyLang() {
-    document.documentElement.lang = lang;
-    document.querySelectorAll("[data-i18n]").forEach((el) => {
-      const k = el.dataset.i18n;
-      el.innerHTML = lang === "it" && IT[k] ? IT[k] : enText[k];
-    });
-    $("#lang").textContent = lang === "en" ? "IT" : "EN";
-    document.title = lang === "it" ? "GTASP10 — Le top 10 memecoin GTA 6 su Solana in un indice" : TITLE_EN;
-    render();
-  }
-  $("#lang").addEventListener("click", () => { lang = lang === "en" ? "it" : "en"; localStorage.setItem("gtasp10_lang", lang); applyLang(); });
+
 
   // formatting
   const usd = (v) => {
@@ -127,12 +33,12 @@
   function tick() {
     const now = new Date();
     let d = RELEASE - now;
-    if (d <= 0) $("#cd-release").textContent = T[lang].out;
+    if (d <= 0) $("#cd-release").textContent = t.out;
     else {
       const days = Math.floor(d / 864e5); d -= days * 864e5;
       const h = Math.floor(d / 36e5); d -= h * 36e5;
       const m = Math.floor(d / 6e4); const s = Math.floor((d - m * 6e4) / 1e3);
-      $("#cd-release").textContent = (days ? days + T[lang].days + " " : "") + `${pad(h)}:${pad(m)}:${pad(s)}`;
+      $("#cd-release").textContent = (days ? days + t.days + " " : "") + `${pad(h)}:${pad(m)}:${pad(s)}`;
     }
     const next = new Date(now); next.setMinutes(60, 0, 0);
     const r = next - now, mm = Math.floor(r / 6e4), ss = Math.floor((r % 6e4) / 1e3);
@@ -175,10 +81,9 @@
 
   function render() {
     if (!latest && !cands) return;
-    const t = T[lang];
     if (latest) {
       const asof = latest.as_of ? new Date(latest.as_of) : null;
-      $("#asof").textContent = asof ? `${t.asof}: ${asof.toLocaleString(lang === "it" ? "it-IT" : "en-GB", { dateStyle: "medium", timeStyle: "short" })}${latest.dry_run ? " · dry-run" : ""}` : "";
+      $("#asof").textContent = asof ? `${t.asof}: ${asof.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}${latest.dry_run ? " · dry-run" : ""}` : "";
       $("#hashes").textContent = latest.params_hash ? `params ${latest.params_hash.slice(0, 16)}… · inputs ${(latest.inputs_hash || "").slice(0, 16)}… · code ${(latest.code_commit || "").slice(0, 7)}` : "";
       const members = (latest.members || []).slice().sort((a, b) => a.rank - b.rank);
       const entered = new Set((latest.changes && latest.changes.entered) || []);
@@ -206,7 +111,7 @@
       let h = `<thead><tr>${t.cols.map((c, i) => `<th class="${i === 2 || i === 4 ? "hidemob" : ""}">${c}</th>`).join("")}</tr></thead><tbody>`;
       if (!list.length) h += `<tr><td colspan="6" class="muted">${t.none}</td></tr>`;
       list.forEach((c, i) => {
-        const st = c.status === "member" ? `<span class="tag ok">${t.member}</span>` : `<span class="tag f">${esc(REASON[lang][c.status] || c.status || t.nodata)}</span>`;
+        const st = c.status === "member" ? `<span class="tag ok">${t.member}</span>` : `<span class="tag f">${esc(REASON[c.status] || c.status || t.nodata)}</span>`;
         const v = (k) => k === sortKey ? `<b>${usd(c[k])}</b><span class="vbar" style="width:${Math.max(4, ((c[k] || 0) / maxv) * 60)}px"></span>` : usd(c[k]);
         h += `<tr><td class="rk">${i + 1}</td><td class="tk"><b>${esc(c.ticker || short(c.mint))}</b><small>${short(c.mint)}</small></td><td class="hidemob">${st}</td><td>${v("mc")}</td><td class="hidemob">${v("liq")}</td><td>${v("vol24h")}</td></tr>`;
       });
@@ -227,5 +132,110 @@
     render();
   }
   load(); setInterval(load, 60000);
-  applyLang();
+})();
+
+// ---------- Chart & Buy + Check your rewards ----------
+(() => {
+  "use strict";
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const B58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+  const isAddr = (s) => typeof s === "string" && B58.test(s);
+  const ca = typeof CA === "string" && isAddr(CA) ? CA : null;
+  const enc = (s) => encodeURIComponent(s);
+
+  // Chart & Buy
+  const VENUES = [
+    { name: "pump.fun", url: (m) => `https://pump.fun/coin/${enc(m)}` },
+    { name: "Jupiter", url: (m) => `https://jup.ag/swap/SOL-${enc(m)}` },
+    { name: "Raydium", url: (m) => `https://raydium.io/swap/?inputMint=sol&outputMint=${enc(m)}` },
+    { name: "DexScreener", url: (m) => `https://dexscreener.com/solana/${enc(m)}` },
+  ];
+  $("#venues").innerHTML = VENUES.map((v) => ca
+    ? `<a class="venue" href="${v.url(ca)}" target="_blank" rel="noopener noreferrer"><b>${v.name}</b><span>Open ↗</span></a>`
+    : `<button class="venue" type="button" disabled aria-disabled="true"><b>${v.name}</b><span>Available at launch</span></button>`).join("");
+  if (ca) {
+    $("#ca-text").textContent = ca;
+    $("#chart-body").innerHTML = `<iframe title="GTASP10 chart" loading="lazy" src="https://dexscreener.com/solana/${enc(ca)}?embed=1&theme=dark&trades=0&info=0"></iframe>`;
+    $("#chart-panel").classList.add("live");
+    document.querySelector(".chart-note").remove();
+  }
+
+  // Rewards
+  const SUPPLY_MIN = 1e-6; // 1 / 1,000,000 of supply
+  const CURVE = [[0,0],[1,0],[1,1],[1.5,1],[1.75,1.5],[2,2],[2.5,3],[3,4],[4,5]];
+  function multiplier(h) {
+    if (h < 1) return 0;
+    if (h >= 4) return 5;
+    for (let i = 1; i < CURVE.length; i++) {
+      const [h0, m0] = CURVE[i - 1], [h1, m1] = CURVE[i];
+      if (h >= h0 && h < h1) return h1 === h0 ? m1 : m0 + ((m1 - m0) * (h - h0)) / (h1 - h0);
+    }
+    return 5;
+  }
+  const fmtHold = (sec) => { const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60); return h ? `${h}h ${String(m).padStart(2, "0")}m` : `${m}m`; };
+  const fmtPct = (x, d = 4) => (x * 100).toLocaleString("en-US", { maximumFractionDigits: d }) + "%";
+
+  const EXAMPLE = {
+    address: "7xKX…9fQa", holding_seconds: 9300, supply_share: 0.00042, draw_odds: 0.0031,
+    accrued: [
+      { ticker: "Basket token #1", amount: 1520.4, usd: 4.12 },
+      { ticker: "Basket token #2", amount: 88210, usd: 2.87 },
+      { ticker: "Basket token #3", amount: 312.9, usd: 1.05 },
+    ],
+  };
+
+  function show(d, example) {
+    const hours = (d.holding_seconds || 0) / 3600;
+    const mult = typeof d.multiplier === "number" ? d.multiplier : multiplier(hours);
+    const share = d.supply_share || 0;
+    const eligible = typeof d.eligible === "boolean" ? d.eligible : share >= SUPPLY_MIN && hours >= 1;
+    $("#rw-badge").textContent = example ? "Example" : "Live";
+    $("#rw-badge").classList.toggle("live", !example);
+    $("#rw-who").textContent = example ? `${d.address} (demo wallet)` : `${d.address.slice(0, 4)}…${d.address.slice(-4)}`;
+    $("#rw-hold").textContent = fmtHold(d.holding_seconds || 0);
+    $("#rw-mult").textContent = mult.toFixed(mult % 1 ? 2 : 0) + "×";
+    $("#rw-meter").style.width = (mult / 5) * 100 + "%";
+    $("#rw-elig").textContent = eligible ? "Eligible" : hours < 1 && share >= SUPPLY_MIN ? "Warming up" : "Not eligible";
+    $("#rw-elig").className = eligible ? "ok" : "no";
+    $("#rw-share").textContent = `holds ${fmtPct(share)} of supply · min 0.0001%`;
+    $("#rw-odds").textContent = fmtPct(d.draw_odds || 0, 3);
+    const list = d.accrued || [];
+    $("#rw-list").innerHTML = list.length
+      ? list.map((r) => `<div class="rw-row"><span>${esc(r.ticker)}</span><span class="mono">${Number(r.amount).toLocaleString("en-US", { maximumFractionDigits: 4 })}</span><span class="muted">${r.usd != null ? "≈ $" + Number(r.usd).toFixed(2) : ""}</span></div>`).join("")
+      : `<p class="muted small">No basket rewards accrued yet.</p>`;
+    $("#rw-foot").textContent = example
+      ? "Example values for illustration only. Rewards depend on fees actually generated and are not guaranteed."
+      : `Read-only data${d.as_of ? " as of " + new Date(d.as_of).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : ""}. Rewards depend on fees actually generated and are not guaranteed.`;
+    $("#rw-result").classList.toggle("is-example", example);
+  }
+  show(EXAMPLE, true);
+
+  const msg = (text, kind) => { const el = $("#rw-msg"); el.textContent = text; el.className = "rw-msg " + (kind || ""); };
+  $("#rw-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const addr = $("#rw-addr").value.trim();
+    if (!isAddr(addr)) {
+      msg(/\s/.test(addr) && addr.split(/\s+/).length >= 12
+        ? "That looks like a seed phrase. Never share it with anyone. Paste only your public wallet address."
+        : "That doesn't look like a Solana address (base58, 32–44 characters).", "err");
+      return;
+    }
+    if (!ca) {
+      msg("Valid address. Rewards tracking starts at launch, so here's an example of what you'll see.", "info");
+      show(EXAMPLE, true);
+      return;
+    }
+    msg("Loading…", "info");
+    try {
+      const r = await fetch(`data/wallets/${enc(addr)}.json?t=${Date.now()}`, { cache: "no-store" });
+      if (r.status === 404) { msg("No GTASP10 holdings found for this address yet.", "info"); return; }
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json();
+      d.address = addr;
+      msg("", ""); show(d, false);
+    } catch (_) {
+      msg("Couldn't load rewards right now. Please try again in a minute.", "err");
+    }
+  });
 })();
