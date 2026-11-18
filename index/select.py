@@ -241,18 +241,31 @@ def run_index(
                     missing.insert(0, m.sources[tag].rsplit("@", 1)[0])
         if reason is not None:
             status[mint] = reason
-            if reason != "no_keyword":
-                row: dict = {"mint": mint, "ticker": m.ticker, "reason": reason}
-                if missing:  # D37: never silent, name what was missing
-                    row["missing"] = missing
-                if m.mc_usd is not None and math.isfinite(m.mc_usd):
-                    row["mc_usd"] = round(m.mc_usd, 2)
-                excluded.append(row)
+            # D38: every candidate is listed, no_keyword included (never silent)
+            row: dict = {"mint": mint, "ticker": m.ticker, "reason": reason}
+            if reason == "no_keyword":
+                row["name"] = m.name  # shows what the vocabulary saw (empty = no data)
+            if missing:  # D37: never silent, name what was missing
+                row["missing"] = missing
+            if m.mc_usd is not None and math.isfinite(m.mc_usd):
+                row["mc_usd"] = round(m.mc_usd, 2)
+            excluded.append(row)
 
     ranked = rank(scored)
     pos = {mint: i + 1 for i, mint in enumerate(ranked)}
     members = select_members(ranked, prev_members, params)
     bps = weights_bps(members, scored, params, _mc_volume(by_mint, members))
+    chosen = set(members)
+    for mint in ranked:  # D38: passed every filter but outside the top N -> listed with its rank
+        if mint not in chosen:
+            m = by_mint[mint]
+            row = {"mint": mint, "ticker": m.ticker, "reason": f"rank_{pos[mint]}"}
+            if m.mc_usd is not None and math.isfinite(m.mc_usd):
+                row["mc_usd"] = round(m.mc_usd, 2)
+            excluded.append(row)
+    listed = chosen | {row["mint"] for row in excluded}
+    if listed != set(by_mint):  # invariant: no candidate disappears
+        raise RuntimeError(f"{len(set(by_mint) - listed)} candidate(s) missing from output")
 
     changes = {
         "entered": sorted(set(members) - set(prev_members), key=lambda x: pos[x]),

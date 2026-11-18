@@ -121,3 +121,53 @@ def test_d38_scaled_never_shrinks() -> None:
     assert _scaled(100.0, 0.5) == 100.0
     assert _scaled(100.0, None) == 100.0
     assert _scaled(None, 2.0) is None
+
+
+def test_d38_no_candidate_is_silent() -> None:
+    """Every candidate is a member or an excluded row with a reason (no_keyword, rank_n, ...)."""
+    import json
+    from pathlib import Path
+
+    from index.filters import Metrics
+    from index.params import IndexParams, Overrides
+    from index.select import run_index
+
+    params = IndexParams.model_validate(json.loads(Path("index/params.json").read_text()))
+    alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+
+    def mint(i: int) -> str:
+        return (alphabet[i % 58] + alphabet[(i // 58) % 58]) * 16 + "pump"
+
+    good = dict(
+        coverage=1.0,
+        age_hours=100.0,
+        liquidity_usd=200_000.0,
+        top10_pct=20.0,
+        total_fees_sol=50.0,
+        trading_fees_24h_sol=50.0,
+        window_fees_sol=5.0,
+        bundle_pct=1.0,
+        dev_pct=1.0,
+        mint_authority_revoked=True,
+        freeze_authority_revoked=True,
+        token_program="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        extensions=(),
+        unique_traders=500,
+        independent_traders=500,
+        roundtrip_share=0.0,
+        volume_wallets=300,
+        median_trade_sol=0.1,
+        volume_usd=500_000.0,
+    )
+    rows = [
+        Metrics(mint=mint(i), ticker=f"GTA{i}", name="GTA 6", mc_usd=1e6 + i, **good)
+        for i in range(14)
+    ]
+    rows.append(Metrics(mint=mint(20), ticker="DOG", name="dog coin", mc_usd=1e6, **good))
+    rows.append(Metrics(mint=mint(21), ticker="", name="", mc_usd=None))
+    out = run_index(rows, [], params, Overrides(), "2026-11-18T12:00:00Z", "abcdef0")
+    listed = {m["mint"] for m in out["members"]} | {e["mint"] for e in out["excluded"]}
+    assert listed == {r.mint for r in rows}
+    reasons = {e["mint"]: e["reason"] for e in out["excluded"]}
+    assert reasons[mint(20)] == "no_keyword" and reasons[mint(21)] == "no_keyword"
+    assert sum(r.startswith("rank_") for r in reasons.values()) == 4

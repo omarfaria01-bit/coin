@@ -360,6 +360,9 @@ not lowered.
    liquidity (F2, F11, score), 24h volume and F4/score fees are now summed over all its pools from `/token-pairs/v1`
    where the coin is the base token and the pool holds >= $10,000 (smaller pools ignored as dust/wash). GTA VI: top pool
    $169k liquidity / $7.1M volume vs all pools ~$1.16M / ~$9.9M; AudaCity: $408k / $3.6M vs ~$0.75M / ~$5.5M.
+12. No silent coins: every measured candidate is a member or an `excluded` row with a reason. `no_keyword` rows are
+   now listed (with the `name` the vocabulary saw) and coins that pass every filter but rank below the top N get
+   `rank_<n>`. `run_index` raises if any candidate is missing from the output. (Dacity Coin and rockstar vanished.)
 Risk, said plainly: F4 now trusts DexScreener volume (wash volume counts, as D35 already accepts), and F9 no longer needs 0.05 SOL
 per wallet, so ~50 dust wallets can satisfy it (red-team case updated: tests/test_index_hourly_attacks.py).
 

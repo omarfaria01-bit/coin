@@ -65,7 +65,7 @@ order as stated below. Files are never edited after the next hour is published.
 | `params_hash` | string | sha256 hex | Hash of the canonical params JSON (`index/params.json` model). Changes with any param. |
 | `inputs_hash` | string | sha256 hex | Hash of `{candidates, prev_members, overrides}` (candidates sorted by mint bytes). Same inputs + params ⇒ same file. |
 | `members` | array[object] | — | Current members, rank order, `0..membership.size`. Empty is valid: no coin passed the filters. |
-| `excluded` | array[object] | — | Candidates that are not members, with the first reason. `no_keyword` coins are omitted. D37: `mc_usd` when known, and for `insufficient_data` a `missing` list naming the missing metric(s) (or `helius ...` error / `skipped: dexscreener liquidity below prescreen`). |
+| `excluded` | array[object] | — | Candidates that are not members, with the first reason. D38: every measured candidate is either a member or listed here (`no_keyword` rows carry `name`; coins that pass every filter but rank below the top N have reason `rank_<n>`). D37: `mc_usd` when known, and for `insufficient_data` a `missing` list naming the missing metric(s) (or `helius ...` error / `skipped: dexscreener liquidity below prescreen`). |
 | `changes` | object | — | Difference against the previous published file. |
 | `emergency` | array[object] | — | Emergency removals applied to this file; `[]` normally. |
 | `exit_notice` | array[string] | mint | **Conditional**, present (possibly `[]`) iff `rebalance_hours` == 1. Mints whose rank exit is deferred one hour. |
@@ -123,8 +123,8 @@ amounts appear (the prize split in INDEX_RULES §7 is engine output).
 `{mint, ticker, reason}`, sorted by mint bytes. `reason` is one of
 `insufficient_data` (a required metric is missing), `weak_keyword`, `denied`,
 `self`, or the first failed filter `F1`…`F11` (an F8c failure is reported as
-`F8`). A coin that passes everything is either a member or is not listed here;
-`no_keyword` coins are not listed at all. A missing metric always counts as a
+`F8`). D38: no candidate is ever silent. A coin that passes everything but ranks below
+the top N is listed with reason `rank_<n>`; `no_keyword` coins are listed with `name`. A missing metric always counts as a
 failure, never as a pass.
 
 ## 5. `changes`
