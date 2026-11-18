@@ -43,8 +43,11 @@ class Keywords(_Strict):
 
     strong: tuple[str, ...]
     needs_context: tuple[str, ...] = ()
+    # D41: everyday words (Hugh, Johnson, Core, Meme) that count only next to a strong word or a
+    # non-generic `needs_context` word; two generic words together are never GTA context.
+    generic: tuple[str, ...] = ()
 
-    @field_validator("strong", "needs_context")
+    @field_validator("strong", "needs_context", "generic")
     @classmethod
     def _non_empty_words(cls, v: tuple[str, ...]) -> tuple[str, ...]:
         if any(not w.strip() for w in v):

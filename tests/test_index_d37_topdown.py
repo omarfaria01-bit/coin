@@ -171,3 +171,29 @@ def test_d38_no_candidate_is_silent() -> None:
     reasons = {e["mint"]: e["reason"] for e in out["excluded"]}
     assert reasons[mint(20)] == "no_keyword" and reasons[mint(21)] == "no_keyword"
     assert sum(r.startswith("rank_") for r in reasons.values()) == 4
+
+
+def test_d41_snapmatic_vocabulary() -> None:
+    import json
+    from pathlib import Path
+
+    from index.filters import gta_match
+    from index.params import IndexParams
+
+    p = IndexParams.model_validate(json.loads(Path("index/params.json").read_text()))
+    for text in (
+        "Hugh Johnson HUGH",
+        "hughjohnson",
+        "Snapmatic",
+        "Lifeinvader",
+        "Bleeter",
+        "Weazel News",
+        "iFruit",
+        "Eyefind",
+        "in-game meme",
+        "Hugh Johnson Core",
+        "Johnson Vice",
+    ):
+        assert gta_match(text, p), text
+    for text in ("Hugh Coin", "core meme", "johnson meme", "MEME", "Core", "Johnson & Johnson"):
+        assert not gta_match(text, p), text
