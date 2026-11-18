@@ -4,11 +4,12 @@
     HELIUS_API_KEY=... python tools/payout_inputs.py export --config payout-inputs.json
 
 `snapshot` (hourly): every holder of our mint into holder_state.json (engine.holder_state:
-held_since resets at 0, day-minimum balance). `export` (daily, after midnight UTC): for the
+held_since resets at 0, D47 balance-hours). `export` (daily, after midnight UTC): for the
 day that just ended, writes inputs-<day>/{snapshot,balances,exclude}.json in the planner's
-formats. The day's weight is its MINIMUM balance, so buying just before a snapshot earns nothing.
-`export` refuses while the previous plan has transfers not marked sent in the sender's ledger
-(the wallet still holds them), and on a day with fewer than 20 of 24 snapshots.
+formats. Each wallet's `weight` is the day's balance-hours x loyalty (min of two consecutive
+snapshots per hour), so buying just before a snapshot earns nothing and holders earn from their
+first full hour, launch day included. `export` refuses while the previous plan has transfers not
+marked sent in the sender's ledger (the wallet still holds them), and on a day with < 2 snapshots.
 """
 
 from __future__ import annotations
@@ -33,7 +34,7 @@ from engine.holder_state import HolderState, apply_snapshot, day_inputs  # noqa:
 
 CONFIG_KEYS = {"mint", "system_wallet", "excluded", "team_wallets", "fee_bot_ledger", "state_dir"}
 REASON = {"dev": "team", "treasury": "system", "program_owned_off_curve": "pool"}
-PAGE, MAX_PAGES, MIN_SNAPSHOTS = 1000, 500, 20
+PAGE, MAX_PAGES, MIN_SNAPSHOTS = 1000, 500, 2  # D47: missing hours just earn nothing
 Rpc = Callable[[str, object], object]
 
 
@@ -132,10 +133,14 @@ def export(cfg: Mapping, rpc: Rpc, now: int) -> dict:
     state = HolderState.from_json(json.loads((sd / "holder_state.json").read_text()))
     if state.day != day or state.snapshots_today < MIN_SNAPSHOTS:
         raise RuntimeError(f"{state.snapshots_today} snapshots for {state.day}, need {day}")
-    bal, hold = day_inputs(state, at=now)
     wallets = [
-        {"address": w, "balance": str(b), "holding_seconds": hold[w]}
-        for w, b in sorted(bal.items())
+        {
+            "address": w,
+            "weight": f"{wt.numerator}/{wt.denominator}",
+            "balance": str(state.wallets[w].last),
+            "holding_seconds": max(0, now - (state.wallets[w].held_since or now)),
+        }
+        for w, wt in day_inputs(state).items()
     ]
     mints = {
         m: {

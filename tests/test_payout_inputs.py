@@ -5,10 +5,12 @@ from __future__ import annotations
 import json
 import subprocess  # nosec B404
 import sys
+from fractions import Fraction
 from pathlib import Path
 
 import pytest
 
+from engine.loyalty import loyalty_multiplier
 from tools.payout_inputs import load_config, main
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -57,7 +59,7 @@ def ok(cfg, cmd, rpc, now, capsys):
     return json.loads(capsys.readouterr().out)
 
 
-def test_day_min_balance_exclusions_and_formats(cfg, tmp_path, capsys):
+def test_balance_hours_exclusions_and_formats(cfg, tmp_path, capsys):
     rpc = FakeRpc({A: 300, B: 100, SYS: 50, TEAM: 50}, wallet=10**9)
     for h in range(24):
         rpc.holders[A] = 30 if h == 7 else 300  # sold most of it for one hour
@@ -66,7 +68,11 @@ def test_day_min_balance_exclusions_and_formats(cfg, tmp_path, capsys):
     assert out == {"day": DAY0, "dir": out["dir"], "holders": 2, "mints": 1}
     d = Path(out["dir"])
     snap = {w["address"]: w for w in json.loads((d / "snapshot.json").read_text())["wallets"]}
-    assert snap[A]["balance"] == "30" and snap[B]["balance"] == "100"  # day minimum
+    m = [loyalty_multiplier(h * 3600) for h in range(1, 24)]  # hour h closes at snapshot h
+    a_hours = [30 if h in (7, 8) else 300 for h in range(1, 24)]  # min of each pair
+    assert Fraction(snap[A]["weight"]) == sum(c * x for c, x in zip(a_hours, m, strict=True))
+    assert Fraction(snap[B]["weight"]) == 100 * sum(m)
+    assert snap[A]["balance"] == "300" and snap[B]["balance"] == "100"  # latest, for display
     assert snap[A]["holding_seconds"] == 86400 + 600 - 2400
     bal = json.loads((d / "balances.json").read_text())
     assert bal == {
