@@ -31,6 +31,17 @@ if ! flock -n 9; then
 fi
 
 cd "$REPO"
+# #311: disk hygiene FIRST, in both modes, so it runs even when git fails below. Prune old cache
+# files; the warning exit (3 at >=85% used) must not stop the job.
+uv run python tools/prune_index_cache.py --cache-dir "$REPO/data/index/cache" --disk-path "$REPO" || true
+
+# #311: the job runs as root but /opt/coin is owned by another user ("dubious ownership" killed
+# every run before the prune). Trust exactly these two trees for every git call below
+# (GIT_CONFIG_* = command-line scope, which git honours for safe.directory).
+export GIT_CONFIG_COUNT=2
+export GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="$REPO"
+export GIT_CONFIG_KEY_1=safe.directory GIT_CONFIG_VALUE_1="$WORK"
+
 if [[ -n "$(git status --porcelain)" ]]; then
   echo "repo is dirty; published index left unchanged" >&2
   exit 1
@@ -89,9 +100,6 @@ if [[ "$MODE" != "hourly" ]]; then
   echo "mode must be hourly or sample" >&2
   exit 2
 fi
-
-# Disk hygiene: prune old cache files; the warning exit (3 at >=85% used) must not stop the job.
-uv run python tools/prune_index_cache.py --cache-dir "$REPO/data/index/cache" --disk-path "$REPO" || true
 
 prepare_worktree
 AS_OF="$(date -u +%Y-%m-%dT%H:00:00Z)"
