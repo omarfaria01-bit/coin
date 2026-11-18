@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Index — GTASP10</title>
+<meta name="description" content="Live top 10 of the GTASP10 index. Weights follow the square root of market cap, 18% cap, 5% floor, recomputed every hour.">
+<meta name="theme-color" content="#1a0b2e">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Monoton&family=Bungee&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="logo-400.png">
+<link rel="stylesheet" href="style.css?v=20261118f">
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="index.html"><img class="brand-img" src="logo-400.png" alt="GTASP10 logo" width="40" height="40"><span class="logo">GTASP<b>10</b></span></a>
+  <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav"><span class="sr">Menu</span><span class="burger" aria-hidden="true"></span></button>
+  <nav id="site-nav" class="links">
+    <a href="index.html">Home</a>
+    <a href="index-table.html">Index</a>
+    <a href="rewards.html">Rewards</a>
+    <a href="backtest.html">Backtest</a>
+    <a href="docs.html">Docs</a>
+    <a href="faq.html">FAQ</a>
+    <a href="disclaimer.html">Disclaimer</a>
+  </nav>
+</header>
+<div class="page-hero">
+  <p class="kicker">Live basket</p>
+  <h1>Index</h1>
+  <p class="lead">Weights are proportional to the square root of market cap, with an 18% cap and a 5% floor, recomputed every hour.</p>
+  <p class="muted" id="asof"></p>
+</div>
+<main>
+<section class="section">
+  <div id="board-banner" class="glass preview-banner" hidden>
+    <p><strong>Preview</strong> — the official file has no members yet</p>
+    <p class="muted small">Preview weights use the square root of market cap, with an 18% cap and a 5% floor. Not a buy signal.</p>
+  </div>
+  <div id="members-wrap" hidden>
+    <div class="members-grid">
+      <div class="glass donut-card" id="donut-wrap"><svg id="donut" viewBox="0 0 220 220"></svg><div class="donut-center"><b id="donut-n">10</b><span>coins</span></div></div>
+      <div class="board" id="board"></div>
+      <p class="muted small board-note"><b>Buy weight</b> is the share of every basket buy that goes to that coin.</p>
+    </div>
+  </div>
+  <div id="building" class="glass building" hidden>
+    <div class="pulse"></div>
+    <div>
+      <h3>Top 10 loading</h3>
+      <p>Every candidate is sampled through the day. A coin joins when it clears every filter.</p>
+      <p class="muted"><span id="excl-summary"></span></p>
+    </div>
+  </div>
+  <div class="cands">
+    <div class="cands-head">
+      <div>
+        <h3>Candidates on the radar</h3>
+        <p class="warn">These are candidates, not index members. Not a buy signal.</p>
+      </div>
+      <div class="seg" role="tablist">
+        <button class="on" data-sort="vol24h" type="button">24h volume</button>
+        <button data-sort="mc" type="button">Market cap</button>
+        <button data-sort="liq" type="button">Liquidity</button>
+      </div>
+    </div>
+    <div class="glass table-card"><table class="tbl" id="cands"></table></div>
+    <p class="muted small mono" id="hashes"></p>
+  </div>
+</section>
+</main>
+<footer class="foot">
+  <div class="logo small">GTASP<b>10</b></div>
+  <nav class="foot-links">
+    <a href="index.html">Home</a><a href="index-table.html">Index</a><a href="rewards.html">Rewards</a>
+    <a href="backtest.html">Backtest</a><a href="docs.html">Docs</a><a href="faq.html">FAQ</a><a href="disclaimer.html">Disclaimer</a>
+  </nav>
+  <p>This site is informational. Nothing here is financial advice. GTASP10 is a memecoin index: it is high risk and you can lose everything you put in. No returns are promised. GTASP10 is not affiliated with Rockstar Games or Take-Two Interactive. Grand Theft Auto and GTA are trademarks of their respective owners.</p>
+</footer>
+<script src="rules.js?v=20261118f"></script>
+<script src="nav.js?v=20261118f"></script>
+<script src="app.js?v=20261118f"></script>
+</body>
+</html>

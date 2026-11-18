@@ -1,21 +1,19 @@
-# GTASP10 public front end (draft, #164)
+# GTASP10 public site
 
-Static site, vanilla HTML/CSS/JS, no build step, no wallet connect, no contract address yet.
+Static HTML, CSS and JS. No build step. English only. Relative links, so the same files work at `https://gtasp10.xyz/` and `https://desk.linkgox.com/gtasp10/`.
 
-- `index.html`, `style.css`, `app.js` — Italian first, EN toggle (stored in localStorage).
-- Reads `data/latest.json` (latest hourly index output) and `data/candidates.json` (latest sample per tracked mint), refreshed every 60 s.
-- Empty top 10 → "Top 10 in costruzione" + candidates preview (clearly labelled as NOT members). With members → donut + table with weights, MC, liquidity, volume, rank change.
+Pages: `index.html` (home), `index-table.html` (live top 10), `rewards.html`, `backtest.html`, `docs.html`, `faq.html`, `disclaimer.html`.
 
-## Live
+`rules.js` is generated from `index/params.json` and the reward code:
 
-https://desk.linkgox.com/gtasp10/ (Hetzner, Caddy `handle_path /gtasp10/*` → `/var/www/gtasp10`, no auth; the rest of desk.linkgox.com keeps basic_auth).
+```
+uv run python tools/gen_web_rules.py
+```
 
-## Data export (server)
+The index page reads `data/latest.json` and `data/candidates.json` (exported on the server, not committed). The backtest page reads `data/backtest.json`, written by:
 
-`deploy/gtasp10-export.py` → `/usr/local/bin/gtasp10-export.py`, run by `gtasp10-export.timer` every 5 min as root with
-`ProtectSystem=strict` and write access only to `/var/www/gtasp10/data`. Read-only on coin data
-(`/var/lib/coin/index-data/index/out/*.json`, `/opt/coin/data/index/samples/*.jsonl`). Units: `deploy/systemd-units.txt`.
+```
+uv run python sim/backtest.py --index-dir /path/to/index/out --out web/data/backtest.json
+```
 
-## Deploy
-
-`scp web/index.html web/style.css web/app.js root@77.42.76.147:/var/www/gtasp10/`
+Script sources are local. The content-security policy allows no external scripts.

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Docs — GTASP10</title>
+<meta name="description" content="Public rules of the GTASP10 index: filters, square-root weights, fees, holding multiplier and the draw.">
+<meta name="theme-color" content="#1a0b2e">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="logo-400.png">
+<link rel="stylesheet" href="style.css?v=20261118f">
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="index.html"><img class="brand-img" src="logo-400.png" alt="GTASP10 logo" width="40" height="40"><span class="logo">GTASP<b>10</b></span></a>
+  <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav"><span class="sr">Menu</span><span class="burger" aria-hidden="true"></span></button>
+  <nav id="site-nav" class="links">
+    <a href="index.html">Home</a>
+    <a href="index-table.html">Index</a>
+    <a href="rewards.html">Rewards</a>
+    <a href="backtest.html">Backtest</a>
+    <a href="docs.html">Docs</a>
+    <a href="faq.html">FAQ</a>
+    <a href="disclaimer.html">Disclaimer</a>
+  </nav>
+</header>
+<div class="page-hero">
+  <p class="kicker">Public formula</p>
+  <h1>Docs</h1>
+  <p>The sentences below are generated from the shipped parameters. The page and the code use the same file, <span class="mono">web/rules.js</span>.</p>
+</div>
+<main>
+<section class="section">
+  <div class="rules">
+    <div class="glass card">
+      <h3>Universe</h3>
+      <p>Solana coins whose name, ticker or description matches the public GTA vocabulary. A coin still has to pass every filter. Manual removals are for scams only.</p>
+    </div>
+    <div class="glass card">
+      <h3>Filters, all of them</h3>
+      <div class="chips">
+        <span>Age at least 4 hours</span>
+        <span>Liquidity at least $50,000</span>
+        <span>Pools under $10,000 ignored</span>
+        <span>Top 10 holders at most 30%</span>
+        <span>Fees at least 8 SOL / 24h</span>
+        <span>Bundle at most 30%</span>
+        <span>Authorities revoked</span>
+        <span>At least 50 traders</span>
+        <span>Volume greater than 0</span>
+        <span>Market cap at most 100× liquidity</span>
+      </div>
+      <p class="muted small">Liquidity is summed across pools of at least $10,000. Smaller pools are ignored. There is no minimum on the top-10 holder share, only the 30% ceiling.</p>
+    </div>
+    <div class="glass card">
+      <h3>Rank and weights</h3>
+      <p>Rank uses log S = 40%·ln(market cap) + 30%·ln(liquidity) + 20%·ln(24h fees) + 10%·ln(traders). Buy weights are a separate step.</p>
+      <p>Weights are proportional to the square root of market cap, with an 18% cap and a 5% floor, recomputed every hour.</p>
+      <p class="muted small">Top 10. A coin enters at rank 8 or better and leaves only past rank 12.</p>
+    </div>
+    <div class="glass card">
+      <h3>Fees</h3>
+      <p>0% of fees go to the team. 100% go to holders: 70% is distributed as rewards in the basket coins, and 30% goes to the draw pot.</p>
+      <p>The team holds about 2% of the supply.</p>
+    </div>
+    <div class="glass card">
+      <h3>Rewards</h3>
+      <p>Rewards accrue with the holding score and are paid once a day. Anything below the minimum payout of 0.001 SOL stays pending, and no token account is opened for dust. That minimum is never set above 0.005 SOL.</p>
+      <p>Nothing before 1h. The multiplier is 1× from 1h to 1h30, 1.5× at 1h45, 2× at 2h, 3× at 2h30, 4× at 3h and 5× at 4h, then stays at 5×.</p>
+    </div>
+    <div class="glass card">
+      <h3>Draw</h3>
+      <p>COMING SOON. The draw is not live. When it is turned on it pays SOL prizes from the pot and rolls the pot over until it reaches 0.01 SOL. It also rolls over when fewer than 100 eligible holders qualify.</p>
+      <p class="muted small">Odds follow the holding score. No holder counts more than 5% of supply, and no holder can take more than 5% of the odds. A wallet needs at least 0.01% of supply to enter the draw.</p>
+    </div>
+  </div>
+  <div class="glass card" style="margin-top:1rem">
+    <h3>What the hourly checks cover</h3>
+    <ul class="ticks">
+      <li>A coin whose market cap is more than 100× its liquidity is blocked on every hourly run.</li>
+      <li>Membership does not flip on a one-hour rank wobble: a coin enters at rank 8 or better and leaves only past rank 12.</li>
+      <li>A holding younger than 1 hour scores 0.</li>
+      <li>Draw odds are capped at 5% per holder group, and a pot below the minimum is not drawn.</li>
+      <li>Round-trip trades are not removed from volume.</li>
+    </ul>
+  </div>
+</section>
+</main>
+<footer class="foot">
+  <div class="logo small">GTASP<b>10</b></div>
+  <nav class="foot-links">
+    <a href="index.html">Home</a><a href="index-table.html">Index</a><a href="rewards.html">Rewards</a>
+    <a href="backtest.html">Backtest</a><a href="docs.html">Docs</a><a href="faq.html">FAQ</a><a href="disclaimer.html">Disclaimer</a>
+  </nav>
+  <p>This site is informational. Nothing here is financial advice. GTASP10 is a memecoin index: it is high risk and you can lose everything you put in. No returns are promised. GTASP10 is not affiliated with Rockstar Games or Take-Two Interactive. Grand Theft Auto and GTA are trademarks of their respective owners.</p>
+</footer>
+<script src="nav.js?v=20261118f"></script>
+</body>
+</html>

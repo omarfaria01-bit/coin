@@ -1,0 +1,7518 @@
+{
+  "generated_at": "2026-11-18T15:47:28Z",
+  "rules": {
+    "weights": "sqrt_mc_capped",
+    "cap_pct": 18,
+    "floor_pct": 5,
+    "rebalance_hours": 1
+  },
+  "anchor_as_of": "2026-11-18T15:00:00Z",
+  "published_replay": {
+    "start": "2026-11-18T13:00:00Z",
+    "end": "2026-11-18T15:00:00Z",
+    "hours_with_members": 3,
+    "rebalances": 2,
+    "index_end": 0.976534,
+    "note": "Full current filters on stored metrics, sqrt-mcap weights, market-cap change as the price."
+  },
+  "caveats": [
+    "Past simulated performance. It is not a promise of future results.",
+    "The price history is short, and several hours of the live index are still missing.",
+    "The basket is the coins that pass the current filters on the latest official snapshot, replayed backward. Coins that failed the filters are not added later. That is survivorship of today's basket.",
+    "Holder concentration, launch bundle, authorities, trader count and the $50,000 liquidity floor are applied on the official snapshots. They are not re-checked on earlier hours, because the public candles do not carry those fields.",
+    "Each earlier hour still requires a positive close, positive volume and a pool at least 4 hours old. Weights are recomputed every hour from the square root of reconstructed market cap (18% cap, 5% floor).",
+    "Market cap is the published market cap scaled by the public price. Supply is assumed constant. Hourly closes ignore trading costs and slippage.",
+    "Prices are public pool closes. This is a simulation, not a live result.",
+    "Lucia: price history unavailable (HTTPError)",
+    "SOL line is the CoinGecko SOL/USD hourly price, rebased to 1."
+  ],
+  "history": {
+    "start": "2026-10-02T11:00:00Z",
+    "end": "2026-11-18T15:00:00Z",
+    "hours": 1132,
+    "points": 1059,
+    "rebalances": 1058
+  },
+  "index": {
+    "end": 732.242104,
+    "max_drawdown": 0.33709
+  },
+  "equal_weight": {
+    "end": 992.848411,
+    "max_drawdown": 0.33709
+  },
+  "top_coin": {
+    "mint": "4kjruqGHDsSqkMdFfCjV7Vb62HPFhtXyWc2t6JpQzDnz",
+    "ticker": "GTA6",
+    "end": 19.078429,
+    "max_drawdown": 0.857644
+  },
+  "sol": {
+    "end": 0.599918,
+    "max_drawdown": 0.44467,
+    "hours": 1058
+  },
+  "coins": [
+    {
+      "mint": "BsbsB3WLq7vbY5En3MBCAsTrcwaCxNKY2Mp5pGuLpump",
+      "ticker": "GTA",
+      "hours": 999
+    },
+    {
+      "mint": "4kjruqGHDsSqkMdFfCjV7Vb62HPFhtXyWc2t6JpQzDnz",
+      "ticker": "GTA6",
+      "hours": 928
+    },
+    {
+      "mint": "AKotzk1dhcNangAJBtvNKtT9bhbSVZc2mMhRFgkFpump",
+      "ticker": "Macca",
+      "hours": 813
+    },
+    {
+      "mint": "DKYcjobF7HPtL9RyQBRdeRQ2iWvizpfbgWwPWNXdpump",
+      "ticker": "DacityCoin",
+      "hours": 813
+    },
+    {
+      "mint": "GexThZHgaswpAQ7Fi8QrHFubjPimUNSYhJiAA7XZpump",
+      "ticker": "WASTED",
+      "hours": 448
+    },
+    {
+      "mint": "HZbiEpF2oM658EpjNRRqxharz5L9Ddm8akpSH2R5pump",
+      "ticker": "Rocco",
+      "hours": 307
+    },
+    {
+      "mint": "4rYsDHMfKmt6VuVGcM8cGzBgkZNgQT3w2DhdEmtVpump",
+      "ticker": "DacityCoin",
+      "hours": 168
+    },
+    {
+      "mint": "9rbKkz2BDQBVgZmrHY6d7PTq2ge91gkpEyE4y9PPpump",
+      "ticker": "Leonida",
+      "hours": 9
+    },
+    {
+      "mint": "7KBFymfGAe8MmKEuNersoM59TvpiHzZ76jP7rSLrpump",
+      "ticker": "GTA",
+      "hours": 8
+    }
+  ],
+  "curve": [
+    {
+      "t": "2026-10-02T11:00:00Z",
+      "index": 1.0,
+      "equal_weight": 1.0,
+      "top_coin": 1.0,
+      "sol": 1.0
+    },
+    {
+      "t": "2026-10-02T12:00:00Z",
+      "index": 1.034685,
+      "equal_weight": 1.034685,
+      "top_coin": 1.034685,
+      "sol": 0.999349
+    },
+    {
+      "t": "2026-10-02T16:00:00Z",
+      "index": 0.999698,
+      "equal_weight": 0.999698,
+      "top_coin": 0.999698,
+      "sol": 0.993708
+    },
+    {
+      "t": "2026-10-02T17:00:00Z",
+      "index": 0.992951,
+      "equal_weight": 0.992951,
+      "top_coin": 0.992951,
+      "sol": 0.993466
+    },
+    {
+      "t": "2026-10-02T18:00:00Z",
+      "index": 1.026976,
+      "equal_weight": 1.026976,
+      "top_coin": 1.026976,
+      "sol": 0.991269
+    },
+    {
+      "t": "2026-10-02T19:00:00Z",
+      "index": 0.987677,
+      "equal_weight": 0.987677,
+      "top_coin": 0.987677,
+      "sol": 0.978142
+    },
+    {
+      "t": "2026-10-02T20:00:00Z",
+      "index": 0.955076,
+      "equal_weight": 0.955076,
+      "top_coin": 0.955076,
+      "sol": 0.977117
+    },
+    {
+      "t": "2026-10-02T21:00:00Z",
+      "index": 0.987844,
+      "equal_weight": 0.987844,
+      "top_coin": 0.987844,
+      "sol": 0.975338
+    },
+    {
+      "t": "2026-10-03T02:00:00Z",
+      "index": 0.98841,
+      "equal_weight": 0.98841,
+      "top_coin": 0.98841,
+      "sol": 0.976333
+    },
+    {
+      "t": "2026-10-03T03:00:00Z",
+      "index": 1.030967,
+      "equal_weight": 1.030967,
+      "top_coin": 1.030967,
+      "sol": 0.974769
+    },
+    {
+      "t": "2026-10-03T09:00:00Z",
+      "index": 0.995049,
+      "equal_weight": 0.995049,
+      "top_coin": 0.995049,
+      "sol": 0.974316
+    },
+    {
+      "t": "2026-10-03T10:00:00Z",
+      "index": 0.997901,
+      "equal_weight": 0.997901,
+      "top_coin": 0.997901,
+      "sol": 0.974705
+    },
+    {
+      "t": "2026-10-03T15:00:00Z",
+      "index": 1.001002,
+      "equal_weight": 1.001002,
+      "top_coin": 1.001002,
+      "sol": 0.977153
+    },
+    {
+      "t": "2026-10-03T16:00:00Z",
+      "index": 0.989959,
+      "equal_weight": 0.989959,
+      "top_coin": 0.989959,
+      "sol": 0.976893
+    },
+    {
+      "t": "2026-10-03T17:00:00Z",
+      "index": 0.994962,
+      "equal_weight": 0.994962,
+      "top_coin": 0.994962,
+      "sol": 0.976921
+    },
+    {
+      "t": "2026-10-03T21:00:00Z",
+      "index": 0.958621,
+      "equal_weight": 0.958621,
+      "top_coin": 0.958621,
+      "sol": 0.977167
+    },
+    {
+      "t": "2026-10-04T22:00:00Z",
+      "index": 0.922799,
+      "equal_weight": 0.922799,
+      "top_coin": 0.922799,
+      "sol": 0.9763
+    },
+    {
+      "t": "2026-10-04T23:00:00Z",
+      "index": 0.912278,
+      "equal_weight": 0.912278,
+      "top_coin": 0.912278,
+      "sol": 0.980381
+    },
+    {
+      "t": "2026-10-05T00:00:00Z",
+      "index": 0.910936,
+      "equal_weight": 0.910936,
+      "top_coin": 0.910936,
+      "sol": 0.97914
+    },
+    {
+      "t": "2026-10-05T01:00:00Z",
+      "index": 0.910885,
+      "equal_weight": 0.910885,
+      "top_coin": 0.910885,
+      "sol": 0.977356
+    },
+    {
+      "t": "2026-10-05T04:00:00Z",
+      "index": 0.909631,
+      "equal_weight": 0.909631,
+      "top_coin": 0.909631,
+      "sol": 0.971316
+    },
+    {
+      "t": "2026-10-05T05:00:00Z",
+      "index": 0.909977,
+      "equal_weight": 0.909977,
+      "top_coin": 0.909977,
+      "sol": 0.971809
+    },
+    {
+      "t": "2026-10-05T06:00:00Z",
+      "index": 0.914551,
+      "equal_weight": 0.914551,
+      "top_coin": 0.914551,
+      "sol": 0.971322
+    },
+    {
+      "t": "2026-10-05T09:00:00Z",
+      "index": 0.881158,
+      "equal_weight": 0.881158,
+      "top_coin": 0.881158,
+      "sol": 0.966582
+    },
+    {
+      "t": "2026-10-05T10:00:00Z",
+      "index": 0.898343,
+      "equal_weight": 0.898343,
+      "top_coin": 0.898343,
+      "sol": 0.962937
+    },
+    {
+      "t": "2026-10-05T11:00:00Z",
+      "index": 0.873655,
+      "equal_weight": 0.873655,
+      "top_coin": 0.873655,
+      "sol": 0.963337
+    },
+    {
+      "t": "2026-10-05T12:00:00Z",
+      "index": 0.890848,
+      "equal_weight": 0.890848,
+      "top_coin": 0.890848,
+      "sol": 0.963934
+    },
+    {
+      "t": "2026-10-05T13:00:00Z",
+      "index": 0.927921,
+      "equal_weight": 0.927921,
+      "top_coin": 0.927921,
+      "sol": 0.960874
+    },
+    {
+      "t": "2026-10-05T14:00:00Z",
+      "index": 0.939658,
+      "equal_weight": 0.939658,
+      "top_coin": 0.939658,
+      "sol": 0.963982
+    },
+    {
+      "t": "2026-10-05T15:00:00Z",
+      "index": 0.936133,
+      "equal_weight": 0.936133,
+      "top_coin": 0.936133,
+      "sol": 0.953975
+    },
+    {
+      "t": "2026-10-05T16:00:00Z",
+      "index": 0.91839,
+      "equal_weight": 0.91839,
+      "top_coin": 0.91839,
+      "sol": 0.952744
+    },
+    {
+      "t": "2026-10-05T17:00:00Z",
+      "index": 0.956184,
+      "equal_weight": 0.956184,
+      "top_coin": 0.956184,
+      "sol": 0.95494
+    },
+    {
+      "t": "2026-10-05T18:00:00Z",
+      "index": 0.959886,
+      "equal_weight": 0.959886,
+      "top_coin": 0.959886,
+      "sol": 0.958172
+    },
+    {
+      "t": "2026-10-05T19:00:00Z",
+      "index": 0.961194,
+      "equal_weight": 0.961194,
+      "top_coin": 0.961194,
+      "sol": 0.958901
+    },
+    {
+      "t": "2026-10-05T20:00:00Z",
+      "index": 0.964549,
+      "equal_weight": 0.964549,
+      "top_coin": 0.964549,
+      "sol": 0.959896
+    },
+    {
+      "t": "2026-10-06T11:00:00Z",
+      "index": 0.980084,
+      "equal_weight": 0.980084,
+      "top_coin": 0.980084,
+      "sol": 0.965777
+    },
+    {
+      "t": "2026-10-06T12:00:00Z",
+      "index": 0.981468,
+      "equal_weight": 0.981468,
+      "top_coin": 0.981468,
+      "sol": 0.966434
+    },
+    {
+      "t": "2026-10-06T13:00:00Z",
+      "index": 0.993855,
+      "equal_weight": 0.993855,
+      "top_coin": 0.993855,
+      "sol": 0.966791
+    },
+    {
+      "t": "2026-10-06T14:00:00Z",
+      "index": 0.957524,
+      "equal_weight": 0.957524,
+      "top_coin": 0.957524,
+      "sol": 0.970825
+    },
+    {
+      "t": "2026-10-06T15:00:00Z",
+      "index": 0.950978,
+      "equal_weight": 0.950978,
+      "top_coin": 0.950978,
+      "sol": 0.978025
+    },
+    {
+      "t": "2026-10-06T18:00:00Z",
+      "index": 0.966266,
+      "equal_weight": 0.966266,
+      "top_coin": 0.966266,
+      "sol": 0.981936
+    },
+    {
+      "t": "2026-10-06T19:00:00Z",
+      "index": 0.942501,
+      "equal_weight": 0.942501,
+      "top_coin": 0.942501,
+      "sol": 0.9819
+    },
+    {
+      "t": "2026-10-06T23:00:00Z",
+      "index": 0.977537,
+      "equal_weight": 0.977537,
+      "top_coin": 0.977537,
+      "sol": 0.980497
+    },
+    {
+      "t": "2026-10-07T00:00:00Z",
+      "index": 0.977144,
+      "equal_weight": 0.977144,
+      "top_coin": 0.977144,
+      "sol": 0.979239
+    },
+    {
+      "t": "2026-10-07T01:00:00Z",
+      "index": 0.800799,
+      "equal_weight": 0.800799,
+      "top_coin": 0.800799,
+      "sol": 0.978276
+    },
+    {
+      "t": "2026-10-07T02:00:00Z",
+      "index": 0.685903,
+      "equal_weight": 0.685903,
+      "top_coin": 0.685903,
+      "sol": 0.966131
+    },
+    {
+      "t": "2026-10-07T03:00:00Z",
+      "index": 0.722938,
+      "equal_weight": 0.722938,
+      "top_coin": 0.722938,
+      "sol": 0.959711
+    },
+    {
+      "t": "2026-10-07T04:00:00Z",
+      "index": 0.752633,
+      "equal_weight": 0.752633,
+      "top_coin": 0.752633,
+      "sol": 0.959369
+    },
+    {
+      "t": "2026-10-07T05:00:00Z",
+      "index": 0.747803,
+      "equal_weight": 0.747803,
+      "top_coin": 0.747803,
+      "sol": 0.958142
+    },
+    {
+      "t": "2026-10-07T06:00:00Z",
+      "index": 0.796412,
+      "equal_weight": 0.796412,
+      "top_coin": 0.796412,
+      "sol": 0.964306
+    },
+    {
+      "t": "2026-10-07T07:00:00Z",
+      "index": 0.772352,
+      "equal_weight": 0.772352,
+      "top_coin": 0.772352,
+      "sol": 0.963881
+    },
+    {
+      "t": "2026-10-07T08:00:00Z",
+      "index": 0.815848,
+      "equal_weight": 0.815848,
+      "top_coin": 0.815848,
+      "sol": 0.962382
+    },
+    {
+      "t": "2026-10-07T11:00:00Z",
+      "index": 0.811578,
+      "equal_weight": 0.811578,
+      "top_coin": 0.811578,
+      "sol": 0.961775
+    },
+    {
+      "t": "2026-10-07T12:00:00Z",
+      "index": 0.824613,
+      "equal_weight": 0.824613,
+      "top_coin": 0.824613,
+      "sol": 0.958992
+    },
+    {
+      "t": "2026-10-07T13:00:00Z",
+      "index": 0.802288,
+      "equal_weight": 0.802288,
+      "top_coin": 0.802288,
+      "sol": 0.951381
+    },
+    {
+      "t": "2026-10-07T14:00:00Z",
+      "index": 0.805192,
+      "equal_weight": 0.805192,
+      "top_coin": 0.805192,
+      "sol": 0.949929
+    },
+    {
+      "t": "2026-10-07T19:00:00Z",
+      "index": 0.805086,
+      "equal_weight": 0.805086,
+      "top_coin": 0.805086,
+      "sol": 0.948405
+    },
+    {
+      "t": "2026-10-07T20:00:00Z",
+      "index": 0.94373,
+      "equal_weight": 0.94373,
+      "top_coin": 0.94373,
+      "sol": 0.946137
+    },
+    {
+      "t": "2026-10-07T21:00:00Z",
+      "index": 0.943278,
+      "equal_weight": 0.943278,
+      "top_coin": 0.943278,
+      "sol": 0.948935
+    },
+    {
+      "t": "2026-10-08T00:00:00Z",
+      "index": 0.942687,
+      "equal_weight": 0.942687,
+      "top_coin": 0.942687,
+      "sol": 0.951184
+    },
+    {
+      "t": "2026-10-08T01:00:00Z",
+      "index": 0.949899,
+      "equal_weight": 0.949899,
+      "top_coin": 0.943736,
+      "sol": 0.952314
+    },
+    {
+      "t": "2026-10-08T02:00:00Z",
+      "index": 0.927209,
+      "equal_weight": 0.927209,
+      "top_coin": 0.942513,
+      "sol": 0.949756
+    },
+    {
+      "t": "2026-10-08T03:00:00Z",
+      "index": 0.911743,
+      "equal_weight": 0.911743,
+      "top_coin": 0.942513,
+      "sol": 0.952804
+    },
+    {
+      "t": "2026-10-08T04:00:00Z",
+      "index": 0.907805,
+      "equal_weight": 0.907805,
+      "top_coin": 0.942513,
+      "sol": 0.94679
+    },
+    {
+      "t": "2026-10-08T05:00:00Z",
+      "index": 0.890038,
+      "equal_weight": 0.890038,
+      "top_coin": 0.945116,
+      "sol": 0.940423
+    },
+    {
+      "t": "2026-10-08T06:00:00Z",
+      "index": 0.922045,
+      "equal_weight": 0.922045,
+      "top_coin": 0.946502,
+      "sol": 0.939745
+    },
+    {
+      "t": "2026-10-08T07:00:00Z",
+      "index": 0.918516,
+      "equal_weight": 0.918516,
+      "top_coin": 0.945579,
+      "sol": 0.94324
+    },
+    {
+      "t": "2026-10-08T08:00:00Z",
+      "index": 0.907474,
+      "equal_weight": 0.907474,
+      "top_coin": 0.918396,
+      "sol": 0.940347
+    },
+    {
+      "t": "2026-10-08T09:00:00Z",
+      "index": 0.914796,
+      "equal_weight": 0.914796,
+      "top_coin": 0.916208,
+      "sol": 0.939637
+    },
+    {
+      "t": "2026-10-08T10:00:00Z",
+      "index": 0.858647,
+      "equal_weight": 0.858647,
+      "top_coin": 0.876528,
+      "sol": 0.942227
+    },
+    {
+      "t": "2026-10-08T11:00:00Z",
+      "index": 0.892592,
+      "equal_weight": 0.892592,
+      "top_coin": 0.912611,
+      "sol": 0.935791
+    },
+    {
+      "t": "2026-10-08T12:00:00Z",
+      "index": 0.910044,
+      "equal_weight": 0.910044,
+      "top_coin": 0.941686,
+      "sol": 0.925654
+    },
+    {
+      "t": "2026-10-08T13:00:00Z",
+      "index": 0.942132,
+      "equal_weight": 0.942132,
+      "top_coin": 0.924045,
+      "sol": 0.92015
+    },
+    {
+      "t": "2026-10-08T14:00:00Z",
+      "index": 0.96217,
+      "equal_weight": 0.96217,
+      "top_coin": 0.918882,
+      "sol": 0.918191
+    },
+    {
+      "t": "2026-10-08T15:00:00Z",
+      "index": 0.95389,
+      "equal_weight": 0.95389,
+      "top_coin": 0.925958,
+      "sol": 0.920116
+    },
+    {
+      "t": "2026-10-08T16:00:00Z",
+      "index": 0.929453,
+      "equal_weight": 0.929453,
+      "top_coin": 0.919782,
+      "sol": 0.888994
+    },
+    {
+      "t": "2026-10-08T17:00:00Z",
+      "index": 0.913541,
+      "equal_weight": 0.913541,
+      "top_coin": 0.91598,
+      "sol": 0.880368
+    },
+    {
+      "t": "2026-10-08T18:00:00Z",
+      "index": 0.919676,
+      "equal_weight": 0.919676,
+      "top_coin": 0.960791,
+      "sol": 0.870819
+    },
+    {
+      "t": "2026-10-08T19:00:00Z",
+      "index": 1.041094,
+      "equal_weight": 1.041094,
+      "top_coin": 0.946057,
+      "sol": 0.884379
+    },
+    {
+      "t": "2026-10-08T20:00:00Z",
+      "index": 0.997314,
+      "equal_weight": 0.997314,
+      "top_coin": 0.877915,
+      "sol": 0.89361
+    },
+    {
+      "t": "2026-10-08T21:00:00Z",
+      "index": 1.075549,
+      "equal_weight": 1.075549,
+      "top_coin": 0.926966,
+      "sol": 0.898409
+    },
+    {
+      "t": "2026-10-08T22:00:00Z",
+      "index": 1.07402,
+      "equal_weight": 1.07402,
+      "top_coin": 0.895826,
+      "sol": 0.90488
+    },
+    {
+      "t": "2026-10-08T23:00:00Z",
+      "index": 1.077628,
+      "equal_weight": 1.077628,
+      "top_coin": 0.911492,
+      "sol": 0.902712
+    },
+    {
+      "t": "2026-10-09T00:00:00Z",
+      "index": 1.054002,
+      "equal_weight": 1.054002,
+      "top_coin": 0.871626,
+      "sol": 0.896201
+    },
+    {
+      "t": "2026-10-09T01:00:00Z",
+      "index": 1.131483,
+      "equal_weight": 1.131483,
+      "top_coin": 0.871626,
+      "sol": 0.894175
+    },
+    {
+      "t": "2026-10-09T02:00:00Z",
+      "index": 0.936714,
+      "equal_weight": 0.936714,
+      "top_coin": 0.871626,
+      "sol": 0.89515
+    },
+    {
+      "t": "2026-10-09T03:00:00Z",
+      "index": 0.91263,
+      "equal_weight": 0.91263,
+      "top_coin": 0.871626,
+      "sol": 0.9024
+    },
+    {
+      "t": "2026-10-09T04:00:00Z",
+      "index": 0.888565,
+      "equal_weight": 0.888565,
+      "top_coin": 0.871626,
+      "sol": 0.903079
+    },
+    {
+      "t": "2026-10-09T05:00:00Z",
+      "index": 0.884995,
+      "equal_weight": 0.884995,
+      "top_coin": 0.871626,
+      "sol": 0.898953
+    },
+    {
+      "t": "2026-10-09T06:00:00Z",
+      "index": 0.872745,
+      "equal_weight": 0.872745,
+      "top_coin": 0.871626,
+      "sol": 0.902376
+    },
+    {
+      "t": "2026-10-09T07:00:00Z",
+      "index": 0.892809,
+      "equal_weight": 0.892809,
+      "top_coin": 0.871626,
+      "sol": 0.905
+    },
+    {
+      "t": "2026-10-09T08:00:00Z",
+      "index": 0.938807,
+      "equal_weight": 0.938807,
+      "top_coin": 0.871626,
+      "sol": 0.904837
+    },
+    {
+      "t": "2026-10-09T09:00:00Z",
+      "index": 0.968459,
+      "equal_weight": 0.968459,
+      "top_coin": 0.84789,
+      "sol": 0.904893
+    },
+    {
+      "t": "2026-10-09T10:00:00Z",
+      "index": 0.960374,
+      "equal_weight": 0.960374,
+      "top_coin": 0.864405,
+      "sol": 0.90307
+    },
+    {
+      "t": "2026-10-09T11:00:00Z",
+      "index": 0.982808,
+      "equal_weight": 0.982808,
+      "top_coin": 0.864405,
+      "sol": 0.897346
+    },
+    {
+      "t": "2026-10-09T12:00:00Z",
+      "index": 0.966038,
+      "equal_weight": 0.966038,
+      "top_coin": 0.864405,
+      "sol": 0.90959
+    },
+    {
+      "t": "2026-10-09T13:00:00Z",
+      "index": 1.002357,
+      "equal_weight": 1.002357,
+      "top_coin": 0.884468,
+      "sol": 0.903053
+    },
+    {
+      "t": "2026-10-09T14:00:00Z",
+      "index": 0.975161,
+      "equal_weight": 0.975161,
+      "top_coin": 0.846072,
+      "sol": 0.896328
+    },
+    {
+      "t": "2026-10-09T15:00:00Z",
+      "index": 0.966876,
+      "equal_weight": 0.966876,
+      "top_coin": 0.845116,
+      "sol": 0.900232
+    },
+    {
+      "t": "2026-10-09T16:00:00Z",
+      "index": 0.983652,
+      "equal_weight": 0.983652,
+      "top_coin": 0.878784,
+      "sol": 0.89688
+    },
+    {
+      "t": "2026-10-09T17:00:00Z",
+      "index": 0.982465,
+      "equal_weight": 0.982465,
+      "top_coin": 0.879224,
+      "sol": 0.897951
+    },
+    {
+      "t": "2026-10-09T18:00:00Z",
+      "index": 0.990274,
+      "equal_weight": 0.990274,
+      "top_coin": 0.843907,
+      "sol": 0.898763
+    },
+    {
+      "t": "2026-10-09T19:00:00Z",
+      "index": 1.00928,
+      "equal_weight": 1.00928,
+      "top_coin": 0.839577,
+      "sol": 0.894915
+    },
+    {
+      "t": "2026-10-09T20:00:00Z",
+      "index": 0.999111,
+      "equal_weight": 0.999111,
+      "top_coin": 0.839577,
+      "sol": 0.888429
+    },
+    {
+      "t": "2026-10-09T21:00:00Z",
+      "index": 0.965117,
+      "equal_weight": 0.965117,
+      "top_coin": 0.839577,
+      "sol": 0.89161
+    },
+    {
+      "t": "2026-10-09T22:00:00Z",
+      "index": 1.038014,
+      "equal_weight": 1.038014,
+      "top_coin": 0.875378,
+      "sol": 0.89115
+    },
+    {
+      "t": "2026-10-09T23:00:00Z",
+      "index": 1.053394,
+      "equal_weight": 1.053394,
+      "top_coin": 0.882171,
+      "sol": 0.893085
+    },
+    {
+      "t": "2026-10-10T00:00:00Z",
+      "index": 1.117074,
+      "equal_weight": 1.117074,
+      "top_coin": 0.935726,
+      "sol": 0.892654
+    },
+    {
+      "t": "2026-10-10T01:00:00Z",
+      "index": 1.085024,
+      "equal_weight": 1.085024,
+      "top_coin": 0.858613,
+      "sol": 0.894695
+    },
+    {
+      "t": "2026-10-10T02:00:00Z",
+      "index": 1.025785,
+      "equal_weight": 1.025785,
+      "top_coin": 0.858613,
+      "sol": 0.899136
+    },
+    {
+      "t": "2026-10-10T03:00:00Z",
+      "index": 1.022718,
+      "equal_weight": 1.022718,
+      "top_coin": 0.858613,
+      "sol": 0.898844
+    },
+    {
+      "t": "2026-10-10T04:00:00Z",
+      "index": 0.993642,
+      "equal_weight": 0.993642,
+      "top_coin": 0.858613,
+      "sol": 0.897177
+    },
+    {
+      "t": "2026-10-10T05:00:00Z",
+      "index": 0.984391,
+      "equal_weight": 0.984391,
+      "top_coin": 0.858613,
+      "sol": 0.898393
+    },
+    {
+      "t": "2026-10-10T06:00:00Z",
+      "index": 1.025358,
+      "equal_weight": 1.025358,
+      "top_coin": 0.858613,
+      "sol": 0.900687
+    },
+    {
+      "t": "2026-10-10T07:00:00Z",
+      "index": 0.997136,
+      "equal_weight": 0.997136,
+      "top_coin": 0.858613,
+      "sol": 0.898169
+    },
+    {
+      "t": "2026-10-10T08:00:00Z",
+      "index": 1.023116,
+      "equal_weight": 1.023116,
+      "top_coin": 0.858613,
+      "sol": 0.898954
+    },
+    {
+      "t": "2026-10-10T09:00:00Z",
+      "index": 1.042771,
+      "equal_weight": 1.042771,
+      "top_coin": 0.858613,
+      "sol": 0.899422
+    },
+    {
+      "t": "2026-10-10T10:00:00Z",
+      "index": 1.06879,
+      "equal_weight": 1.06879,
+      "top_coin": 0.858613,
+      "sol": 0.899081
+    },
+    {
+      "t": "2026-10-10T11:00:00Z",
+      "index": 1.128622,
+      "equal_weight": 1.128622,
+      "top_coin": 0.858613,
+      "sol": 0.896975
+    },
+    {
+      "t": "2026-10-10T12:00:00Z",
+      "index": 1.076571,
+      "equal_weight": 1.076571,
+      "top_coin": 0.858613,
+      "sol": 0.898456
+    },
+    {
+      "t": "2026-10-10T13:00:00Z",
+      "index": 1.06644,
+      "equal_weight": 1.06644,
+      "top_coin": 0.858613,
+      "sol": 0.897439
+    },
+    {
+      "t": "2026-10-10T14:00:00Z",
+      "index": 1.148152,
+      "equal_weight": 1.148152,
+      "top_coin": 0.858613,
+      "sol": 0.898933
+    },
+    {
+      "t": "2026-10-10T15:00:00Z",
+      "index": 1.165304,
+      "equal_weight": 1.165304,
+      "top_coin": 0.858613,
+      "sol": 0.903771
+    },
+    {
+      "t": "2026-10-10T16:00:00Z",
+      "index": 1.181034,
+      "equal_weight": 1.181034,
+      "top_coin": 0.858613,
+      "sol": 0.903398
+    },
+    {
+      "t": "2026-10-10T17:00:00Z",
+      "index": 1.218602,
+      "equal_weight": 1.218602,
+      "top_coin": 0.858613,
+      "sol": 0.899921
+    },
+    {
+      "t": "2026-10-10T18:00:00Z",
+      "index": 1.292648,
+      "equal_weight": 1.292648,
+      "top_coin": 0.858613,
+      "sol": 0.899267
+    },
+    {
+      "t": "2026-10-10T19:00:00Z",
+      "index": 1.203434,
+      "equal_weight": 1.203434,
+      "top_coin": 0.858613,
+      "sol": 0.901839
+    },
+    {
+      "t": "2026-10-10T20:00:00Z",
+      "index": 1.231168,
+      "equal_weight": 1.231168,
+      "top_coin": 0.858613,
+      "sol": 0.903181
+    },
+    {
+      "t": "2026-10-10T21:00:00Z",
+      "index": 1.250881,
+      "equal_weight": 1.250881,
+      "top_coin": 0.849683,
+      "sol": 0.902307
+    },
+    {
+      "t": "2026-10-10T22:00:00Z",
+      "index": 1.310952,
+      "equal_weight": 1.310952,
+      "top_coin": 0.817181,
+      "sol": 0.90202
+    },
+    {
+      "t": "2026-10-10T23:00:00Z",
+      "index": 1.283942,
+      "equal_weight": 1.283942,
+      "top_coin": 0.823636,
+      "sol": 0.90345
+    },
+    {
+      "t": "2026-10-11T00:00:00Z",
+      "index": 1.267816,
+      "equal_weight": 1.267816,
+      "top_coin": 0.787027,
+      "sol": 0.900229
+    },
+    {
+      "t": "2026-10-11T01:00:00Z",
+      "index": 1.27355,
+      "equal_weight": 1.27355,
+      "top_coin": 0.789248,
+      "sol": 0.898806
+    },
+    {
+      "t": "2026-10-11T02:00:00Z",
+      "index": 1.23534,
+      "equal_weight": 1.23534,
+      "top_coin": 0.789248,
+      "sol": 0.900018
+    },
+    {
+      "t": "2026-10-11T03:00:00Z",
+      "index": 1.122028,
+      "equal_weight": 1.122028,
+      "top_coin": 0.789248,
+      "sol": 0.89961
+    },
+    {
+      "t": "2026-10-11T04:00:00Z",
+      "index": 1.197874,
+      "equal_weight": 1.197874,
+      "top_coin": 0.789248,
+      "sol": 0.892787
+    },
+    {
+      "t": "2026-10-11T05:00:00Z",
+      "index": 1.304805,
+      "equal_weight": 1.304805,
+      "top_coin": 0.790064,
+      "sol": 0.896305
+    },
+    {
+      "t": "2026-10-11T06:00:00Z",
+      "index": 1.350797,
+      "equal_weight": 1.350797,
+      "top_coin": 0.825897,
+      "sol": 0.894176
+    },
+    {
+      "t": "2026-10-11T07:00:00Z",
+      "index": 1.368989,
+      "equal_weight": 1.368989,
+      "top_coin": 0.825897,
+      "sol": 0.897956
+    },
+    {
+      "t": "2026-10-11T08:00:00Z",
+      "index": 1.224506,
+      "equal_weight": 1.224506,
+      "top_coin": 0.825897,
+      "sol": 0.894665
+    },
+    {
+      "t": "2026-10-11T09:00:00Z",
+      "index": 1.314324,
+      "equal_weight": 1.314324,
+      "top_coin": 0.825897,
+      "sol": 0.895519
+    },
+    {
+      "t": "2026-10-11T10:00:00Z",
+      "index": 1.243369,
+      "equal_weight": 1.243369,
+      "top_coin": 0.825897,
+      "sol": 0.89533
+    },
+    {
+      "t": "2026-10-11T11:00:00Z",
+      "index": 1.129843,
+      "equal_weight": 1.129843,
+      "top_coin": 0.825897,
+      "sol": 0.894109
+    },
+    {
+      "t": "2026-10-11T12:00:00Z",
+      "index": 1.08793,
+      "equal_weight": 1.08793,
+      "top_coin": 0.813734,
+      "sol": 0.896599
+    },
+    {
+      "t": "2026-10-11T13:00:00Z",
+      "index": 1.159802,
+      "equal_weight": 1.159802,
+      "top_coin": 0.819941,
+      "sol": 0.895534
+    },
+    {
+      "t": "2026-10-11T14:00:00Z",
+      "index": 1.063517,
+      "equal_weight": 1.063517,
+      "top_coin": 0.777244,
+      "sol": 0.895032
+    },
+    {
+      "t": "2026-10-11T15:00:00Z",
+      "index": 1.250025,
+      "equal_weight": 1.250025,
+      "top_coin": 0.957969,
+      "sol": 0.897399
+    },
+    {
+      "t": "2026-10-11T16:00:00Z",
+      "index": 1.238362,
+      "equal_weight": 1.238362,
+      "top_coin": 0.85061,
+      "sol": 0.915183
+    },
+    {
+      "t": "2026-10-11T17:00:00Z",
+      "index": 1.164517,
+      "equal_weight": 1.164517,
+      "top_coin": 0.85061,
+      "sol": 0.918374
+    },
+    {
+      "t": "2026-10-11T18:00:00Z",
+      "index": 1.174464,
+      "equal_weight": 1.174464,
+      "top_coin": 0.85061,
+      "sol": 0.917138
+    },
+    {
+      "t": "2026-10-11T19:00:00Z",
+      "index": 1.091579,
+      "equal_weight": 1.091579,
+      "top_coin": 0.792608,
+      "sol": 0.912119
+    },
+    {
+      "t": "2026-10-11T20:00:00Z",
+      "index": 1.134337,
+      "equal_weight": 1.134337,
+      "top_coin": 0.880846,
+      "sol": 0.910614
+    },
+    {
+      "t": "2026-10-11T21:00:00Z",
+      "index": 1.086607,
+      "equal_weight": 1.086607,
+      "top_coin": 0.867781,
+      "sol": 0.910069
+    },
+    {
+      "t": "2026-10-11T22:00:00Z",
+      "index": 1.231759,
+      "equal_weight": 1.231759,
+      "top_coin": 1.104639,
+      "sol": 0.904676
+    },
+    {
+      "t": "2026-10-11T23:00:00Z",
+      "index": 1.224016,
+      "equal_weight": 1.224016,
+      "top_coin": 1.087781,
+      "sol": 0.908285
+    },
+    {
+      "t": "2026-10-12T00:00:00Z",
+      "index": 1.132884,
+      "equal_weight": 1.132884,
+      "top_coin": 0.976337,
+      "sol": 0.910479
+    },
+    {
+      "t": "2026-10-12T01:00:00Z",
+      "index": 1.156741,
+      "equal_weight": 1.156741,
+      "top_coin": 0.946633,
+      "sol": 0.912766
+    },
+    {
+      "t": "2026-10-12T02:00:00Z",
+      "index": 1.153437,
+      "equal_weight": 1.153437,
+      "top_coin": 0.954469,
+      "sol": 0.912097
+    },
+    {
+      "t": "2026-10-12T03:00:00Z",
+      "index": 1.058833,
+      "equal_weight": 1.058833,
+      "top_coin": 0.912102,
+      "sol": 0.916246
+    },
+    {
+      "t": "2026-10-12T04:00:00Z",
+      "index": 1.08209,
+      "equal_weight": 1.08209,
+      "top_coin": 0.904989,
+      "sol": 0.913481
+    },
+    {
+      "t": "2026-10-12T05:00:00Z",
+      "index": 1.089096,
+      "equal_weight": 1.089096,
+      "top_coin": 0.904989,
+      "sol": 0.925257
+    },
+    {
+      "t": "2026-10-12T06:00:00Z",
+      "index": 1.123021,
+      "equal_weight": 1.123021,
+      "top_coin": 0.904989,
+      "sol": 0.92274
+    },
+    {
+      "t": "2026-10-12T07:00:00Z",
+      "index": 1.144546,
+      "equal_weight": 1.144546,
+      "top_coin": 0.936619,
+      "sol": 0.921301
+    },
+    {
+      "t": "2026-10-12T08:00:00Z",
+      "index": 1.132453,
+      "equal_weight": 1.132453,
+      "top_coin": 0.936619,
+      "sol": 0.920842
+    },
+    {
+      "t": "2026-10-12T09:00:00Z",
+      "index": 1.10527,
+      "equal_weight": 1.10527,
+      "top_coin": 0.936619,
+      "sol": 0.913593
+    },
+    {
+      "t": "2026-10-12T10:00:00Z",
+      "index": 1.073783,
+      "equal_weight": 1.073783,
+      "top_coin": 0.91889,
+      "sol": 0.913825
+    },
+    {
+      "t": "2026-10-12T11:00:00Z",
+      "index": 1.076157,
+      "equal_weight": 1.076157,
+      "top_coin": 0.91889,
+      "sol": 0.913079
+    },
+    {
+      "t": "2026-10-12T12:00:00Z",
+      "index": 1.078638,
+      "equal_weight": 1.078638,
+      "top_coin": 0.91889,
+      "sol": 0.907699
+    },
+    {
+      "t": "2026-10-12T13:00:00Z",
+      "index": 1.094041,
+      "equal_weight": 1.094041,
+      "top_coin": 0.926635,
+      "sol": 0.901644
+    },
+    {
+      "t": "2026-10-12T14:00:00Z",
+      "index": 1.064977,
+      "equal_weight": 1.064977,
+      "top_coin": 0.926635,
+      "sol": 0.903569
+    },
+    {
+      "t": "2026-10-12T15:00:00Z",
+      "index": 1.254433,
+      "equal_weight": 1.254433,
+      "top_coin": 0.926635,
+      "sol": 0.889526
+    },
+    {
+      "t": "2026-10-12T16:00:00Z",
+      "index": 1.224977,
+      "equal_weight": 1.224977,
+      "top_coin": 0.923723,
+      "sol": 0.890551
+    },
+    {
+      "t": "2026-10-12T17:00:00Z",
+      "index": 1.142397,
+      "equal_weight": 1.142397,
+      "top_coin": 0.916036,
+      "sol": 0.882489
+    },
+    {
+      "t": "2026-10-12T18:00:00Z",
+      "index": 1.154005,
+      "equal_weight": 1.154005,
+      "top_coin": 0.916036,
+      "sol": 0.881314
+    },
+    {
+      "t": "2026-10-12T19:00:00Z",
+      "index": 1.703277,
+      "equal_weight": 1.703277,
+      "top_coin": 0.916036,
+      "sol": 0.87957
+    },
+    {
+      "t": "2026-10-12T20:00:00Z",
+      "index": 1.689141,
+      "equal_weight": 1.689141,
+      "top_coin": 0.924508,
+      "sol": 0.885563
+    },
+    {
+      "t": "2026-10-12T21:00:00Z",
+      "index": 1.499427,
+      "equal_weight": 1.499427,
+      "top_coin": 0.924508,
+      "sol": 0.887005
+    },
+    {
+      "t": "2026-10-12T22:00:00Z",
+      "index": 1.52273,
+      "equal_weight": 1.52273,
+      "top_coin": 0.924508,
+      "sol": 0.876593
+    },
+    {
+      "t": "2026-10-12T23:00:00Z",
+      "index": 1.427075,
+      "equal_weight": 1.427075,
+      "top_coin": 0.924508,
+      "sol": 0.870476
+    },
+    {
+      "t": "2026-10-13T00:00:00Z",
+      "index": 1.300684,
+      "equal_weight": 1.300684,
+      "top_coin": 0.924508,
+      "sol": 0.864519
+    },
+    {
+      "t": "2026-10-13T01:00:00Z",
+      "index": 1.355339,
+      "equal_weight": 1.355339,
+      "top_coin": 0.924508,
+      "sol": 0.842487
+    },
+    {
+      "t": "2026-10-13T02:00:00Z",
+      "index": 1.493578,
+      "equal_weight": 1.493578,
+      "top_coin": 0.924508,
+      "sol": 0.861158
+    },
+    {
+      "t": "2026-10-13T03:00:00Z",
+      "index": 1.488261,
+      "equal_weight": 1.488261,
+      "top_coin": 0.924508,
+      "sol": 0.87246
+    },
+    {
+      "t": "2026-10-13T04:00:00Z",
+      "index": 1.52976,
+      "equal_weight": 1.52976,
+      "top_coin": 0.924508,
+      "sol": 0.878594
+    },
+    {
+      "t": "2026-10-13T05:00:00Z",
+      "index": 1.56146,
+      "equal_weight": 1.56146,
+      "top_coin": 0.924508,
+      "sol": 0.883709
+    },
+    {
+      "t": "2026-10-13T06:00:00Z",
+      "index": 1.483506,
+      "equal_weight": 1.483506,
+      "top_coin": 0.889943,
+      "sol": 0.886909
+    },
+    {
+      "t": "2026-10-13T07:00:00Z",
+      "index": 1.485045,
+      "equal_weight": 1.485045,
+      "top_coin": 0.926409,
+      "sol": 0.888261
+    },
+    {
+      "t": "2026-10-13T08:00:00Z",
+      "index": 1.50612,
+      "equal_weight": 1.50612,
+      "top_coin": 0.931455,
+      "sol": 0.888162
+    },
+    {
+      "t": "2026-10-13T09:00:00Z",
+      "index": 1.516533,
+      "equal_weight": 1.516533,
+      "top_coin": 0.931455,
+      "sol": 0.880754
+    },
+    {
+      "t": "2026-10-13T10:00:00Z",
+      "index": 1.800786,
+      "equal_weight": 1.800786,
+      "top_coin": 0.931455,
+      "sol": 0.875029
+    },
+    {
+      "t": "2026-10-13T11:00:00Z",
+      "index": 1.800191,
+      "equal_weight": 1.800191,
+      "top_coin": 0.931455,
+      "sol": 0.870671
+    },
+    {
+      "t": "2026-10-13T12:00:00Z",
+      "index": 1.782144,
+      "equal_weight": 1.782144,
+      "top_coin": 0.931455,
+      "sol": 0.868299
+    },
+    {
+      "t": "2026-10-13T13:00:00Z",
+      "index": 1.915735,
+      "equal_weight": 1.915735,
+      "top_coin": 0.931455,
+      "sol": 0.872134
+    },
+    {
+      "t": "2026-10-13T14:00:00Z",
+      "index": 1.846105,
+      "equal_weight": 1.846105,
+      "top_coin": 0.914147,
+      "sol": 0.873255
+    },
+    {
+      "t": "2026-10-13T15:00:00Z",
+      "index": 1.818432,
+      "equal_weight": 1.818432,
+      "top_coin": 0.944652,
+      "sol": 0.879713
+    },
+    {
+      "t": "2026-10-13T16:00:00Z",
+      "index": 1.806023,
+      "equal_weight": 1.806023,
+      "top_coin": 0.910887,
+      "sol": 0.87754
+    },
+    {
+      "t": "2026-10-13T17:00:00Z",
+      "index": 1.747682,
+      "equal_weight": 1.747682,
+      "top_coin": 0.874566,
+      "sol": 0.879694
+    },
+    {
+      "t": "2026-10-13T18:00:00Z",
+      "index": 1.830017,
+      "equal_weight": 1.830017,
+      "top_coin": 0.877461,
+      "sol": 0.876254
+    },
+    {
+      "t": "2026-10-13T19:00:00Z",
+      "index": 1.83902,
+      "equal_weight": 1.83902,
+      "top_coin": 0.884376,
+      "sol": 0.881924
+    },
+    {
+      "t": "2026-10-13T20:00:00Z",
+      "index": 1.738132,
+      "equal_weight": 1.738132,
+      "top_coin": 0.838925,
+      "sol": 0.879531
+    },
+    {
+      "t": "2026-10-13T21:00:00Z",
+      "index": 1.870799,
+      "equal_weight": 1.870799,
+      "top_coin": 0.90501,
+      "sol": 0.876073
+    },
+    {
+      "t": "2026-10-13T22:00:00Z",
+      "index": 1.730098,
+      "equal_weight": 1.730098,
+      "top_coin": 0.90501,
+      "sol": 0.875812
+    },
+    {
+      "t": "2026-10-13T23:00:00Z",
+      "index": 1.742151,
+      "equal_weight": 1.742151,
+      "top_coin": 0.90501,
+      "sol": 0.874981
+    },
+    {
+      "t": "2026-10-14T00:00:00Z",
+      "index": 1.794602,
+      "equal_weight": 1.794602,
+      "top_coin": 0.90501,
+      "sol": 0.873624
+    },
+    {
+      "t": "2026-10-14T01:00:00Z",
+      "index": 1.786193,
+      "equal_weight": 1.786193,
+      "top_coin": 0.90501,
+      "sol": 0.878704
+    },
+    {
+      "t": "2026-10-14T02:00:00Z",
+      "index": 1.822712,
+      "equal_weight": 1.822712,
+      "top_coin": 0.90501,
+      "sol": 0.878283
+    },
+    {
+      "t": "2026-10-14T03:00:00Z",
+      "index": 1.726893,
+      "equal_weight": 1.726893,
+      "top_coin": 0.887567,
+      "sol": 0.881245
+    },
+    {
+      "t": "2026-10-14T04:00:00Z",
+      "index": 1.793408,
+      "equal_weight": 1.793408,
+      "top_coin": 0.887567,
+      "sol": 0.881923
+    },
+    {
+      "t": "2026-10-14T05:00:00Z",
+      "index": 1.825961,
+      "equal_weight": 1.825961,
+      "top_coin": 0.887567,
+      "sol": 0.882829
+    },
+    {
+      "t": "2026-10-14T06:00:00Z",
+      "index": 1.73754,
+      "equal_weight": 1.73754,
+      "top_coin": 0.887567,
+      "sol": 0.876471
+    },
+    {
+      "t": "2026-10-14T07:00:00Z",
+      "index": 1.761778,
+      "equal_weight": 1.761778,
+      "top_coin": 0.88807,
+      "sol": 0.876436
+    },
+    {
+      "t": "2026-10-14T08:00:00Z",
+      "index": 1.709983,
+      "equal_weight": 1.709983,
+      "top_coin": 0.88807,
+      "sol": 0.878923
+    },
+    {
+      "t": "2026-10-14T09:00:00Z",
+      "index": 1.692668,
+      "equal_weight": 1.692668,
+      "top_coin": 0.88807,
+      "sol": 0.875357
+    },
+    {
+      "t": "2026-10-14T10:00:00Z",
+      "index": 1.797129,
+      "equal_weight": 1.797129,
+      "top_coin": 0.88807,
+      "sol": 0.872176
+    },
+    {
+      "t": "2026-10-14T11:00:00Z",
+      "index": 1.739998,
+      "equal_weight": 1.739998,
+      "top_coin": 0.88807,
+      "sol": 0.876458
+    },
+    {
+      "t": "2026-10-14T12:00:00Z",
+      "index": 1.705063,
+      "equal_weight": 1.705063,
+      "top_coin": 0.88807,
+      "sol": 0.876207
+    },
+    {
+      "t": "2026-10-14T13:00:00Z",
+      "index": 1.664086,
+      "equal_weight": 1.664086,
+      "top_coin": 0.88807,
+      "sol": 0.862766
+    },
+    {
+      "t": "2026-10-14T14:00:00Z",
+      "index": 1.726983,
+      "equal_weight": 1.726983,
+      "top_coin": 0.88807,
+      "sol": 0.858478
+    },
+    {
+      "t": "2026-10-14T15:00:00Z",
+      "index": 1.630637,
+      "equal_weight": 1.630637,
+      "top_coin": 0.88807,
+      "sol": 0.852656
+    },
+    {
+      "t": "2026-10-14T16:00:00Z",
+      "index": 1.578397,
+      "equal_weight": 1.578397,
+      "top_coin": 0.88807,
+      "sol": 0.849766
+    },
+    {
+      "t": "2026-10-14T17:00:00Z",
+      "index": 1.600226,
+      "equal_weight": 1.600226,
+      "top_coin": 0.88807,
+      "sol": 0.858841
+    },
+    {
+      "t": "2026-10-14T18:00:00Z",
+      "index": 1.584248,
+      "equal_weight": 1.584248,
+      "top_coin": 0.88807,
+      "sol": 0.853771
+    },
+    {
+      "t": "2026-10-14T19:00:00Z",
+      "index": 1.474125,
+      "equal_weight": 1.474125,
+      "top_coin": 0.88807,
+      "sol": 0.853224
+    },
+    {
+      "t": "2026-10-14T20:00:00Z",
+      "index": 1.52284,
+      "equal_weight": 1.52284,
+      "top_coin": 0.923829,
+      "sol": 0.851909
+    },
+    {
+      "t": "2026-10-14T21:00:00Z",
+      "index": 1.537063,
+      "equal_weight": 1.537063,
+      "top_coin": 0.927599,
+      "sol": 0.851341
+    },
+    {
+      "t": "2026-10-14T22:00:00Z",
+      "index": 1.560895,
+      "equal_weight": 1.560895,
+      "top_coin": 0.927599,
+      "sol": 0.856376
+    },
+    {
+      "t": "2026-10-14T23:00:00Z",
+      "index": 1.612596,
+      "equal_weight": 1.612596,
+      "top_coin": 0.927599,
+      "sol": 0.855006
+    },
+    {
+      "t": "2026-10-15T00:00:00Z",
+      "index": 1.681132,
+      "equal_weight": 1.681132,
+      "top_coin": 0.927599,
+      "sol": 0.852713
+    },
+    {
+      "t": "2026-10-15T01:00:00Z",
+      "index": 1.59082,
+      "equal_weight": 1.59082,
+      "top_coin": 0.927599,
+      "sol": 0.853456
+    },
+    {
+      "t": "2026-10-15T02:00:00Z",
+      "index": 1.530147,
+      "equal_weight": 1.530147,
+      "top_coin": 0.927599,
+      "sol": 0.850953
+    },
+    {
+      "t": "2026-10-15T03:00:00Z",
+      "index": 1.581122,
+      "equal_weight": 1.581122,
+      "top_coin": 0.994963,
+      "sol": 0.844935
+    },
+    {
+      "t": "2026-10-15T04:00:00Z",
+      "index": 1.620376,
+      "equal_weight": 1.620376,
+      "top_coin": 1.016537,
+      "sol": 0.838067
+    },
+    {
+      "t": "2026-10-15T05:00:00Z",
+      "index": 1.573166,
+      "equal_weight": 1.573166,
+      "top_coin": 0.943837,
+      "sol": 0.849617
+    },
+    {
+      "t": "2026-10-15T06:00:00Z",
+      "index": 1.597234,
+      "equal_weight": 1.597234,
+      "top_coin": 0.943837,
+      "sol": 0.829911
+    },
+    {
+      "t": "2026-10-15T07:00:00Z",
+      "index": 1.651151,
+      "equal_weight": 1.651151,
+      "top_coin": 0.943837,
+      "sol": 0.835243
+    },
+    {
+      "t": "2026-10-15T08:00:00Z",
+      "index": 1.64,
+      "equal_weight": 1.64,
+      "top_coin": 0.949108,
+      "sol": 0.843914
+    },
+    {
+      "t": "2026-10-15T09:00:00Z",
+      "index": 1.680303,
+      "equal_weight": 1.680303,
+      "top_coin": 1.019194,
+      "sol": 0.844788
+    },
+    {
+      "t": "2026-10-15T10:00:00Z",
+      "index": 1.599084,
+      "equal_weight": 1.599084,
+      "top_coin": 0.942134,
+      "sol": 0.843267
+    },
+    {
+      "t": "2026-10-15T11:00:00Z",
+      "index": 1.676093,
+      "equal_weight": 1.676093,
+      "top_coin": 0.977976,
+      "sol": 0.837097
+    },
+    {
+      "t": "2026-10-15T12:00:00Z",
+      "index": 1.771287,
+      "equal_weight": 1.771287,
+      "top_coin": 1.054163,
+      "sol": 0.835798
+    },
+    {
+      "t": "2026-10-15T13:00:00Z",
+      "index": 1.790543,
+      "equal_weight": 1.790543,
+      "top_coin": 1.021001,
+      "sol": 0.831752
+    },
+    {
+      "t": "2026-10-15T14:00:00Z",
+      "index": 2.066908,
+      "equal_weight": 2.066908,
+      "top_coin": 1.155532,
+      "sol": 0.830021
+    },
+    {
+      "t": "2026-10-15T15:00:00Z",
+      "index": 2.066442,
+      "equal_weight": 2.066442,
+      "top_coin": 1.173694,
+      "sol": 0.856811
+    },
+    {
+      "t": "2026-10-15T16:00:00Z",
+      "index": 1.918405,
+      "equal_weight": 1.918405,
+      "top_coin": 1.084182,
+      "sol": 0.867084
+    },
+    {
+      "t": "2026-10-15T17:00:00Z",
+      "index": 1.830738,
+      "equal_weight": 1.830738,
+      "top_coin": 1.027979,
+      "sol": 0.863473
+    },
+    {
+      "t": "2026-10-15T18:00:00Z",
+      "index": 1.840032,
+      "equal_weight": 1.840032,
+      "top_coin": 1.024768,
+      "sol": 0.86537
+    },
+    {
+      "t": "2026-10-15T19:00:00Z",
+      "index": 2.079302,
+      "equal_weight": 2.079302,
+      "top_coin": 1.068466,
+      "sol": 0.866476
+    },
+    {
+      "t": "2026-10-15T20:00:00Z",
+      "index": 2.121018,
+      "equal_weight": 2.121018,
+      "top_coin": 1.113725,
+      "sol": 0.866833
+    },
+    {
+      "t": "2026-10-15T21:00:00Z",
+      "index": 2.165873,
+      "equal_weight": 2.165873,
+      "top_coin": 1.061678,
+      "sol": 0.86369
+    },
+    {
+      "t": "2026-10-15T22:00:00Z",
+      "index": 1.874486,
+      "equal_weight": 1.874486,
+      "top_coin": 1.065688,
+      "sol": 0.86715
+    },
+    {
+      "t": "2026-10-15T23:00:00Z",
+      "index": 1.892936,
+      "equal_weight": 1.892936,
+      "top_coin": 1.013751,
+      "sol": 0.865124
+    },
+    {
+      "t": "2026-10-16T00:00:00Z",
+      "index": 1.843385,
+      "equal_weight": 1.843385,
+      "top_coin": 1.014016,
+      "sol": 0.862128
+    },
+    {
+      "t": "2026-10-16T01:00:00Z",
+      "index": 1.778759,
+      "equal_weight": 1.778759,
+      "top_coin": 0.97061,
+      "sol": 0.862697
+    },
+    {
+      "t": "2026-10-16T02:00:00Z",
+      "index": 1.587902,
+      "equal_weight": 1.587902,
+      "top_coin": 1.000076,
+      "sol": 0.859599
+    },
+    {
+      "t": "2026-10-16T03:00:00Z",
+      "index": 1.69024,
+      "equal_weight": 1.690248,
+      "top_coin": 1.000076,
+      "sol": 0.860948
+    },
+    {
+      "t": "2026-10-16T04:00:00Z",
+      "index": 1.675849,
+      "equal_weight": 1.675847,
+      "top_coin": 1.000076,
+      "sol": 0.860868
+    },
+    {
+      "t": "2026-10-16T05:00:00Z",
+      "index": 1.811937,
+      "equal_weight": 1.811935,
+      "top_coin": 0.978648,
+      "sol": 0.864517
+    },
+    {
+      "t": "2026-10-16T06:00:00Z",
+      "index": 1.712169,
+      "equal_weight": 1.712166,
+      "top_coin": 1.044655,
+      "sol": 0.866376
+    },
+    {
+      "t": "2026-10-16T07:00:00Z",
+      "index": 1.799098,
+      "equal_weight": 1.799095,
+      "top_coin": 1.043328,
+      "sol": 0.869281
+    },
+    {
+      "t": "2026-10-16T08:00:00Z",
+      "index": 1.827318,
+      "equal_weight": 1.827315,
+      "top_coin": 1.043878,
+      "sol": 0.869835
+    },
+    {
+      "t": "2026-10-16T09:00:00Z",
+      "index": 1.801646,
+      "equal_weight": 1.801644,
+      "top_coin": 1.007381,
+      "sol": 0.873252
+    },
+    {
+      "t": "2026-10-16T10:00:00Z",
+      "index": 2.04633,
+      "equal_weight": 2.046327,
+      "top_coin": 1.038432,
+      "sol": 0.869181
+    },
+    {
+      "t": "2026-10-16T11:00:00Z",
+      "index": 1.84394,
+      "equal_weight": 1.843938,
+      "top_coin": 1.028424,
+      "sol": 0.873086
+    },
+    {
+      "t": "2026-10-16T12:00:00Z",
+      "index": 1.875934,
+      "equal_weight": 1.875931,
+      "top_coin": 0.996994,
+      "sol": 0.871666
+    },
+    {
+      "t": "2026-10-16T13:00:00Z",
+      "index": 1.73524,
+      "equal_weight": 1.735238,
+      "top_coin": 1.067382,
+      "sol": 0.863741
+    },
+    {
+      "t": "2026-10-16T14:00:00Z",
+      "index": 1.782593,
+      "equal_weight": 1.78259,
+      "top_coin": 1.138063,
+      "sol": 0.864315
+    },
+    {
+      "t": "2026-10-16T15:00:00Z",
+      "index": 1.760714,
+      "equal_weight": 1.760711,
+      "top_coin": 1.348907,
+      "sol": 0.864058
+    },
+    {
+      "t": "2026-10-16T16:00:00Z",
+      "index": 1.749165,
+      "equal_weight": 1.749162,
+      "top_coin": 1.276203,
+      "sol": 0.849193
+    },
+    {
+      "t": "2026-10-16T17:00:00Z",
+      "index": 1.687011,
+      "equal_weight": 1.687008,
+      "top_coin": 1.254845,
+      "sol": 0.850705
+    },
+    {
+      "t": "2026-10-16T18:00:00Z",
+      "index": 1.774169,
+      "equal_weight": 1.774167,
+      "top_coin": 1.246087,
+      "sol": 0.847973
+    },
+    {
+      "t": "2026-10-16T19:00:00Z",
+      "index": 1.706262,
+      "equal_weight": 1.70626,
+      "top_coin": 1.445284,
+      "sol": 0.84235
+    },
+    {
+      "t": "2026-10-16T20:00:00Z",
+      "index": 1.588004,
+      "equal_weight": 1.588002,
+      "top_coin": 1.44719,
+      "sol": 0.846758
+    },
+    {
+      "t": "2026-10-16T21:00:00Z",
+      "index": 1.517312,
+      "equal_weight": 1.517315,
+      "top_coin": 1.44719,
+      "sol": 0.850742
+    },
+    {
+      "t": "2026-10-16T22:00:00Z",
+      "index": 1.698641,
+      "equal_weight": 1.698668,
+      "top_coin": 1.44719,
+      "sol": 0.852484
+    },
+    {
+      "t": "2026-10-16T23:00:00Z",
+      "index": 1.799891,
+      "equal_weight": 1.79992,
+      "top_coin": 1.488912,
+      "sol": 0.853717
+    },
+    {
+      "t": "2026-10-17T00:00:00Z",
+      "index": 1.620415,
+      "equal_weight": 1.620441,
+      "top_coin": 1.518334,
+      "sol": 0.853718
+    },
+    {
+      "t": "2026-10-17T01:00:00Z",
+      "index": 1.763202,
+      "equal_weight": 1.76323,
+      "top_coin": 1.443694,
+      "sol": 0.853217
+    },
+    {
+      "t": "2026-10-17T02:00:00Z",
+      "index": 1.685644,
+      "equal_weight": 1.685671,
+      "top_coin": 1.444603,
+      "sol": 0.85285
+    },
+    {
+      "t": "2026-10-17T03:00:00Z",
+      "index": 1.677962,
+      "equal_weight": 1.677989,
+      "top_coin": 1.545394,
+      "sol": 0.854536
+    },
+    {
+      "t": "2026-10-17T04:00:00Z",
+      "index": 1.784683,
+      "equal_weight": 1.784712,
+      "top_coin": 1.788595,
+      "sol": 0.858133
+    },
+    {
+      "t": "2026-10-17T05:00:00Z",
+      "index": 1.83112,
+      "equal_weight": 1.831149,
+      "top_coin": 1.821478,
+      "sol": 0.856472
+    },
+    {
+      "t": "2026-10-17T06:00:00Z",
+      "index": 1.977551,
+      "equal_weight": 1.977582,
+      "top_coin": 2.162784,
+      "sol": 0.857566
+    },
+    {
+      "t": "2026-10-17T07:00:00Z",
+      "index": 1.830762,
+      "equal_weight": 1.830791,
+      "top_coin": 1.881288,
+      "sol": 0.857707
+    },
+    {
+      "t": "2026-10-17T08:00:00Z",
+      "index": 1.7997,
+      "equal_weight": 1.799728,
+      "top_coin": 1.868511,
+      "sol": 0.858862
+    },
+    {
+      "t": "2026-10-17T09:00:00Z",
+      "index": 1.858783,
+      "equal_weight": 1.858813,
+      "top_coin": 1.809384,
+      "sol": 0.858868
+    },
+    {
+      "t": "2026-10-17T10:00:00Z",
+      "index": 1.754691,
+      "equal_weight": 1.754719,
+      "top_coin": 1.880894,
+      "sol": 0.857119
+    },
+    {
+      "t": "2026-10-17T11:00:00Z",
+      "index": 1.704446,
+      "equal_weight": 1.704473,
+      "top_coin": 1.864905,
+      "sol": 0.857775
+    },
+    {
+      "t": "2026-10-17T12:00:00Z",
+      "index": 1.97612,
+      "equal_weight": 1.976151,
+      "top_coin": 1.854559,
+      "sol": 0.855664
+    },
+    {
+      "t": "2026-10-17T13:00:00Z",
+      "index": 1.876903,
+      "equal_weight": 1.876933,
+      "top_coin": 1.793271,
+      "sol": 0.849679
+    },
+    {
+      "t": "2026-10-17T14:00:00Z",
+      "index": 1.95325,
+      "equal_weight": 1.953281,
+      "top_coin": 1.793271,
+      "sol": 0.850328
+    },
+    {
+      "t": "2026-10-17T15:00:00Z",
+      "index": 1.914698,
+      "equal_weight": 1.914719,
+      "top_coin": 1.793271,
+      "sol": 0.852805
+    },
+    {
+      "t": "2026-10-17T16:00:00Z",
+      "index": 2.023188,
+      "equal_weight": 2.023211,
+      "top_coin": 1.76845,
+      "sol": 0.847226
+    },
+    {
+      "t": "2026-10-17T17:00:00Z",
+      "index": 1.929186,
+      "equal_weight": 1.929207,
+      "top_coin": 1.686421,
+      "sol": 0.843516
+    },
+    {
+      "t": "2026-10-17T18:00:00Z",
+      "index": 1.974777,
+      "equal_weight": 1.974798,
+      "top_coin": 1.703925,
+      "sol": 0.845975
+    },
+    {
+      "t": "2026-10-17T19:00:00Z",
+      "index": 1.969201,
+      "equal_weight": 1.969223,
+      "top_coin": 1.792309,
+      "sol": 0.849496
+    },
+    {
+      "t": "2026-10-17T20:00:00Z",
+      "index": 2.044637,
+      "equal_weight": 2.044659,
+      "top_coin": 1.872038,
+      "sol": 0.851194
+    },
+    {
+      "t": "2026-10-17T21:00:00Z",
+      "index": 1.839519,
+      "equal_weight": 1.839539,
+      "top_coin": 1.732433,
+      "sol": 0.851875
+    },
+    {
+      "t": "2026-10-17T22:00:00Z",
+      "index": 1.999984,
+      "equal_weight": 2.000006,
+      "top_coin": 1.81142,
+      "sol": 0.836678
+    },
+    {
+      "t": "2026-10-17T23:00:00Z",
+      "index": 2.155979,
+      "equal_weight": 2.156002,
+      "top_coin": 1.797284,
+      "sol": 0.842656
+    },
+    {
+      "t": "2026-10-18T00:00:00Z",
+      "index": 2.048035,
+      "equal_weight": 2.048049,
+      "top_coin": 1.797284,
+      "sol": 0.845902
+    },
+    {
+      "t": "2026-10-18T01:00:00Z",
+      "index": 2.131143,
+      "equal_weight": 2.131161,
+      "top_coin": 1.797284,
+      "sol": 0.845792
+    },
+    {
+      "t": "2026-10-18T02:00:00Z",
+      "index": 2.228819,
+      "equal_weight": 2.228839,
+      "top_coin": 1.87017,
+      "sol": 0.84728
+    },
+    {
+      "t": "2026-10-18T03:00:00Z",
+      "index": 2.745938,
+      "equal_weight": 2.745962,
+      "top_coin": 1.80796,
+      "sol": 0.850066
+    },
+    {
+      "t": "2026-10-18T04:00:00Z",
+      "index": 2.675844,
+      "equal_weight": 2.675868,
+      "top_coin": 1.80796,
+      "sol": 0.854671
+    },
+    {
+      "t": "2026-10-18T05:00:00Z",
+      "index": 2.665548,
+      "equal_weight": 2.665559,
+      "top_coin": 1.80796,
+      "sol": 0.849137
+    },
+    {
+      "t": "2026-10-18T06:00:00Z",
+      "index": 2.820159,
+      "equal_weight": 2.820175,
+      "top_coin": 1.80796,
+      "sol": 0.846258
+    },
+    {
+      "t": "2026-10-18T07:00:00Z",
+      "index": 2.618712,
+      "equal_weight": 2.618713,
+      "top_coin": 1.80796,
+      "sol": 0.84778
+    },
+    {
+      "t": "2026-10-18T08:00:00Z",
+      "index": 2.597292,
+      "equal_weight": 2.597277,
+      "top_coin": 1.80796,
+      "sol": 0.844436
+    },
+    {
+      "t": "2026-10-18T09:00:00Z",
+      "index": 2.572444,
+      "equal_weight": 2.572429,
+      "top_coin": 1.773639,
+      "sol": 0.843929
+    },
+    {
+      "t": "2026-10-18T10:00:00Z",
+      "index": 2.749978,
+      "equal_weight": 2.749962,
+      "top_coin": 1.745317,
+      "sol": 0.850323
+    },
+    {
+      "t": "2026-10-18T11:00:00Z",
+      "index": 2.779912,
+      "equal_weight": 2.779895,
+      "top_coin": 1.767497,
+      "sol": 0.850319
+    },
+    {
+      "t": "2026-10-18T12:00:00Z",
+      "index": 2.612937,
+      "equal_weight": 2.612915,
+      "top_coin": 1.767497,
+      "sol": 0.849899
+    },
+    {
+      "t": "2026-10-18T13:00:00Z",
+      "index": 2.449432,
+      "equal_weight": 2.449395,
+      "top_coin": 1.767497,
+      "sol": 0.850766
+    },
+    {
+      "t": "2026-10-18T14:00:00Z",
+      "index": 2.462327,
+      "equal_weight": 2.46229,
+      "top_coin": 1.74959,
+      "sol": 0.842031
+    },
+    {
+      "t": "2026-10-18T15:00:00Z",
+      "index": 2.53735,
+      "equal_weight": 2.537312,
+      "top_coin": 1.663329,
+      "sol": 0.835086
+    },
+    {
+      "t": "2026-10-18T16:00:00Z",
+      "index": 2.725686,
+      "equal_weight": 2.725645,
+      "top_coin": 1.585355,
+      "sol": 0.83541
+    },
+    {
+      "t": "2026-10-18T17:00:00Z",
+      "index": 2.908744,
+      "equal_weight": 2.908701,
+      "top_coin": 1.524577,
+      "sol": 0.834761
+    },
+    {
+      "t": "2026-10-18T18:00:00Z",
+      "index": 3.041662,
+      "equal_weight": 3.041617,
+      "top_coin": 1.554569,
+      "sol": 0.835288
+    },
+    {
+      "t": "2026-10-18T19:00:00Z",
+      "index": 3.076468,
+      "equal_weight": 3.076422,
+      "top_coin": 1.790562,
+      "sol": 0.836115
+    },
+    {
+      "t": "2026-10-18T20:00:00Z",
+      "index": 3.170878,
+      "equal_weight": 3.170831,
+      "top_coin": 1.685397,
+      "sol": 0.824558
+    },
+    {
+      "t": "2026-10-18T21:00:00Z",
+      "index": 3.056927,
+      "equal_weight": 3.056881,
+      "top_coin": 1.762031,
+      "sol": 0.827509
+    },
+    {
+      "t": "2026-10-18T22:00:00Z",
+      "index": 3.678136,
+      "equal_weight": 3.678081,
+      "top_coin": 1.763489,
+      "sol": 0.835183
+    },
+    {
+      "t": "2026-10-18T23:00:00Z",
+      "index": 3.546129,
+      "equal_weight": 3.546076,
+      "top_coin": 1.822059,
+      "sol": 0.849344
+    },
+    {
+      "t": "2026-10-19T00:00:00Z",
+      "index": 3.29085,
+      "equal_weight": 3.290801,
+      "top_coin": 1.805922,
+      "sol": 0.851123
+    },
+    {
+      "t": "2026-10-19T01:00:00Z",
+      "index": 3.422114,
+      "equal_weight": 3.422063,
+      "top_coin": 1.96461,
+      "sol": 0.853044
+    },
+    {
+      "t": "2026-10-19T02:00:00Z",
+      "index": 3.622186,
+      "equal_weight": 3.622131,
+      "top_coin": 2.122108,
+      "sol": 0.857704
+    },
+    {
+      "t": "2026-10-19T03:00:00Z",
+      "index": 3.860124,
+      "equal_weight": 3.860066,
+      "top_coin": 2.137097,
+      "sol": 0.862648
+    },
+    {
+      "t": "2026-10-19T04:00:00Z",
+      "index": 3.512109,
+      "equal_weight": 3.512056,
+      "top_coin": 2.234752,
+      "sol": 0.860428
+    },
+    {
+      "t": "2026-10-19T05:00:00Z",
+      "index": 3.393682,
+      "equal_weight": 3.393631,
+      "top_coin": 2.342222,
+      "sol": 0.864369
+    },
+    {
+      "t": "2026-10-19T06:00:00Z",
+      "index": 3.392864,
+      "equal_weight": 3.392813,
+      "top_coin": 2.374271,
+      "sol": 0.864216
+    },
+    {
+      "t": "2026-10-19T07:00:00Z",
+      "index": 3.400268,
+      "equal_weight": 3.400217,
+      "top_coin": 2.279238,
+      "sol": 0.864929
+    },
+    {
+      "t": "2026-10-19T08:00:00Z",
+      "index": 3.431802,
+      "equal_weight": 3.43175,
+      "top_coin": 2.278771,
+      "sol": 0.864097
+    },
+    {
+      "t": "2026-10-19T09:00:00Z",
+      "index": 3.409575,
+      "equal_weight": 3.409523,
+      "top_coin": 2.256839,
+      "sol": 0.864169
+    },
+    {
+      "t": "2026-10-19T10:00:00Z",
+      "index": 3.58151,
+      "equal_weight": 3.581457,
+      "top_coin": 2.04686,
+      "sol": 0.862862
+    },
+    {
+      "t": "2026-10-19T11:00:00Z",
+      "index": 3.505533,
+      "equal_weight": 3.50548,
+      "top_coin": 2.059482,
+      "sol": 0.858468
+    },
+    {
+      "t": "2026-10-19T12:00:00Z",
+      "index": 3.232055,
+      "equal_weight": 3.232007,
+      "top_coin": 2.080939,
+      "sol": 0.856051
+    },
+    {
+      "t": "2026-10-19T13:00:00Z",
+      "index": 3.255971,
+      "equal_weight": 3.255922,
+      "top_coin": 2.251195,
+      "sol": 0.860802
+    },
+    {
+      "t": "2026-10-19T14:00:00Z",
+      "index": 3.680032,
+      "equal_weight": 3.679977,
+      "top_coin": 2.346912,
+      "sol": 0.852892
+    },
+    {
+      "t": "2026-10-19T15:00:00Z",
+      "index": 3.906395,
+      "equal_weight": 3.906336,
+      "top_coin": 2.570775,
+      "sol": 0.855742
+    },
+    {
+      "t": "2026-10-19T16:00:00Z",
+      "index": 3.987455,
+      "equal_weight": 3.987395,
+      "top_coin": 3.100549,
+      "sol": 0.851779
+    },
+    {
+      "t": "2026-10-19T17:00:00Z",
+      "index": 4.104358,
+      "equal_weight": 4.104296,
+      "top_coin": 2.81346,
+      "sol": 0.853938
+    },
+    {
+      "t": "2026-10-19T18:00:00Z",
+      "index": 4.245732,
+      "equal_weight": 4.245669,
+      "top_coin": 2.871857,
+      "sol": 0.851345
+    },
+    {
+      "t": "2026-10-19T19:00:00Z",
+      "index": 3.962051,
+      "equal_weight": 3.961992,
+      "top_coin": 3.183183,
+      "sol": 0.850265
+    },
+    {
+      "t": "2026-10-19T20:00:00Z",
+      "index": 4.407738,
+      "equal_weight": 4.407672,
+      "top_coin": 3.189004,
+      "sol": 0.850335
+    },
+    {
+      "t": "2026-10-19T21:00:00Z",
+      "index": 4.593162,
+      "equal_weight": 4.593093,
+      "top_coin": 3.073238,
+      "sol": 0.854921
+    },
+    {
+      "t": "2026-10-19T22:00:00Z",
+      "index": 4.24864,
+      "equal_weight": 4.248576,
+      "top_coin": 2.91008,
+      "sol": 0.856595
+    },
+    {
+      "t": "2026-10-19T23:00:00Z",
+      "index": 4.10001,
+      "equal_weight": 4.099948,
+      "top_coin": 2.907207,
+      "sol": 0.860094
+    },
+    {
+      "t": "2026-10-20T00:00:00Z",
+      "index": 4.163107,
+      "equal_weight": 4.163045,
+      "top_coin": 3.16271,
+      "sol": 0.859126
+    },
+    {
+      "t": "2026-10-20T01:00:00Z",
+      "index": 6.793014,
+      "equal_weight": 6.792912,
+      "top_coin": 3.194765,
+      "sol": 0.856459
+    },
+    {
+      "t": "2026-10-20T02:00:00Z",
+      "index": 6.083865,
+      "equal_weight": 6.083773,
+      "top_coin": 3.089129,
+      "sol": 0.857593
+    },
+    {
+      "t": "2026-10-20T03:00:00Z",
+      "index": 6.766583,
+      "equal_weight": 6.766481,
+      "top_coin": 3.649237,
+      "sol": 0.859657
+    },
+    {
+      "t": "2026-10-20T04:00:00Z",
+      "index": 5.858702,
+      "equal_weight": 5.858614,
+      "top_coin": 3.558043,
+      "sol": 0.861209
+    },
+    {
+      "t": "2026-10-20T05:00:00Z",
+      "index": 5.810797,
+      "equal_weight": 5.810709,
+      "top_coin": 3.717345,
+      "sol": 0.860489
+    },
+    {
+      "t": "2026-10-20T06:00:00Z",
+      "index": 5.965106,
+      "equal_weight": 5.965017,
+      "top_coin": 3.569292,
+      "sol": 0.855108
+    },
+    {
+      "t": "2026-10-20T07:00:00Z",
+      "index": 6.340253,
+      "equal_weight": 6.340157,
+      "top_coin": 3.499394,
+      "sol": 0.855961
+    },
+    {
+      "t": "2026-10-20T08:00:00Z",
+      "index": 6.02762,
+      "equal_weight": 6.02753,
+      "top_coin": 3.408253,
+      "sol": 0.853361
+    },
+    {
+      "t": "2026-10-20T09:00:00Z",
+      "index": 6.434392,
+      "equal_weight": 6.434296,
+      "top_coin": 3.471057,
+      "sol": 0.851049
+    },
+    {
+      "t": "2026-10-20T10:00:00Z",
+      "index": 6.522511,
+      "equal_weight": 6.522413,
+      "top_coin": 3.40216,
+      "sol": 0.850524
+    },
+    {
+      "t": "2026-10-20T11:00:00Z",
+      "index": 6.515902,
+      "equal_weight": 6.515805,
+      "top_coin": 3.615866,
+      "sol": 0.852255
+    },
+    {
+      "t": "2026-10-20T12:00:00Z",
+      "index": 6.701341,
+      "equal_weight": 6.70124,
+      "top_coin": 3.569191,
+      "sol": 0.851197
+    },
+    {
+      "t": "2026-10-20T13:00:00Z",
+      "index": 6.435307,
+      "equal_weight": 6.43521,
+      "top_coin": 3.710081,
+      "sol": 0.854228
+    },
+    {
+      "t": "2026-10-20T14:00:00Z",
+      "index": 6.695649,
+      "equal_weight": 6.695549,
+      "top_coin": 3.617346,
+      "sol": 0.859856
+    },
+    {
+      "t": "2026-10-20T15:00:00Z",
+      "index": 7.335234,
+      "equal_weight": 7.335124,
+      "top_coin": 4.393881,
+      "sol": 0.881613
+    },
+    {
+      "t": "2026-10-20T16:00:00Z",
+      "index": 7.129323,
+      "equal_weight": 7.129216,
+      "top_coin": 3.555043,
+      "sol": 0.866205
+    },
+    {
+      "t": "2026-10-20T17:00:00Z",
+      "index": 7.646256,
+      "equal_weight": 7.646141,
+      "top_coin": 4.165035,
+      "sol": 0.870949
+    },
+    {
+      "t": "2026-10-20T18:00:00Z",
+      "index": 7.83278,
+      "equal_weight": 7.832663,
+      "top_coin": 4.188611,
+      "sol": 0.873015
+    },
+    {
+      "t": "2026-10-20T19:00:00Z",
+      "index": 7.693609,
+      "equal_weight": 7.693494,
+      "top_coin": 4.862525,
+      "sol": 0.866801
+    },
+    {
+      "t": "2026-10-20T20:00:00Z",
+      "index": 8.162334,
+      "equal_weight": 8.162212,
+      "top_coin": 6.60928,
+      "sol": 0.867207
+    },
+    {
+      "t": "2026-10-20T21:00:00Z",
+      "index": 8.068362,
+      "equal_weight": 8.068241,
+      "top_coin": 5.918097,
+      "sol": 0.872817
+    },
+    {
+      "t": "2026-10-20T22:00:00Z",
+      "index": 8.254065,
+      "equal_weight": 8.253941,
+      "top_coin": 5.181349,
+      "sol": 0.873374
+    },
+    {
+      "t": "2026-10-20T23:00:00Z",
+      "index": 7.032241,
+      "equal_weight": 7.032135,
+      "top_coin": 4.163931,
+      "sol": 0.873958
+    },
+    {
+      "t": "2026-10-21T00:00:00Z",
+      "index": 7.00476,
+      "equal_weight": 7.004655,
+      "top_coin": 4.395958,
+      "sol": 0.870653
+    },
+    {
+      "t": "2026-10-21T01:00:00Z",
+      "index": 6.784443,
+      "equal_weight": 6.784342,
+      "top_coin": 4.613157,
+      "sol": 0.871943
+    },
+    {
+      "t": "2026-10-21T02:00:00Z",
+      "index": 6.574612,
+      "equal_weight": 6.574513,
+      "top_coin": 4.469895,
+      "sol": 0.872741
+    },
+    {
+      "t": "2026-10-21T03:00:00Z",
+      "index": 6.722862,
+      "equal_weight": 6.722761,
+      "top_coin": 4.837092,
+      "sol": 0.868952
+    },
+    {
+      "t": "2026-10-21T04:00:00Z",
+      "index": 7.565726,
+      "equal_weight": 7.565612,
+      "top_coin": 5.424492,
+      "sol": 0.866125
+    },
+    {
+      "t": "2026-10-21T05:00:00Z",
+      "index": 6.775892,
+      "equal_weight": 6.77579,
+      "top_coin": 5.3498,
+      "sol": 0.865719
+    },
+    {
+      "t": "2026-10-21T06:00:00Z",
+      "index": 6.466717,
+      "equal_weight": 6.46662,
+      "top_coin": 5.385906,
+      "sol": 0.864174
+    },
+    {
+      "t": "2026-10-21T07:00:00Z",
+      "index": 7.647705,
+      "equal_weight": 7.647711,
+      "top_coin": 5.385906,
+      "sol": 0.866644
+    },
+    {
+      "t": "2026-10-21T08:00:00Z",
+      "index": 8.06221,
+      "equal_weight": 8.062276,
+      "top_coin": 5.385906,
+      "sol": 0.87352
+    },
+    {
+      "t": "2026-10-21T09:00:00Z",
+      "index": 7.932806,
+      "equal_weight": 7.932872,
+      "top_coin": 6.29186,
+      "sol": 0.8716
+    },
+    {
+      "t": "2026-10-21T10:00:00Z",
+      "index": 8.857299,
+      "equal_weight": 8.857373,
+      "top_coin": 6.567656,
+      "sol": 0.871922
+    },
+    {
+      "t": "2026-10-21T11:00:00Z",
+      "index": 8.139785,
+      "equal_weight": 8.139852,
+      "top_coin": 5.810509,
+      "sol": 0.871777
+    },
+    {
+      "t": "2026-10-21T12:00:00Z",
+      "index": 8.16445,
+      "equal_weight": 8.164517,
+      "top_coin": 6.311277,
+      "sol": 0.873662
+    },
+    {
+      "t": "2026-10-21T13:00:00Z",
+      "index": 8.467046,
+      "equal_weight": 8.467116,
+      "top_coin": 6.256132,
+      "sol": 0.874696
+    },
+    {
+      "t": "2026-10-21T14:00:00Z",
+      "index": 8.435953,
+      "equal_weight": 8.436023,
+      "top_coin": 6.192998,
+      "sol": 0.873138
+    },
+    {
+      "t": "2026-10-21T15:00:00Z",
+      "index": 8.014131,
+      "equal_weight": 8.014198,
+      "top_coin": 5.912288,
+      "sol": 0.881292
+    },
+    {
+      "t": "2026-10-21T16:00:00Z",
+      "index": 8.891352,
+      "equal_weight": 8.891426,
+      "top_coin": 6.050536,
+      "sol": 0.887446
+    },
+    {
+      "t": "2026-10-21T17:00:00Z",
+      "index": 8.570853,
+      "equal_weight": 8.570924,
+      "top_coin": 5.776482,
+      "sol": 0.885843
+    },
+    {
+      "t": "2026-10-21T18:00:00Z",
+      "index": 11.353,
+      "equal_weight": 11.353094,
+      "top_coin": 5.333438,
+      "sol": 0.888477
+    },
+    {
+      "t": "2026-10-21T19:00:00Z",
+      "index": 10.808421,
+      "equal_weight": 10.80851,
+      "top_coin": 5.112098,
+      "sol": 0.883913
+    },
+    {
+      "t": "2026-10-21T20:00:00Z",
+      "index": 10.716581,
+      "equal_weight": 10.71667,
+      "top_coin": 5.361855,
+      "sol": 0.885559
+    },
+    {
+      "t": "2026-10-21T21:00:00Z",
+      "index": 9.561517,
+      "equal_weight": 9.561597,
+      "top_coin": 4.953755,
+      "sol": 0.883912
+    },
+    {
+      "t": "2026-10-21T22:00:00Z",
+      "index": 9.954115,
+      "equal_weight": 9.954197,
+      "top_coin": 4.718758,
+      "sol": 0.885352
+    },
+    {
+      "t": "2026-10-21T23:00:00Z",
+      "index": 10.527693,
+      "equal_weight": 10.52778,
+      "top_coin": 4.662553,
+      "sol": 0.878875
+    },
+    {
+      "t": "2026-10-22T00:00:00Z",
+      "index": 9.968832,
+      "equal_weight": 9.968914,
+      "top_coin": 5.009085,
+      "sol": 0.875174
+    },
+    {
+      "t": "2026-10-22T01:00:00Z",
+      "index": 10.466898,
+      "equal_weight": 10.466984,
+      "top_coin": 5.004943,
+      "sol": 0.877029
+    },
+    {
+      "t": "2026-10-22T02:00:00Z",
+      "index": 12.42641,
+      "equal_weight": 12.42611,
+      "top_coin": 5.004943,
+      "sol": 0.868727
+    },
+    {
+      "t": "2026-10-22T03:00:00Z",
+      "index": 11.664652,
+      "equal_weight": 11.664548,
+      "top_coin": 5.004943,
+      "sol": 0.863032
+    },
+    {
+      "t": "2026-10-22T04:00:00Z",
+      "index": 11.956646,
+      "equal_weight": 11.95654,
+      "top_coin": 4.937346,
+      "sol": 0.862872
+    },
+    {
+      "t": "2026-10-22T05:00:00Z",
+      "index": 11.549548,
+      "equal_weight": 11.549445,
+      "top_coin": 4.981379,
+      "sol": 0.863398
+    },
+    {
+      "t": "2026-10-22T06:00:00Z",
+      "index": 11.186599,
+      "equal_weight": 11.1865,
+      "top_coin": 4.297989,
+      "sol": 0.859011
+    },
+    {
+      "t": "2026-10-22T07:00:00Z",
+      "index": 11.849987,
+      "equal_weight": 11.849881,
+      "top_coin": 4.74945,
+      "sol": 0.855451
+    },
+    {
+      "t": "2026-10-22T08:00:00Z",
+      "index": 11.583453,
+      "equal_weight": 11.58335,
+      "top_coin": 4.668085,
+      "sol": 0.853637
+    },
+    {
+      "t": "2026-10-22T09:00:00Z",
+      "index": 12.790812,
+      "equal_weight": 12.790698,
+      "top_coin": 4.724827,
+      "sol": 0.848712
+    },
+    {
+      "t": "2026-10-22T10:00:00Z",
+      "index": 11.686228,
+      "equal_weight": 11.686231,
+      "top_coin": 4.724827,
+      "sol": 0.852469
+    },
+    {
+      "t": "2026-10-22T11:00:00Z",
+      "index": 12.864145,
+      "equal_weight": 12.864137,
+      "top_coin": 4.724827,
+      "sol": 0.854802
+    },
+    {
+      "t": "2026-10-22T12:00:00Z",
+      "index": 12.562052,
+      "equal_weight": 12.562025,
+      "top_coin": 4.724827,
+      "sol": 0.854315
+    },
+    {
+      "t": "2026-10-22T13:00:00Z",
+      "index": 12.321511,
+      "equal_weight": 12.321485,
+      "top_coin": 4.746971,
+      "sol": 0.853672
+    },
+    {
+      "t": "2026-10-22T14:00:00Z",
+      "index": 12.514068,
+      "equal_weight": 12.514041,
+      "top_coin": 4.080191,
+      "sol": 0.859838
+    },
+    {
+      "t": "2026-10-22T15:00:00Z",
+      "index": 12.196713,
+      "equal_weight": 12.196686,
+      "top_coin": 3.53709,
+      "sol": 0.856088
+    },
+    {
+      "t": "2026-10-22T16:00:00Z",
+      "index": 12.237852,
+      "equal_weight": 12.237826,
+      "top_coin": 3.441219,
+      "sol": 0.855589
+    },
+    {
+      "t": "2026-10-22T17:00:00Z",
+      "index": 12.614758,
+      "equal_weight": 12.614731,
+      "top_coin": 3.670548,
+      "sol": 0.848026
+    },
+    {
+      "t": "2026-10-22T18:00:00Z",
+      "index": 13.03759,
+      "equal_weight": 13.037562,
+      "top_coin": 4.005304,
+      "sol": 0.847461
+    },
+    {
+      "t": "2026-10-22T19:00:00Z",
+      "index": 12.753383,
+      "equal_weight": 12.753355,
+      "top_coin": 3.995758,
+      "sol": 0.847201
+    },
+    {
+      "t": "2026-10-22T20:00:00Z",
+      "index": 15.788715,
+      "equal_weight": 15.788681,
+      "top_coin": 3.820084,
+      "sol": 0.847376
+    },
+    {
+      "t": "2026-10-22T21:00:00Z",
+      "index": 15.473824,
+      "equal_weight": 15.473791,
+      "top_coin": 3.992137,
+      "sol": 0.844882
+    },
+    {
+      "t": "2026-10-22T22:00:00Z",
+      "index": 15.200738,
+      "equal_weight": 15.200705,
+      "top_coin": 3.874713,
+      "sol": 0.847665
+    },
+    {
+      "t": "2026-10-22T23:00:00Z",
+      "index": 14.51829,
+      "equal_weight": 14.518259,
+      "top_coin": 3.875881,
+      "sol": 0.844824
+    },
+    {
+      "t": "2026-10-23T00:00:00Z",
+      "index": 14.537676,
+      "equal_weight": 14.537645,
+      "top_coin": 3.881063,
+      "sol": 0.84736
+    },
+    {
+      "t": "2026-10-23T01:00:00Z",
+      "index": 14.710674,
+      "equal_weight": 14.710642,
+      "top_coin": 4.360327,
+      "sol": 0.850625
+    },
+    {
+      "t": "2026-10-23T02:00:00Z",
+      "index": 16.896163,
+      "equal_weight": 16.896126,
+      "top_coin": 4.542898,
+      "sol": 0.850308
+    },
+    {
+      "t": "2026-10-23T03:00:00Z",
+      "index": 17.081507,
+      "equal_weight": 17.08147,
+      "top_coin": 4.587188,
+      "sol": 0.855203
+    },
+    {
+      "t": "2026-10-23T04:00:00Z",
+      "index": 17.80482,
+      "equal_weight": 17.80477,
+      "top_coin": 4.587188,
+      "sol": 0.852251
+    },
+    {
+      "t": "2026-10-23T05:00:00Z",
+      "index": 16.933534,
+      "equal_weight": 16.933529,
+      "top_coin": 4.587188,
+      "sol": 0.850156
+    },
+    {
+      "t": "2026-10-23T06:00:00Z",
+      "index": 17.618679,
+      "equal_weight": 17.618674,
+      "top_coin": 4.7936,
+      "sol": 0.854045
+    },
+    {
+      "t": "2026-10-23T07:00:00Z",
+      "index": 17.767074,
+      "equal_weight": 17.767068,
+      "top_coin": 5.121311,
+      "sol": 0.855898
+    },
+    {
+      "t": "2026-10-23T08:00:00Z",
+      "index": 17.548229,
+      "equal_weight": 17.548223,
+      "top_coin": 5.500689,
+      "sol": 0.852627
+    },
+    {
+      "t": "2026-10-23T09:00:00Z",
+      "index": 17.628101,
+      "equal_weight": 17.628095,
+      "top_coin": 5.216287,
+      "sol": 0.85554
+    },
+    {
+      "t": "2026-10-23T10:00:00Z",
+      "index": 16.924812,
+      "equal_weight": 16.924807,
+      "top_coin": 4.57665,
+      "sol": 0.851947
+    },
+    {
+      "t": "2026-10-23T11:00:00Z",
+      "index": 17.819381,
+      "equal_weight": 17.819376,
+      "top_coin": 4.50778,
+      "sol": 0.850639
+    },
+    {
+      "t": "2026-10-23T12:00:00Z",
+      "index": 17.924172,
+      "equal_weight": 17.924167,
+      "top_coin": 5.436864,
+      "sol": 0.854427
+    },
+    {
+      "t": "2026-10-23T13:00:00Z",
+      "index": 20.055264,
+      "equal_weight": 20.055258,
+      "top_coin": 5.399526,
+      "sol": 0.854083
+    },
+    {
+      "t": "2026-10-23T14:00:00Z",
+      "index": 20.122578,
+      "equal_weight": 20.122572,
+      "top_coin": 4.690641,
+      "sol": 0.858767
+    },
+    {
+      "t": "2026-10-23T15:00:00Z",
+      "index": 20.64181,
+      "equal_weight": 20.641804,
+      "top_coin": 5.407659,
+      "sol": 0.856562
+    },
+    {
+      "t": "2026-10-23T16:00:00Z",
+      "index": 20.25974,
+      "equal_weight": 20.259734,
+      "top_coin": 5.661119,
+      "sol": 0.85646
+    },
+    {
+      "t": "2026-10-23T17:00:00Z",
+      "index": 20.686448,
+      "equal_weight": 20.686442,
+      "top_coin": 5.337181,
+      "sol": 0.855527
+    },
+    {
+      "t": "2026-10-23T18:00:00Z",
+      "index": 21.077903,
+      "equal_weight": 21.077897,
+      "top_coin": 5.661694,
+      "sol": 0.854377
+    },
+    {
+      "t": "2026-10-23T19:00:00Z",
+      "index": 20.28344,
+      "equal_weight": 20.283434,
+      "top_coin": 5.738775,
+      "sol": 0.850877
+    },
+    {
+      "t": "2026-10-23T20:00:00Z",
+      "index": 18.490226,
+      "equal_weight": 18.490221,
+      "top_coin": 5.000517,
+      "sol": 0.846902
+    },
+    {
+      "t": "2026-10-23T21:00:00Z",
+      "index": 20.422964,
+      "equal_weight": 20.422958,
+      "top_coin": 5.347406,
+      "sol": 0.849745
+    },
+    {
+      "t": "2026-10-23T22:00:00Z",
+      "index": 18.928766,
+      "equal_weight": 18.92876,
+      "top_coin": 5.157776,
+      "sol": 0.847573
+    },
+    {
+      "t": "2026-10-23T23:00:00Z",
+      "index": 18.415144,
+      "equal_weight": 18.415139,
+      "top_coin": 4.878082,
+      "sol": 0.836241
+    },
+    {
+      "t": "2026-10-24T00:00:00Z",
+      "index": 18.688736,
+      "equal_weight": 18.688731,
+      "top_coin": 5.284493,
+      "sol": 0.840792
+    },
+    {
+      "t": "2026-10-24T01:00:00Z",
+      "index": 18.576129,
+      "equal_weight": 18.576123,
+      "top_coin": 5.501946,
+      "sol": 0.836312
+    },
+    {
+      "t": "2026-10-24T02:00:00Z",
+      "index": 20.364984,
+      "equal_weight": 20.364977,
+      "top_coin": 5.569336,
+      "sol": 0.83892
+    },
+    {
+      "t": "2026-10-24T03:00:00Z",
+      "index": 21.771622,
+      "equal_weight": 21.771616,
+      "top_coin": 5.509674,
+      "sol": 0.839996
+    },
+    {
+      "t": "2026-10-24T04:00:00Z",
+      "index": 28.751106,
+      "equal_weight": 28.750584,
+      "top_coin": 5.509674,
+      "sol": 0.839191
+    },
+    {
+      "t": "2026-10-24T05:00:00Z",
+      "index": 25.804771,
+      "equal_weight": 25.804616,
+      "top_coin": 5.509674,
+      "sol": 0.839742
+    },
+    {
+      "t": "2026-10-24T06:00:00Z",
+      "index": 26.277826,
+      "equal_weight": 26.277669,
+      "top_coin": 5.387375,
+      "sol": 0.836743
+    },
+    {
+      "t": "2026-10-24T07:00:00Z",
+      "index": 24.411945,
+      "equal_weight": 24.411798,
+      "top_coin": 5.208381,
+      "sol": 0.835158
+    },
+    {
+      "t": "2026-10-24T08:00:00Z",
+      "index": 23.580478,
+      "equal_weight": 23.580336,
+      "top_coin": 5.313675,
+      "sol": 0.833269
+    },
+    {
+      "t": "2026-10-24T09:00:00Z",
+      "index": 23.141732,
+      "equal_weight": 23.141593,
+      "top_coin": 5.224968,
+      "sol": 0.833554
+    },
+    {
+      "t": "2026-10-24T10:00:00Z",
+      "index": 23.645308,
+      "equal_weight": 23.645166,
+      "top_coin": 5.195027,
+      "sol": 0.829213
+    },
+    {
+      "t": "2026-10-24T11:00:00Z",
+      "index": 23.619346,
+      "equal_weight": 23.619204,
+      "top_coin": 5.328427,
+      "sol": 0.831679
+    },
+    {
+      "t": "2026-10-24T12:00:00Z",
+      "index": 35.640912,
+      "equal_weight": 35.640698,
+      "top_coin": 5.281558,
+      "sol": 0.82991
+    },
+    {
+      "t": "2026-10-24T13:00:00Z",
+      "index": 36.239999,
+      "equal_weight": 36.239781,
+      "top_coin": 5.139717,
+      "sol": 0.830777
+    },
+    {
+      "t": "2026-10-24T14:00:00Z",
+      "index": 38.356234,
+      "equal_weight": 38.356004,
+      "top_coin": 4.928509,
+      "sol": 0.829093
+    },
+    {
+      "t": "2026-10-24T15:00:00Z",
+      "index": 37.692625,
+      "equal_weight": 37.692399,
+      "top_coin": 4.860839,
+      "sol": 0.821027
+    },
+    {
+      "t": "2026-10-24T16:00:00Z",
+      "index": 31.844337,
+      "equal_weight": 31.844146,
+      "top_coin": 4.733975,
+      "sol": 0.815767
+    },
+    {
+      "t": "2026-10-24T17:00:00Z",
+      "index": 34.649708,
+      "equal_weight": 34.6495,
+      "top_coin": 4.331787,
+      "sol": 0.821783
+    },
+    {
+      "t": "2026-10-24T18:00:00Z",
+      "index": 34.713629,
+      "equal_weight": 34.713421,
+      "top_coin": 4.419877,
+      "sol": 0.821759
+    },
+    {
+      "t": "2026-10-24T19:00:00Z",
+      "index": 35.549134,
+      "equal_weight": 35.54899,
+      "top_coin": 4.419877,
+      "sol": 0.828279
+    },
+    {
+      "t": "2026-10-24T20:00:00Z",
+      "index": 36.964091,
+      "equal_weight": 36.964204,
+      "top_coin": 4.419877,
+      "sol": 0.827668
+    },
+    {
+      "t": "2026-10-24T21:00:00Z",
+      "index": 35.659932,
+      "equal_weight": 35.660041,
+      "top_coin": 4.424598,
+      "sol": 0.830621
+    },
+    {
+      "t": "2026-10-24T22:00:00Z",
+      "index": 34.798506,
+      "equal_weight": 34.798613,
+      "top_coin": 4.621066,
+      "sol": 0.829052
+    },
+    {
+      "t": "2026-10-24T23:00:00Z",
+      "index": 37.636592,
+      "equal_weight": 37.636707,
+      "top_coin": 4.741037,
+      "sol": 0.830835
+    },
+    {
+      "t": "2026-10-25T00:00:00Z",
+      "index": 36.902418,
+      "equal_weight": 36.902531,
+      "top_coin": 4.786915,
+      "sol": 0.836934
+    },
+    {
+      "t": "2026-10-25T01:00:00Z",
+      "index": 38.140085,
+      "equal_weight": 38.140202,
+      "top_coin": 5.037101,
+      "sol": 0.837857
+    },
+    {
+      "t": "2026-10-25T02:00:00Z",
+      "index": 38.14986,
+      "equal_weight": 38.149977,
+      "top_coin": 5.032439,
+      "sol": 0.837664
+    },
+    {
+      "t": "2026-10-25T03:00:00Z",
+      "index": 40.985349,
+      "equal_weight": 40.985475,
+      "top_coin": 5.138816,
+      "sol": 0.837682
+    },
+    {
+      "t": "2026-10-25T04:00:00Z",
+      "index": 39.581177,
+      "equal_weight": 39.581299,
+      "top_coin": 4.544517,
+      "sol": 0.837425
+    },
+    {
+      "t": "2026-10-25T05:00:00Z",
+      "index": 40.7047,
+      "equal_weight": 40.704825,
+      "top_coin": 4.545713,
+      "sol": 0.839141
+    },
+    {
+      "t": "2026-10-25T06:00:00Z",
+      "index": 38.657051,
+      "equal_weight": 38.65717,
+      "top_coin": 4.580829,
+      "sol": 0.833758
+    },
+    {
+      "t": "2026-10-25T07:00:00Z",
+      "index": 37.310328,
+      "equal_weight": 37.310443,
+      "top_coin": 4.554703,
+      "sol": 0.828495
+    },
+    {
+      "t": "2026-10-25T08:00:00Z",
+      "index": 37.153332,
+      "equal_weight": 37.153446,
+      "top_coin": 4.456156,
+      "sol": 0.831102
+    },
+    {
+      "t": "2026-10-25T09:00:00Z",
+      "index": 38.468721,
+      "equal_weight": 38.468839,
+      "top_coin": 4.568314,
+      "sol": 0.82437
+    },
+    {
+      "t": "2026-10-25T10:00:00Z",
+      "index": 39.768543,
+      "equal_weight": 39.768665,
+      "top_coin": 4.463923,
+      "sol": 0.825124
+    },
+    {
+      "t": "2026-10-25T11:00:00Z",
+      "index": 38.20148,
+      "equal_weight": 38.201597,
+      "top_coin": 4.466649,
+      "sol": 0.823565
+    },
+    {
+      "t": "2026-10-25T12:00:00Z",
+      "index": 39.985955,
+      "equal_weight": 39.986078,
+      "top_coin": 4.309948,
+      "sol": 0.828438
+    },
+    {
+      "t": "2026-10-25T13:00:00Z",
+      "index": 37.972289,
+      "equal_weight": 37.972405,
+      "top_coin": 4.358823,
+      "sol": 0.825954
+    },
+    {
+      "t": "2026-10-25T14:00:00Z",
+      "index": 35.524491,
+      "equal_weight": 35.525123,
+      "top_coin": 4.358823,
+      "sol": 0.823936
+    },
+    {
+      "t": "2026-10-25T15:00:00Z",
+      "index": 34.77286,
+      "equal_weight": 34.773373,
+      "top_coin": 4.358823,
+      "sol": 0.828644
+    },
+    {
+      "t": "2026-10-25T16:00:00Z",
+      "index": 35.375618,
+      "equal_weight": 35.37614,
+      "top_coin": 4.736506,
+      "sol": 0.830861
+    },
+    {
+      "t": "2026-10-25T17:00:00Z",
+      "index": 35.271241,
+      "equal_weight": 35.271761,
+      "top_coin": 5.335127,
+      "sol": 0.833322
+    },
+    {
+      "t": "2026-10-25T18:00:00Z",
+      "index": 34.565223,
+      "equal_weight": 34.565733,
+      "top_coin": 4.724034,
+      "sol": 0.833688
+    },
+    {
+      "t": "2026-10-25T19:00:00Z",
+      "index": 35.116096,
+      "equal_weight": 35.116614,
+      "top_coin": 4.775421,
+      "sol": 0.832291
+    },
+    {
+      "t": "2026-10-25T20:00:00Z",
+      "index": 34.106535,
+      "equal_weight": 34.107038,
+      "top_coin": 4.723572,
+      "sol": 0.832256
+    },
+    {
+      "t": "2026-10-25T21:00:00Z",
+      "index": 33.318096,
+      "equal_weight": 33.318587,
+      "top_coin": 4.841895,
+      "sol": 0.831129
+    },
+    {
+      "t": "2026-10-25T22:00:00Z",
+      "index": 33.184333,
+      "equal_weight": 33.184823,
+      "top_coin": 4.822498,
+      "sol": 0.826948
+    },
+    {
+      "t": "2026-10-25T23:00:00Z",
+      "index": 34.737584,
+      "equal_weight": 34.738097,
+      "top_coin": 4.828526,
+      "sol": 0.830641
+    },
+    {
+      "t": "2026-10-26T00:00:00Z",
+      "index": 34.326792,
+      "equal_weight": 34.327339,
+      "top_coin": 4.828526,
+      "sol": 0.82855
+    },
+    {
+      "t": "2026-10-26T01:00:00Z",
+      "index": 36.067741,
+      "equal_weight": 36.068468,
+      "top_coin": 4.828526,
+      "sol": 0.829841
+    },
+    {
+      "t": "2026-10-26T02:00:00Z",
+      "index": 34.398946,
+      "equal_weight": 34.399639,
+      "top_coin": 4.761144,
+      "sol": 0.82627
+    },
+    {
+      "t": "2026-10-26T03:00:00Z",
+      "index": 35.092756,
+      "equal_weight": 35.093539,
+      "top_coin": 4.761144,
+      "sol": 0.822389
+    },
+    {
+      "t": "2026-10-26T04:00:00Z",
+      "index": 35.475535,
+      "equal_weight": 35.476366,
+      "top_coin": 4.761144,
+      "sol": 0.819199
+    },
+    {
+      "t": "2026-10-26T05:00:00Z",
+      "index": 35.414701,
+      "equal_weight": 35.415531,
+      "top_coin": 4.662766,
+      "sol": 0.828028
+    },
+    {
+      "t": "2026-10-26T06:00:00Z",
+      "index": 35.652173,
+      "equal_weight": 35.653008,
+      "top_coin": 4.84676,
+      "sol": 0.82939
+    },
+    {
+      "t": "2026-10-26T07:00:00Z",
+      "index": 34.349075,
+      "equal_weight": 34.34988,
+      "top_coin": 4.852379,
+      "sol": 0.825711
+    },
+    {
+      "t": "2026-10-26T08:00:00Z",
+      "index": 33.077532,
+      "equal_weight": 33.078307,
+      "top_coin": 4.751814,
+      "sol": 0.823475
+    },
+    {
+      "t": "2026-10-26T09:00:00Z",
+      "index": 31.403749,
+      "equal_weight": 31.404485,
+      "top_coin": 4.812765,
+      "sol": 0.826504
+    },
+    {
+      "t": "2026-10-26T10:00:00Z",
+      "index": 30.808545,
+      "equal_weight": 30.809267,
+      "top_coin": 4.930932,
+      "sol": 0.830953
+    },
+    {
+      "t": "2026-10-26T11:00:00Z",
+      "index": 30.962695,
+      "equal_weight": 30.96342,
+      "top_coin": 4.851494,
+      "sol": 0.828599
+    },
+    {
+      "t": "2026-10-26T12:00:00Z",
+      "index": 31.166933,
+      "equal_weight": 31.167663,
+      "top_coin": 5.036946,
+      "sol": 0.831351
+    },
+    {
+      "t": "2026-10-26T13:00:00Z",
+      "index": 30.122876,
+      "equal_weight": 30.123582,
+      "top_coin": 5.515939,
+      "sol": 0.830889
+    },
+    {
+      "t": "2026-10-26T14:00:00Z",
+      "index": 32.010153,
+      "equal_weight": 32.010903,
+      "top_coin": 5.56815,
+      "sol": 0.824509
+    },
+    {
+      "t": "2026-10-26T15:00:00Z",
+      "index": 34.63134,
+      "equal_weight": 34.632151,
+      "top_coin": 5.93292,
+      "sol": 0.834089
+    },
+    {
+      "t": "2026-10-26T16:00:00Z",
+      "index": 35.426279,
+      "equal_weight": 35.427109,
+      "top_coin": 6.818381,
+      "sol": 0.833014
+    },
+    {
+      "t": "2026-10-26T17:00:00Z",
+      "index": 33.740481,
+      "equal_weight": 33.741271,
+      "top_coin": 6.132872,
+      "sol": 0.827972
+    },
+    {
+      "t": "2026-10-26T18:00:00Z",
+      "index": 31.690704,
+      "equal_weight": 31.691446,
+      "top_coin": 5.968293,
+      "sol": 0.828765
+    },
+    {
+      "t": "2026-10-26T19:00:00Z",
+      "index": 31.652155,
+      "equal_weight": 31.652897,
+      "top_coin": 6.448858,
+      "sol": 0.820996
+    },
+    {
+      "t": "2026-10-26T20:00:00Z",
+      "index": 33.669564,
+      "equal_weight": 33.670353,
+      "top_coin": 6.615548,
+      "sol": 0.821355
+    },
+    {
+      "t": "2026-10-26T21:00:00Z",
+      "index": 33.120648,
+      "equal_weight": 33.121424,
+      "top_coin": 5.976617,
+      "sol": 0.819834
+    },
+    {
+      "t": "2026-10-26T22:00:00Z",
+      "index": 34.51333,
+      "equal_weight": 34.514139,
+      "top_coin": 6.440811,
+      "sol": 0.821437
+    },
+    {
+      "t": "2026-10-26T23:00:00Z",
+      "index": 33.927366,
+      "equal_weight": 33.928161,
+      "top_coin": 6.289878,
+      "sol": 0.820068
+    },
+    {
+      "t": "2026-10-27T00:00:00Z",
+      "index": 33.178664,
+      "equal_weight": 33.179441,
+      "top_coin": 6.276154,
+      "sol": 0.824567
+    },
+    {
+      "t": "2026-10-27T01:00:00Z",
+      "index": 32.91402,
+      "equal_weight": 32.914791,
+      "top_coin": 6.155562,
+      "sol": 0.824153
+    },
+    {
+      "t": "2026-10-27T02:00:00Z",
+      "index": 31.151722,
+      "equal_weight": 31.152452,
+      "top_coin": 5.945862,
+      "sol": 0.822291
+    },
+    {
+      "t": "2026-10-27T03:00:00Z",
+      "index": 30.980631,
+      "equal_weight": 30.981357,
+      "top_coin": 6.274487,
+      "sol": 0.819501
+    },
+    {
+      "t": "2026-10-27T04:00:00Z",
+      "index": 31.326835,
+      "equal_weight": 31.327569,
+      "top_coin": 6.30258,
+      "sol": 0.818574
+    },
+    {
+      "t": "2026-10-27T05:00:00Z",
+      "index": 33.17646,
+      "equal_weight": 33.177237,
+      "top_coin": 6.34037,
+      "sol": 0.818072
+    },
+    {
+      "t": "2026-10-27T06:00:00Z",
+      "index": 32.541869,
+      "equal_weight": 32.542631,
+      "top_coin": 6.512992,
+      "sol": 0.818799
+    },
+    {
+      "t": "2026-10-27T07:00:00Z",
+      "index": 32.999591,
+      "equal_weight": 33.000364,
+      "top_coin": 7.077246,
+      "sol": 0.813677
+    },
+    {
+      "t": "2026-10-27T08:00:00Z",
+      "index": 34.829351,
+      "equal_weight": 34.830167,
+      "top_coin": 7.493915,
+      "sol": 0.817939
+    },
+    {
+      "t": "2026-10-27T09:00:00Z",
+      "index": 35.680234,
+      "equal_weight": 35.68107,
+      "top_coin": 7.524281,
+      "sol": 0.816614
+    },
+    {
+      "t": "2026-10-27T10:00:00Z",
+      "index": 35.207175,
+      "equal_weight": 35.208,
+      "top_coin": 6.769921,
+      "sol": 0.816316
+    },
+    {
+      "t": "2026-10-27T11:00:00Z",
+      "index": 36.049832,
+      "equal_weight": 36.050677,
+      "top_coin": 7.369325,
+      "sol": 0.818139
+    },
+    {
+      "t": "2026-10-27T12:00:00Z",
+      "index": 35.453756,
+      "equal_weight": 35.454587,
+      "top_coin": 6.75703,
+      "sol": 0.818164
+    },
+    {
+      "t": "2026-10-27T13:00:00Z",
+      "index": 36.62096,
+      "equal_weight": 36.621818,
+      "top_coin": 6.63074,
+      "sol": 0.824959
+    },
+    {
+      "t": "2026-10-27T14:00:00Z",
+      "index": 36.954164,
+      "equal_weight": 36.95503,
+      "top_coin": 7.034811,
+      "sol": 0.818216
+    },
+    {
+      "t": "2026-10-27T15:00:00Z",
+      "index": 37.452527,
+      "equal_weight": 37.453404,
+      "top_coin": 7.080629,
+      "sol": 0.823278
+    },
+    {
+      "t": "2026-10-27T16:00:00Z",
+      "index": 36.473515,
+      "equal_weight": 36.47437,
+      "top_coin": 7.361992,
+      "sol": 0.825319
+    },
+    {
+      "t": "2026-10-27T17:00:00Z",
+      "index": 36.639112,
+      "equal_weight": 36.639971,
+      "top_coin": 7.44137,
+      "sol": 0.82599
+    },
+    {
+      "t": "2026-10-27T18:00:00Z",
+      "index": 35.997996,
+      "equal_weight": 35.99884,
+      "top_coin": 7.44336,
+      "sol": 0.824072
+    },
+    {
+      "t": "2026-10-27T19:00:00Z",
+      "index": 36.347531,
+      "equal_weight": 36.348383,
+      "top_coin": 7.72205,
+      "sol": 0.825204
+    },
+    {
+      "t": "2026-10-27T20:00:00Z",
+      "index": 36.272654,
+      "equal_weight": 36.273504,
+      "top_coin": 8.320216,
+      "sol": 0.827022
+    },
+    {
+      "t": "2026-10-27T21:00:00Z",
+      "index": 36.028777,
+      "equal_weight": 36.029621,
+      "top_coin": 8.043253,
+      "sol": 0.825827
+    },
+    {
+      "t": "2026-10-27T22:00:00Z",
+      "index": 36.124361,
+      "equal_weight": 36.125208,
+      "top_coin": 8.24526,
+      "sol": 0.82887
+    },
+    {
+      "t": "2026-10-27T23:00:00Z",
+      "index": 35.071358,
+      "equal_weight": 35.07218,
+      "top_coin": 8.390423,
+      "sol": 0.827949
+    },
+    {
+      "t": "2026-10-28T00:00:00Z",
+      "index": 34.774378,
+      "equal_weight": 34.775193,
+      "top_coin": 8.210211,
+      "sol": 0.828205
+    },
+    {
+      "t": "2026-10-28T01:00:00Z",
+      "index": 35.40576,
+      "equal_weight": 35.40659,
+      "top_coin": 9.876645,
+      "sol": 0.827744
+    },
+    {
+      "t": "2026-10-28T02:00:00Z",
+      "index": 35.049969,
+      "equal_weight": 35.050791,
+      "top_coin": 9.889519,
+      "sol": 0.831094
+    },
+    {
+      "t": "2026-10-28T03:00:00Z",
+      "index": 33.327763,
+      "equal_weight": 33.328544,
+      "top_coin": 8.571384,
+      "sol": 0.830906
+    },
+    {
+      "t": "2026-10-28T04:00:00Z",
+      "index": 33.016738,
+      "equal_weight": 33.017512,
+      "top_coin": 8.137351,
+      "sol": 0.833864
+    },
+    {
+      "t": "2026-10-28T05:00:00Z",
+      "index": 33.598775,
+      "equal_weight": 33.599563,
+      "top_coin": 8.054141,
+      "sol": 0.833866
+    },
+    {
+      "t": "2026-10-28T06:00:00Z",
+      "index": 35.389539,
+      "equal_weight": 35.390368,
+      "top_coin": 8.378813,
+      "sol": 0.832192
+    },
+    {
+      "t": "2026-10-28T07:00:00Z",
+      "index": 34.466814,
+      "equal_weight": 34.467622,
+      "top_coin": 9.331262,
+      "sol": 0.833595
+    },
+    {
+      "t": "2026-10-28T08:00:00Z",
+      "index": 35.092954,
+      "equal_weight": 35.093776,
+      "top_coin": 9.52357,
+      "sol": 0.836629
+    },
+    {
+      "t": "2026-10-28T09:00:00Z",
+      "index": 35.727297,
+      "equal_weight": 35.728134,
+      "top_coin": 9.616063,
+      "sol": 0.839244
+    },
+    {
+      "t": "2026-10-28T10:00:00Z",
+      "index": 39.757779,
+      "equal_weight": 39.758711,
+      "top_coin": 10.223637,
+      "sol": 0.841582
+    },
+    {
+      "t": "2026-10-28T11:00:00Z",
+      "index": 39.319758,
+      "equal_weight": 39.32068,
+      "top_coin": 10.925379,
+      "sol": 0.841583
+    },
+    {
+      "t": "2026-10-28T12:00:00Z",
+      "index": 37.72287,
+      "equal_weight": 37.723754,
+      "top_coin": 10.192486,
+      "sol": 0.839704
+    },
+    {
+      "t": "2026-10-28T13:00:00Z",
+      "index": 36.293272,
+      "equal_weight": 36.294122,
+      "top_coin": 10.102474,
+      "sol": 0.830052
+    },
+    {
+      "t": "2026-10-28T14:00:00Z",
+      "index": 36.73514,
+      "equal_weight": 36.736001,
+      "top_coin": 9.815571,
+      "sol": 0.826397
+    },
+    {
+      "t": "2026-10-28T15:00:00Z",
+      "index": 37.281044,
+      "equal_weight": 37.281917,
+      "top_coin": 10.038125,
+      "sol": 0.82494
+    },
+    {
+      "t": "2026-10-28T16:00:00Z",
+      "index": 38.127838,
+      "equal_weight": 38.128732,
+      "top_coin": 11.436362,
+      "sol": 0.825899
+    },
+    {
+      "t": "2026-10-28T17:00:00Z",
+      "index": 39.256966,
+      "equal_weight": 39.257886,
+      "top_coin": 12.362769,
+      "sol": 0.827338
+    },
+    {
+      "t": "2026-10-28T18:00:00Z",
+      "index": 39.947968,
+      "equal_weight": 39.948904,
+      "top_coin": 13.574424,
+      "sol": 0.831786
+    },
+    {
+      "t": "2026-10-28T19:00:00Z",
+      "index": 37.017448,
+      "equal_weight": 37.018316,
+      "top_coin": 11.9094,
+      "sol": 0.835258
+    },
+    {
+      "t": "2026-10-28T20:00:00Z",
+      "index": 36.22233,
+      "equal_weight": 36.223178,
+      "top_coin": 11.10592,
+      "sol": 0.842199
+    },
+    {
+      "t": "2026-10-28T21:00:00Z",
+      "index": 35.979562,
+      "equal_weight": 35.980405,
+      "top_coin": 12.171114,
+      "sol": 0.837937
+    },
+    {
+      "t": "2026-10-28T22:00:00Z",
+      "index": 35.066312,
+      "equal_weight": 35.067134,
+      "top_coin": 11.933742,
+      "sol": 0.839961
+    },
+    {
+      "t": "2026-10-28T23:00:00Z",
+      "index": 38.349755,
+      "equal_weight": 38.350653,
+      "top_coin": 15.051447,
+      "sol": 0.837833
+    },
+    {
+      "t": "2026-10-29T00:00:00Z",
+      "index": 39.658815,
+      "equal_weight": 39.659744,
+      "top_coin": 14.585647,
+      "sol": 0.837352
+    },
+    {
+      "t": "2026-10-29T01:00:00Z",
+      "index": 41.081538,
+      "equal_weight": 41.082501,
+      "top_coin": 16.826215,
+      "sol": 0.833
+    },
+    {
+      "t": "2026-10-29T02:00:00Z",
+      "index": 40.143491,
+      "equal_weight": 40.144431,
+      "top_coin": 16.005273,
+      "sol": 0.815431
+    },
+    {
+      "t": "2026-10-29T03:00:00Z",
+      "index": 40.526991,
+      "equal_weight": 40.52794,
+      "top_coin": 16.800745,
+      "sol": 0.818089
+    },
+    {
+      "t": "2026-10-29T04:00:00Z",
+      "index": 40.693828,
+      "equal_weight": 40.694782,
+      "top_coin": 17.509146,
+      "sol": 0.814817
+    },
+    {
+      "t": "2026-10-29T05:00:00Z",
+      "index": 41.591445,
+      "equal_weight": 41.592419,
+      "top_coin": 19.818175,
+      "sol": 0.818774
+    },
+    {
+      "t": "2026-10-29T06:00:00Z",
+      "index": 40.676963,
+      "equal_weight": 40.677916,
+      "top_coin": 19.293988,
+      "sol": 0.820127
+    },
+    {
+      "t": "2026-10-29T07:00:00Z",
+      "index": 40.914038,
+      "equal_weight": 40.914997,
+      "top_coin": 20.049364,
+      "sol": 0.818356
+    },
+    {
+      "t": "2026-10-29T08:00:00Z",
+      "index": 41.583229,
+      "equal_weight": 41.584204,
+      "top_coin": 22.079203,
+      "sol": 0.815851
+    },
+    {
+      "t": "2026-10-29T09:00:00Z",
+      "index": 45.341895,
+      "equal_weight": 45.342957,
+      "top_coin": 24.838045,
+      "sol": 0.819313
+    },
+    {
+      "t": "2026-10-29T10:00:00Z",
+      "index": 43.956712,
+      "equal_weight": 43.957741,
+      "top_coin": 22.574318,
+      "sol": 0.819826
+    },
+    {
+      "t": "2026-10-29T11:00:00Z",
+      "index": 44.657249,
+      "equal_weight": 44.658295,
+      "top_coin": 21.889449,
+      "sol": 0.822484
+    },
+    {
+      "t": "2026-10-29T12:00:00Z",
+      "index": 46.929481,
+      "equal_weight": 46.930581,
+      "top_coin": 26.114836,
+      "sol": 0.820723
+    },
+    {
+      "t": "2026-10-29T13:00:00Z",
+      "index": 49.065768,
+      "equal_weight": 49.066917,
+      "top_coin": 33.968083,
+      "sol": 0.821983
+    },
+    {
+      "t": "2026-10-29T14:00:00Z",
+      "index": 52.294658,
+      "equal_weight": 52.295884,
+      "top_coin": 46.577342,
+      "sol": 0.823032
+    },
+    {
+      "t": "2026-10-29T15:00:00Z",
+      "index": 48.946258,
+      "equal_weight": 48.947405,
+      "top_coin": 25.232591,
+      "sol": 0.832448
+    },
+    {
+      "t": "2026-10-29T16:00:00Z",
+      "index": 47.302678,
+      "equal_weight": 47.303786,
+      "top_coin": 22.837537,
+      "sol": 0.839454
+    },
+    {
+      "t": "2026-10-29T17:00:00Z",
+      "index": 50.899269,
+      "equal_weight": 50.900462,
+      "top_coin": 24.315811,
+      "sol": 0.832999
+    },
+    {
+      "t": "2026-10-29T18:00:00Z",
+      "index": 50.283412,
+      "equal_weight": 50.28459,
+      "top_coin": 25.311072,
+      "sol": 0.826433
+    },
+    {
+      "t": "2026-10-29T19:00:00Z",
+      "index": 53.758364,
+      "equal_weight": 53.759623,
+      "top_coin": 26.103198,
+      "sol": 0.822854
+    },
+    {
+      "t": "2026-10-29T20:00:00Z",
+      "index": 40.354381,
+      "equal_weight": 40.355327,
+      "top_coin": 14.409686,
+      "sol": 0.81652
+    },
+    {
+      "t": "2026-10-29T21:00:00Z",
+      "index": 44.387686,
+      "equal_weight": 44.388726,
+      "top_coin": 19.876613,
+      "sol": 0.786716
+    },
+    {
+      "t": "2026-10-29T22:00:00Z",
+      "index": 43.739847,
+      "equal_weight": 43.740872,
+      "top_coin": 20.512721,
+      "sol": 0.797354
+    },
+    {
+      "t": "2026-10-29T23:00:00Z",
+      "index": 42.493276,
+      "equal_weight": 42.494271,
+      "top_coin": 16.874394,
+      "sol": 0.792831
+    },
+    {
+      "t": "2026-10-30T00:00:00Z",
+      "index": 45.335935,
+      "equal_weight": 45.336997,
+      "top_coin": 22.233359,
+      "sol": 0.781358
+    },
+    {
+      "t": "2026-10-30T01:00:00Z",
+      "index": 46.988421,
+      "equal_weight": 46.989522,
+      "top_coin": 23.422966,
+      "sol": 0.774364
+    },
+    {
+      "t": "2026-10-30T02:00:00Z",
+      "index": 45.707325,
+      "equal_weight": 45.708396,
+      "top_coin": 22.429921,
+      "sol": 0.767496
+    },
+    {
+      "t": "2026-10-30T03:00:00Z",
+      "index": 45.248243,
+      "equal_weight": 45.249303,
+      "top_coin": 21.843513,
+      "sol": 0.778865
+    },
+    {
+      "t": "2026-10-30T04:00:00Z",
+      "index": 43.336705,
+      "equal_weight": 43.337721,
+      "top_coin": 20.903968,
+      "sol": 0.793694
+    },
+    {
+      "t": "2026-10-30T05:00:00Z",
+      "index": 43.282502,
+      "equal_weight": 43.283516,
+      "top_coin": 19.889851,
+      "sol": 0.794978
+    },
+    {
+      "t": "2026-10-30T06:00:00Z",
+      "index": 46.226778,
+      "equal_weight": 46.227861,
+      "top_coin": 21.584074,
+      "sol": 0.801164
+    },
+    {
+      "t": "2026-10-30T07:00:00Z",
+      "index": 45.896078,
+      "equal_weight": 45.897153,
+      "top_coin": 21.86332,
+      "sol": 0.803055
+    },
+    {
+      "t": "2026-10-30T08:00:00Z",
+      "index": 44.336364,
+      "equal_weight": 44.337403,
+      "top_coin": 20.402245,
+      "sol": 0.795246
+    },
+    {
+      "t": "2026-10-30T09:00:00Z",
+      "index": 44.090037,
+      "equal_weight": 44.09107,
+      "top_coin": 21.335932,
+      "sol": 0.795314
+    },
+    {
+      "t": "2026-10-30T10:00:00Z",
+      "index": 44.927633,
+      "equal_weight": 44.928686,
+      "top_coin": 21.344733,
+      "sol": 0.79169
+    },
+    {
+      "t": "2026-10-30T11:00:00Z",
+      "index": 46.797801,
+      "equal_weight": 46.798898,
+      "top_coin": 26.047234,
+      "sol": 0.795075
+    },
+    {
+      "t": "2026-10-30T12:00:00Z",
+      "index": 46.376562,
+      "equal_weight": 46.377648,
+      "top_coin": 23.082729,
+      "sol": 0.789286
+    },
+    {
+      "t": "2026-10-30T13:00:00Z",
+      "index": 44.155788,
+      "equal_weight": 44.156822,
+      "top_coin": 21.322994,
+      "sol": 0.791533
+    },
+    {
+      "t": "2026-10-30T14:00:00Z",
+      "index": 45.988131,
+      "equal_weight": 45.989209,
+      "top_coin": 21.432222,
+      "sol": 0.777543
+    },
+    {
+      "t": "2026-10-30T15:00:00Z",
+      "index": 47.122276,
+      "equal_weight": 47.12338,
+      "top_coin": 18.667878,
+      "sol": 0.773179
+    },
+    {
+      "t": "2026-10-30T16:00:00Z",
+      "index": 50.328918,
+      "equal_weight": 50.330097,
+      "top_coin": 18.346451,
+      "sol": 0.774827
+    },
+    {
+      "t": "2026-10-30T17:00:00Z",
+      "index": 50.318639,
+      "equal_weight": 50.319818,
+      "top_coin": 19.591422,
+      "sol": 0.776092
+    },
+    {
+      "t": "2026-10-30T18:00:00Z",
+      "index": 51.043916,
+      "equal_weight": 51.045112,
+      "top_coin": 19.188631,
+      "sol": 0.771818
+    },
+    {
+      "t": "2026-10-30T19:00:00Z",
+      "index": 50.444486,
+      "equal_weight": 50.445668,
+      "top_coin": 18.854052,
+      "sol": 0.770254
+    },
+    {
+      "t": "2026-10-30T20:00:00Z",
+      "index": 49.099569,
+      "equal_weight": 49.100719,
+      "top_coin": 18.778222,
+      "sol": 0.774847
+    },
+    {
+      "t": "2026-10-30T21:00:00Z",
+      "index": 48.989292,
+      "equal_weight": 48.990439,
+      "top_coin": 18.336497,
+      "sol": 0.778464
+    },
+    {
+      "t": "2026-10-30T22:00:00Z",
+      "index": 48.377472,
+      "equal_weight": 48.378605,
+      "top_coin": 18.2573,
+      "sol": 0.780438
+    },
+    {
+      "t": "2026-10-30T23:00:00Z",
+      "index": 52.120794,
+      "equal_weight": 52.122015,
+      "top_coin": 17.873359,
+      "sol": 0.783848
+    },
+    {
+      "t": "2026-10-31T00:00:00Z",
+      "index": 53.423857,
+      "equal_weight": 53.425108,
+      "top_coin": 17.410344,
+      "sol": 0.787729
+    },
+    {
+      "t": "2026-10-31T01:00:00Z",
+      "index": 57.138786,
+      "equal_weight": 57.140125,
+      "top_coin": 17.298377,
+      "sol": 0.791326
+    },
+    {
+      "t": "2026-10-31T02:00:00Z",
+      "index": 56.596698,
+      "equal_weight": 56.598024,
+      "top_coin": 15.672651,
+      "sol": 0.79081
+    },
+    {
+      "t": "2026-10-31T03:00:00Z",
+      "index": 57.493996,
+      "equal_weight": 57.495343,
+      "top_coin": 17.272464,
+      "sol": 0.791817
+    },
+    {
+      "t": "2026-10-31T04:00:00Z",
+      "index": 58.591266,
+      "equal_weight": 58.592639,
+      "top_coin": 15.792915,
+      "sol": 0.786621
+    },
+    {
+      "t": "2026-10-31T05:00:00Z",
+      "index": 56.53798,
+      "equal_weight": 56.539304,
+      "top_coin": 15.862011,
+      "sol": 0.782909
+    },
+    {
+      "t": "2026-10-31T06:00:00Z",
+      "index": 55.788433,
+      "equal_weight": 55.78974,
+      "top_coin": 16.310496,
+      "sol": 0.784701
+    },
+    {
+      "t": "2026-10-31T07:00:00Z",
+      "index": 53.54549,
+      "equal_weight": 53.546744,
+      "top_coin": 14.108485,
+      "sol": 0.784903
+    },
+    {
+      "t": "2026-10-31T08:00:00Z",
+      "index": 48.913936,
+      "equal_weight": 48.915082,
+      "top_coin": 14.107293,
+      "sol": 0.781665
+    },
+    {
+      "t": "2026-10-31T09:00:00Z",
+      "index": 53.251964,
+      "equal_weight": 53.253212,
+      "top_coin": 14.495104,
+      "sol": 0.779642
+    },
+    {
+      "t": "2026-10-31T10:00:00Z",
+      "index": 53.493197,
+      "equal_weight": 53.49445,
+      "top_coin": 14.289317,
+      "sol": 0.780928
+    },
+    {
+      "t": "2026-10-31T11:00:00Z",
+      "index": 53.721175,
+      "equal_weight": 53.722434,
+      "top_coin": 12.932812,
+      "sol": 0.781725
+    },
+    {
+      "t": "2026-10-31T12:00:00Z",
+      "index": 58.117792,
+      "equal_weight": 58.119154,
+      "top_coin": 12.722856,
+      "sol": 0.783873
+    },
+    {
+      "t": "2026-10-31T13:00:00Z",
+      "index": 63.984851,
+      "equal_weight": 63.98635,
+      "top_coin": 11.36136,
+      "sol": 0.78551
+    },
+    {
+      "t": "2026-10-31T14:00:00Z",
+      "index": 59.131444,
+      "equal_weight": 59.132829,
+      "top_coin": 10.448855,
+      "sol": 0.783179
+    },
+    {
+      "t": "2026-10-31T15:00:00Z",
+      "index": 62.186999,
+      "equal_weight": 62.188455,
+      "top_coin": 12.21383,
+      "sol": 0.782921
+    },
+    {
+      "t": "2026-10-31T16:00:00Z",
+      "index": 54.942143,
+      "equal_weight": 54.94343,
+      "top_coin": 10.028624,
+      "sol": 0.784413
+    },
+    {
+      "t": "2026-10-31T17:00:00Z",
+      "index": 56.898042,
+      "equal_weight": 56.899375,
+      "top_coin": 10.322048,
+      "sol": 0.784335
+    },
+    {
+      "t": "2026-10-31T18:00:00Z",
+      "index": 60.982388,
+      "equal_weight": 60.983817,
+      "top_coin": 11.099925,
+      "sol": 0.785637
+    },
+    {
+      "t": "2026-10-31T19:00:00Z",
+      "index": 57.348861,
+      "equal_weight": 57.350204,
+      "top_coin": 10.821549,
+      "sol": 0.785212
+    },
+    {
+      "t": "2026-10-31T20:00:00Z",
+      "index": 60.145712,
+      "equal_weight": 60.147121,
+      "top_coin": 13.514304,
+      "sol": 0.783673
+    },
+    {
+      "t": "2026-10-31T21:00:00Z",
+      "index": 66.017153,
+      "equal_weight": 66.018699,
+      "top_coin": 17.469248,
+      "sol": 0.782613
+    },
+    {
+      "t": "2026-10-31T22:00:00Z",
+      "index": 60.959649,
+      "equal_weight": 60.961078,
+      "top_coin": 14.062559,
+      "sol": 0.784612
+    },
+    {
+      "t": "2026-10-31T23:00:00Z",
+      "index": 64.992989,
+      "equal_weight": 64.994511,
+      "top_coin": 14.978042,
+      "sol": 0.780775
+    },
+    {
+      "t": "2026-11-01T00:00:00Z",
+      "index": 70.338248,
+      "equal_weight": 70.339896,
+      "top_coin": 17.134075,
+      "sol": 0.780873
+    },
+    {
+      "t": "2026-11-01T01:00:00Z",
+      "index": 69.872157,
+      "equal_weight": 69.873794,
+      "top_coin": 15.630904,
+      "sol": 0.782816
+    },
+    {
+      "t": "2026-11-01T02:00:00Z",
+      "index": 65.642111,
+      "equal_weight": 65.643649,
+      "top_coin": 15.908301,
+      "sol": 0.782675
+    },
+    {
+      "t": "2026-11-01T03:00:00Z",
+      "index": 66.087864,
+      "equal_weight": 66.089412,
+      "top_coin": 15.7054,
+      "sol": 0.780602
+    },
+    {
+      "t": "2026-11-01T04:00:00Z",
+      "index": 73.598283,
+      "equal_weight": 73.600008,
+      "top_coin": 15.783472,
+      "sol": 0.781894
+    },
+    {
+      "t": "2026-11-01T05:00:00Z",
+      "index": 68.906336,
+      "equal_weight": 68.907951,
+      "top_coin": 14.984126,
+      "sol": 0.781033
+    },
+    {
+      "t": "2026-11-01T06:00:00Z",
+      "index": 69.980855,
+      "equal_weight": 69.982495,
+      "top_coin": 15.821579,
+      "sol": 0.782781
+    },
+    {
+      "t": "2026-11-01T07:00:00Z",
+      "index": 71.377818,
+      "equal_weight": 71.379491,
+      "top_coin": 15.149372,
+      "sol": 0.782007
+    },
+    {
+      "t": "2026-11-01T08:00:00Z",
+      "index": 73.648396,
+      "equal_weight": 73.650122,
+      "top_coin": 15.773841,
+      "sol": 0.781555
+    },
+    {
+      "t": "2026-11-01T09:00:00Z",
+      "index": 77.300273,
+      "equal_weight": 77.302084,
+      "top_coin": 16.103912,
+      "sol": 0.784098
+    },
+    {
+      "t": "2026-11-01T10:00:00Z",
+      "index": 79.079826,
+      "equal_weight": 79.081679,
+      "top_coin": 17.443712,
+      "sol": 0.781079
+    },
+    {
+      "t": "2026-11-01T11:00:00Z",
+      "index": 84.097821,
+      "equal_weight": 84.099791,
+      "top_coin": 19.806979,
+      "sol": 0.780235
+    },
+    {
+      "t": "2026-11-01T12:00:00Z",
+      "index": 78.944485,
+      "equal_weight": 78.946335,
+      "top_coin": 17.934355,
+      "sol": 0.779422
+    },
+    {
+      "t": "2026-11-01T13:00:00Z",
+      "index": 79.28301,
+      "equal_weight": 79.284868,
+      "top_coin": 18.751876,
+      "sol": 0.775947
+    },
+    {
+      "t": "2026-11-01T14:00:00Z",
+      "index": 81.576955,
+      "equal_weight": 81.578866,
+      "top_coin": 18.584159,
+      "sol": 0.776242
+    },
+    {
+      "t": "2026-11-01T15:00:00Z",
+      "index": 83.287813,
+      "equal_weight": 83.289764,
+      "top_coin": 17.825925,
+      "sol": 0.776907
+    },
+    {
+      "t": "2026-11-01T16:00:00Z",
+      "index": 84.427268,
+      "equal_weight": 84.429246,
+      "top_coin": 17.089198,
+      "sol": 0.775107
+    },
+    {
+      "t": "2026-11-01T17:00:00Z",
+      "index": 83.894957,
+      "equal_weight": 83.896923,
+      "top_coin": 19.412818,
+      "sol": 0.774841
+    },
+    {
+      "t": "2026-11-01T18:00:00Z",
+      "index": 84.567665,
+      "equal_weight": 84.569646,
+      "top_coin": 19.825553,
+      "sol": 0.773463
+    },
+    {
+      "t": "2026-11-01T19:00:00Z",
+      "index": 81.704302,
+      "equal_weight": 81.706216,
+      "top_coin": 20.064304,
+      "sol": 0.771193
+    },
+    {
+      "t": "2026-11-01T20:00:00Z",
+      "index": 81.446671,
+      "equal_weight": 81.44858,
+      "top_coin": 18.907114,
+      "sol": 0.768293
+    },
+    {
+      "t": "2026-11-01T21:00:00Z",
+      "index": 87.515507,
+      "equal_weight": 87.517558,
+      "top_coin": 18.089115,
+      "sol": 0.771261
+    },
+    {
+      "t": "2026-11-01T22:00:00Z",
+      "index": 88.536251,
+      "equal_weight": 88.538325,
+      "top_coin": 18.879321,
+      "sol": 0.772016
+    },
+    {
+      "t": "2026-11-01T23:00:00Z",
+      "index": 92.978572,
+      "equal_weight": 92.98075,
+      "top_coin": 19.528869,
+      "sol": 0.766993
+    },
+    {
+      "t": "2026-11-02T00:00:00Z",
+      "index": 133.108762,
+      "equal_weight": 133.111881,
+      "top_coin": 18.723633,
+      "sol": 0.773204
+    },
+    {
+      "t": "2026-11-02T01:00:00Z",
+      "index": 128.360029,
+      "equal_weight": 128.363036,
+      "top_coin": 19.286407,
+      "sol": 0.769247
+    },
+    {
+      "t": "2026-11-02T02:00:00Z",
+      "index": 123.48903,
+      "equal_weight": 123.491923,
+      "top_coin": 18.367915,
+      "sol": 0.77635
+    },
+    {
+      "t": "2026-11-02T03:00:00Z",
+      "index": 136.04665,
+      "equal_weight": 136.049838,
+      "top_coin": 19.406669,
+      "sol": 0.776638
+    },
+    {
+      "t": "2026-11-02T04:00:00Z",
+      "index": 131.822646,
+      "equal_weight": 131.825734,
+      "top_coin": 19.279925,
+      "sol": 0.78153
+    },
+    {
+      "t": "2026-11-02T05:00:00Z",
+      "index": 130.361696,
+      "equal_weight": 130.36475,
+      "top_coin": 19.48503,
+      "sol": 0.776471
+    },
+    {
+      "t": "2026-11-02T06:00:00Z",
+      "index": 138.06384,
+      "equal_weight": 138.067075,
+      "top_coin": 21.24603,
+      "sol": 0.775589
+    },
+    {
+      "t": "2026-11-02T07:00:00Z",
+      "index": 143.511734,
+      "equal_weight": 143.515096,
+      "top_coin": 21.548506,
+      "sol": 0.772281
+    },
+    {
+      "t": "2026-11-02T08:00:00Z",
+      "index": 144.040615,
+      "equal_weight": 144.04399,
+      "top_coin": 22.091033,
+      "sol": 0.770874
+    },
+    {
+      "t": "2026-11-02T09:00:00Z",
+      "index": 141.326679,
+      "equal_weight": 141.32999,
+      "top_coin": 21.547944,
+      "sol": 0.773999
+    },
+    {
+      "t": "2026-11-02T10:00:00Z",
+      "index": 138.659453,
+      "equal_weight": 138.662701,
+      "top_coin": 21.7736,
+      "sol": 0.771419
+    },
+    {
+      "t": "2026-11-02T11:00:00Z",
+      "index": 139.372788,
+      "equal_weight": 139.376053,
+      "top_coin": 21.30634,
+      "sol": 0.770178
+    },
+    {
+      "t": "2026-11-02T12:00:00Z",
+      "index": 134.918965,
+      "equal_weight": 134.922126,
+      "top_coin": 19.732244,
+      "sol": 0.768937
+    },
+    {
+      "t": "2026-11-02T13:00:00Z",
+      "index": 143.165666,
+      "equal_weight": 143.16902,
+      "top_coin": 21.235082,
+      "sol": 0.769138
+    },
+    {
+      "t": "2026-11-02T14:00:00Z",
+      "index": 144.490083,
+      "equal_weight": 144.493469,
+      "top_coin": 21.72624,
+      "sol": 0.771194
+    },
+    {
+      "t": "2026-11-02T15:00:00Z",
+      "index": 156.117504,
+      "equal_weight": 156.121162,
+      "top_coin": 20.905257,
+      "sol": 0.771437
+    },
+    {
+      "t": "2026-11-02T16:00:00Z",
+      "index": 160.104411,
+      "equal_weight": 160.108162,
+      "top_coin": 21.199715,
+      "sol": 0.764106
+    },
+    {
+      "t": "2026-11-02T17:00:00Z",
+      "index": 159.398736,
+      "equal_weight": 159.402471,
+      "top_coin": 18.976091,
+      "sol": 0.76395
+    },
+    {
+      "t": "2026-11-02T18:00:00Z",
+      "index": 166.892435,
+      "equal_weight": 166.896345,
+      "top_coin": 18.661139,
+      "sol": 0.753181
+    },
+    {
+      "t": "2026-11-02T19:00:00Z",
+      "index": 185.005037,
+      "equal_weight": 185.009372,
+      "top_coin": 18.957816,
+      "sol": 0.753627
+    },
+    {
+      "t": "2026-11-02T20:00:00Z",
+      "index": 160.067624,
+      "equal_weight": 160.071374,
+      "top_coin": 17.011878,
+      "sol": 0.748675
+    },
+    {
+      "t": "2026-11-02T21:00:00Z",
+      "index": 161.497344,
+      "equal_weight": 161.501127,
+      "top_coin": 17.971505,
+      "sol": 0.748309
+    },
+    {
+      "t": "2026-11-02T22:00:00Z",
+      "index": 161.095636,
+      "equal_weight": 161.099411,
+      "top_coin": 17.420238,
+      "sol": 0.754251
+    },
+    {
+      "t": "2026-11-02T23:00:00Z",
+      "index": 174.271284,
+      "equal_weight": 174.275367,
+      "top_coin": 17.375963,
+      "sol": 0.752022
+    },
+    {
+      "t": "2026-11-03T00:00:00Z",
+      "index": 161.378982,
+      "equal_weight": 161.382763,
+      "top_coin": 18.035426,
+      "sol": 0.751644
+    },
+    {
+      "t": "2026-11-03T01:00:00Z",
+      "index": 161.079155,
+      "equal_weight": 161.082928,
+      "top_coin": 18.424788,
+      "sol": 0.754817
+    },
+    {
+      "t": "2026-11-03T02:00:00Z",
+      "index": 174.571891,
+      "equal_weight": 174.575981,
+      "top_coin": 20.646127,
+      "sol": 0.754713
+    },
+    {
+      "t": "2026-11-03T03:00:00Z",
+      "index": 171.632722,
+      "equal_weight": 171.636744,
+      "top_coin": 19.250484,
+      "sol": 0.750549
+    },
+    {
+      "t": "2026-11-03T04:00:00Z",
+      "index": 178.614811,
+      "equal_weight": 178.618996,
+      "top_coin": 18.96942,
+      "sol": 0.753216
+    },
+    {
+      "t": "2026-11-03T05:00:00Z",
+      "index": 169.654227,
+      "equal_weight": 169.658202,
+      "top_coin": 18.323812,
+      "sol": 0.754077
+    },
+    {
+      "t": "2026-11-03T06:00:00Z",
+      "index": 196.272249,
+      "equal_weight": 196.276847,
+      "top_coin": 16.876517,
+      "sol": 0.749838
+    },
+    {
+      "t": "2026-11-03T07:00:00Z",
+      "index": 200.83931,
+      "equal_weight": 200.844015,
+      "top_coin": 17.288254,
+      "sol": 0.748146
+    },
+    {
+      "t": "2026-11-03T08:00:00Z",
+      "index": 194.886825,
+      "equal_weight": 194.891391,
+      "top_coin": 17.366214,
+      "sol": 0.752642
+    },
+    {
+      "t": "2026-11-03T09:00:00Z",
+      "index": 188.503028,
+      "equal_weight": 188.507444,
+      "top_coin": 18.432141,
+      "sol": 0.751181
+    },
+    {
+      "t": "2026-11-03T10:00:00Z",
+      "index": 193.078116,
+      "equal_weight": 193.082639,
+      "top_coin": 18.38393,
+      "sol": 0.755449
+    },
+    {
+      "t": "2026-11-03T11:00:00Z",
+      "index": 193.299067,
+      "equal_weight": 193.303595,
+      "top_coin": 18.542668,
+      "sol": 0.755323
+    },
+    {
+      "t": "2026-11-03T12:00:00Z",
+      "index": 201.412556,
+      "equal_weight": 201.417275,
+      "top_coin": 19.606493,
+      "sol": 0.755866
+    },
+    {
+      "t": "2026-11-03T13:00:00Z",
+      "index": 188.359361,
+      "equal_weight": 188.363774,
+      "top_coin": 18.235369,
+      "sol": 0.760956
+    },
+    {
+      "t": "2026-11-03T14:00:00Z",
+      "index": 197.255729,
+      "equal_weight": 197.26035,
+      "top_coin": 17.71466,
+      "sol": 0.762257
+    },
+    {
+      "t": "2026-11-03T15:00:00Z",
+      "index": 199.073513,
+      "equal_weight": 199.078177,
+      "top_coin": 17.763576,
+      "sol": 0.76342
+    },
+    {
+      "t": "2026-11-03T16:00:00Z",
+      "index": 192.925694,
+      "equal_weight": 192.930215,
+      "top_coin": 17.474732,
+      "sol": 0.766574
+    },
+    {
+      "t": "2026-11-03T17:00:00Z",
+      "index": 191.973067,
+      "equal_weight": 191.977565,
+      "top_coin": 17.72395,
+      "sol": 0.764953
+    },
+    {
+      "t": "2026-11-03T18:00:00Z",
+      "index": 185.092915,
+      "equal_weight": 185.097251,
+      "top_coin": 16.549583,
+      "sol": 0.763422
+    },
+    {
+      "t": "2026-11-03T19:00:00Z",
+      "index": 184.738226,
+      "equal_weight": 184.742554,
+      "top_coin": 15.60398,
+      "sol": 0.763933
+    },
+    {
+      "t": "2026-11-03T20:00:00Z",
+      "index": 180.371658,
+      "equal_weight": 180.375884,
+      "top_coin": 17.068206,
+      "sol": 0.762636
+    },
+    {
+      "t": "2026-11-03T21:00:00Z",
+      "index": 182.293535,
+      "equal_weight": 182.297806,
+      "top_coin": 17.179969,
+      "sol": 0.764886
+    },
+    {
+      "t": "2026-11-03T22:00:00Z",
+      "index": 179.765442,
+      "equal_weight": 179.769654,
+      "top_coin": 16.217228,
+      "sol": 0.766078
+    },
+    {
+      "t": "2026-11-03T23:00:00Z",
+      "index": 181.47589,
+      "equal_weight": 181.480142,
+      "top_coin": 16.977664,
+      "sol": 0.764828
+    },
+    {
+      "t": "2026-11-04T00:00:00Z",
+      "index": 180.038335,
+      "equal_weight": 180.042553,
+      "top_coin": 16.977801,
+      "sol": 0.759318
+    },
+    {
+      "t": "2026-11-04T01:00:00Z",
+      "index": 177.150087,
+      "equal_weight": 177.154238,
+      "top_coin": 16.782883,
+      "sol": 0.755963
+    },
+    {
+      "t": "2026-11-04T02:00:00Z",
+      "index": 183.91805,
+      "equal_weight": 183.922359,
+      "top_coin": 17.484581,
+      "sol": 0.751528
+    },
+    {
+      "t": "2026-11-04T03:00:00Z",
+      "index": 181.019882,
+      "equal_weight": 181.024123,
+      "top_coin": 17.195311,
+      "sol": 0.744432
+    },
+    {
+      "t": "2026-11-04T04:00:00Z",
+      "index": 182.66339,
+      "equal_weight": 182.667669,
+      "top_coin": 17.130473,
+      "sol": 0.744237
+    },
+    {
+      "t": "2026-11-04T05:00:00Z",
+      "index": 179.647102,
+      "equal_weight": 179.651311,
+      "top_coin": 16.749302,
+      "sol": 0.754675
+    },
+    {
+      "t": "2026-11-04T06:00:00Z",
+      "index": 176.544464,
+      "equal_weight": 176.5486,
+      "top_coin": 17.776401,
+      "sol": 0.758216
+    },
+    {
+      "t": "2026-11-04T07:00:00Z",
+      "index": 183.825015,
+      "equal_weight": 183.829322,
+      "top_coin": 17.833318,
+      "sol": 0.760216
+    },
+    {
+      "t": "2026-11-04T08:00:00Z",
+      "index": 186.190046,
+      "equal_weight": 186.194408,
+      "top_coin": 17.321211,
+      "sol": 0.760461
+    },
+    {
+      "t": "2026-11-04T09:00:00Z",
+      "index": 179.228319,
+      "equal_weight": 179.232518,
+      "top_coin": 17.462485,
+      "sol": 0.762518
+    },
+    {
+      "t": "2026-11-04T10:00:00Z",
+      "index": 174.460587,
+      "equal_weight": 174.464675,
+      "top_coin": 17.413714,
+      "sol": 0.76114
+    },
+    {
+      "t": "2026-11-04T11:00:00Z",
+      "index": 181.417204,
+      "equal_weight": 181.421455,
+      "top_coin": 16.869182,
+      "sol": 0.76492
+    },
+    {
+      "t": "2026-11-04T12:00:00Z",
+      "index": 181.112902,
+      "equal_weight": 181.117145,
+      "top_coin": 16.887831,
+      "sol": 0.765334
+    },
+    {
+      "t": "2026-11-04T13:00:00Z",
+      "index": 181.375544,
+      "equal_weight": 181.379794,
+      "top_coin": 17.085526,
+      "sol": 0.757427
+    },
+    {
+      "t": "2026-11-04T14:00:00Z",
+      "index": 191.230074,
+      "equal_weight": 191.234554,
+      "top_coin": 16.944037,
+      "sol": 0.759941
+    },
+    {
+      "t": "2026-11-04T15:00:00Z",
+      "index": 185.519585,
+      "equal_weight": 185.523932,
+      "top_coin": 17.033927,
+      "sol": 0.77763
+    },
+    {
+      "t": "2026-11-04T16:00:00Z",
+      "index": 184.367701,
+      "equal_weight": 184.372021,
+      "top_coin": 17.118793,
+      "sol": 0.79082
+    },
+    {
+      "t": "2026-11-04T17:00:00Z",
+      "index": 180.040272,
+      "equal_weight": 180.04449,
+      "top_coin": 17.443773,
+      "sol": 0.791147
+    },
+    {
+      "t": "2026-11-04T18:00:00Z",
+      "index": 177.929002,
+      "equal_weight": 177.933171,
+      "top_coin": 17.372499,
+      "sol": 0.783156
+    },
+    {
+      "t": "2026-11-04T19:00:00Z",
+      "index": 172.707805,
+      "equal_weight": 172.711851,
+      "top_coin": 18.159377,
+      "sol": 0.779206
+    },
+    {
+      "t": "2026-11-04T20:00:00Z",
+      "index": 172.826021,
+      "equal_weight": 172.83007,
+      "top_coin": 17.755592,
+      "sol": 0.773271
+    },
+    {
+      "t": "2026-11-04T21:00:00Z",
+      "index": 169.523871,
+      "equal_weight": 169.527843,
+      "top_coin": 15.914598,
+      "sol": 0.775654
+    },
+    {
+      "t": "2026-11-04T22:00:00Z",
+      "index": 168.07194,
+      "equal_weight": 168.075878,
+      "top_coin": 16.943945,
+      "sol": 0.77517
+    },
+    {
+      "t": "2026-11-04T23:00:00Z",
+      "index": 171.78399,
+      "equal_weight": 171.788015,
+      "top_coin": 16.212069,
+      "sol": 0.785331
+    },
+    {
+      "t": "2026-11-05T00:00:00Z",
+      "index": 170.244866,
+      "equal_weight": 170.248855,
+      "top_coin": 17.19815,
+      "sol": 0.781674
+    },
+    {
+      "t": "2026-11-05T01:00:00Z",
+      "index": 168.478193,
+      "equal_weight": 168.48214,
+      "top_coin": 16.674494,
+      "sol": 0.783445
+    },
+    {
+      "t": "2026-11-05T02:00:00Z",
+      "index": 169.61533,
+      "equal_weight": 169.619304,
+      "top_coin": 17.183085,
+      "sol": 0.785654
+    },
+    {
+      "t": "2026-11-05T03:00:00Z",
+      "index": 163.277127,
+      "equal_weight": 163.280952,
+      "top_coin": 17.306304,
+      "sol": 0.787859
+    },
+    {
+      "t": "2026-11-05T04:00:00Z",
+      "index": 161.83191,
+      "equal_weight": 161.835701,
+      "top_coin": 17.20188,
+      "sol": 0.787648
+    },
+    {
+      "t": "2026-11-05T05:00:00Z",
+      "index": 164.377265,
+      "equal_weight": 164.381116,
+      "top_coin": 16.79922,
+      "sol": 0.785663
+    },
+    {
+      "t": "2026-11-05T06:00:00Z",
+      "index": 167.85078,
+      "equal_weight": 167.854713,
+      "top_coin": 17.351568,
+      "sol": 0.783258
+    },
+    {
+      "t": "2026-11-05T07:00:00Z",
+      "index": 161.423878,
+      "equal_weight": 161.42766,
+      "top_coin": 16.319744,
+      "sol": 0.78637
+    },
+    {
+      "t": "2026-11-05T08:00:00Z",
+      "index": 158.523912,
+      "equal_weight": 158.527627,
+      "top_coin": 16.936265,
+      "sol": 0.78398
+    },
+    {
+      "t": "2026-11-05T09:00:00Z",
+      "index": 154.542883,
+      "equal_weight": 154.546504,
+      "top_coin": 16.638561,
+      "sol": 0.791213
+    },
+    {
+      "t": "2026-11-05T10:00:00Z",
+      "index": 156.462365,
+      "equal_weight": 156.466031,
+      "top_coin": 16.59903,
+      "sol": 0.792051
+    },
+    {
+      "t": "2026-11-05T11:00:00Z",
+      "index": 156.695876,
+      "equal_weight": 156.699548,
+      "top_coin": 16.591267,
+      "sol": 0.789867
+    },
+    {
+      "t": "2026-11-05T12:00:00Z",
+      "index": 159.105389,
+      "equal_weight": 159.109116,
+      "top_coin": 16.497994,
+      "sol": 0.789137
+    },
+    {
+      "t": "2026-11-05T13:00:00Z",
+      "index": 153.767945,
+      "equal_weight": 153.771548,
+      "top_coin": 17.073142,
+      "sol": 0.779373
+    },
+    {
+      "t": "2026-11-05T14:00:00Z",
+      "index": 153.370474,
+      "equal_weight": 153.374068,
+      "top_coin": 16.105622,
+      "sol": 0.779994
+    },
+    {
+      "t": "2026-11-05T15:00:00Z",
+      "index": 143.63013,
+      "equal_weight": 143.633496,
+      "top_coin": 15.492954,
+      "sol": 0.759393
+    },
+    {
+      "t": "2026-11-05T16:00:00Z",
+      "index": 156.161119,
+      "equal_weight": 156.164778,
+      "top_coin": 16.264282,
+      "sol": 0.736844
+    },
+    {
+      "t": "2026-11-05T17:00:00Z",
+      "index": 154.31897,
+      "equal_weight": 154.322586,
+      "top_coin": 15.948077,
+      "sol": 0.738577
+    },
+    {
+      "t": "2026-11-05T18:00:00Z",
+      "index": 161.34443,
+      "equal_weight": 161.34821,
+      "top_coin": 16.321102,
+      "sol": 0.728032
+    },
+    {
+      "t": "2026-11-05T19:00:00Z",
+      "index": 162.923001,
+      "equal_weight": 162.926818,
+      "top_coin": 16.072911,
+      "sol": 0.732595
+    },
+    {
+      "t": "2026-11-05T20:00:00Z",
+      "index": 161.055471,
+      "equal_weight": 161.059244,
+      "top_coin": 15.524309,
+      "sol": 0.736285
+    },
+    {
+      "t": "2026-11-05T21:00:00Z",
+      "index": 169.235746,
+      "equal_weight": 168.639477,
+      "top_coin": 14.990838,
+      "sol": 0.735692
+    },
+    {
+      "t": "2026-11-05T22:00:00Z",
+      "index": 166.818128,
+      "equal_weight": 166.368928,
+      "top_coin": 15.85218,
+      "sol": 0.735357
+    },
+    {
+      "t": "2026-11-05T23:00:00Z",
+      "index": 165.233468,
+      "equal_weight": 164.863278,
+      "top_coin": 15.795245,
+      "sol": 0.732834
+    },
+    {
+      "t": "2026-11-06T00:00:00Z",
+      "index": 178.40015,
+      "equal_weight": 188.524721,
+      "top_coin": 15.037794,
+      "sol": 0.730264
+    },
+    {
+      "t": "2026-11-06T01:00:00Z",
+      "index": 174.25297,
+      "equal_weight": 183.137533,
+      "top_coin": 15.324784,
+      "sol": 0.73777
+    },
+    {
+      "t": "2026-11-06T02:00:00Z",
+      "index": 174.892067,
+      "equal_weight": 183.71992,
+      "top_coin": 15.660849,
+      "sol": 0.737293
+    },
+    {
+      "t": "2026-11-06T03:00:00Z",
+      "index": 181.03607,
+      "equal_weight": 189.918176,
+      "top_coin": 15.254649,
+      "sol": 0.738429
+    },
+    {
+      "t": "2026-11-06T04:00:00Z",
+      "index": 181.15018,
+      "equal_weight": 189.881442,
+      "top_coin": 15.497956,
+      "sol": 0.733562
+    },
+    {
+      "t": "2026-11-06T05:00:00Z",
+      "index": 178.602014,
+      "equal_weight": 185.826833,
+      "top_coin": 16.272785,
+      "sol": 0.731852
+    },
+    {
+      "t": "2026-11-06T06:00:00Z",
+      "index": 185.630513,
+      "equal_weight": 197.399893,
+      "top_coin": 16.666808,
+      "sol": 0.731208
+    },
+    {
+      "t": "2026-11-06T07:00:00Z",
+      "index": 183.075231,
+      "equal_weight": 194.559805,
+      "top_coin": 16.251,
+      "sol": 0.732796
+    },
+    {
+      "t": "2026-11-06T08:00:00Z",
+      "index": 182.468358,
+      "equal_weight": 193.080518,
+      "top_coin": 16.615363,
+      "sol": 0.733158
+    },
+    {
+      "t": "2026-11-06T09:00:00Z",
+      "index": 179.92641,
+      "equal_weight": 190.831084,
+      "top_coin": 15.621109,
+      "sol": 0.732316
+    },
+    {
+      "t": "2026-11-06T10:00:00Z",
+      "index": 187.729498,
+      "equal_weight": 199.435806,
+      "top_coin": 15.628256,
+      "sol": 0.736291
+    },
+    {
+      "t": "2026-11-06T11:00:00Z",
+      "index": 196.268749,
+      "equal_weight": 212.549726,
+      "top_coin": 15.953558,
+      "sol": 0.736374
+    },
+    {
+      "t": "2026-11-06T12:00:00Z",
+      "index": 193.940865,
+      "equal_weight": 210.303584,
+      "top_coin": 16.116993,
+      "sol": 0.739154
+    },
+    {
+      "t": "2026-11-06T13:00:00Z",
+      "index": 202.708222,
+      "equal_weight": 219.581466,
+      "top_coin": 15.965575,
+      "sol": 0.737675
+    },
+    {
+      "t": "2026-11-06T14:00:00Z",
+      "index": 204.856547,
+      "equal_weight": 222.589845,
+      "top_coin": 15.677733,
+      "sol": 0.739049
+    },
+    {
+      "t": "2026-11-06T15:00:00Z",
+      "index": 219.988491,
+      "equal_weight": 238.764413,
+      "top_coin": 16.244191,
+      "sol": 0.743751
+    },
+    {
+      "t": "2026-11-06T16:00:00Z",
+      "index": 216.914062,
+      "equal_weight": 235.288396,
+      "top_coin": 16.317953,
+      "sol": 0.741476
+    },
+    {
+      "t": "2026-11-06T17:00:00Z",
+      "index": 210.086804,
+      "equal_weight": 227.263727,
+      "top_coin": 17.649538,
+      "sol": 0.74121
+    },
+    {
+      "t": "2026-11-06T18:00:00Z",
+      "index": 216.343324,
+      "equal_weight": 233.634197,
+      "top_coin": 17.473929,
+      "sol": 0.735967
+    },
+    {
+      "t": "2026-11-06T19:00:00Z",
+      "index": 221.384495,
+      "equal_weight": 240.083328,
+      "top_coin": 16.894998,
+      "sol": 0.737955
+    },
+    {
+      "t": "2026-11-06T20:00:00Z",
+      "index": 219.021982,
+      "equal_weight": 236.964336,
+      "top_coin": 17.392049,
+      "sol": 0.737124
+    },
+    {
+      "t": "2026-11-06T21:00:00Z",
+      "index": 214.686416,
+      "equal_weight": 231.430388,
+      "top_coin": 19.191681,
+      "sol": 0.735134
+    },
+    {
+      "t": "2026-11-06T22:00:00Z",
+      "index": 222.917477,
+      "equal_weight": 241.226922,
+      "top_coin": 20.154852,
+      "sol": 0.738496
+    },
+    {
+      "t": "2026-11-06T23:00:00Z",
+      "index": 218.941889,
+      "equal_weight": 236.967611,
+      "top_coin": 18.862294,
+      "sol": 0.736441
+    },
+    {
+      "t": "2026-11-07T00:00:00Z",
+      "index": 201.898773,
+      "equal_weight": 216.679909,
+      "top_coin": 18.149663,
+      "sol": 0.737044
+    },
+    {
+      "t": "2026-11-07T01:00:00Z",
+      "index": 203.649345,
+      "equal_weight": 219.814806,
+      "top_coin": 18.359404,
+      "sol": 0.737823
+    },
+    {
+      "t": "2026-11-07T02:00:00Z",
+      "index": 213.484778,
+      "equal_weight": 232.144608,
+      "top_coin": 20.481797,
+      "sol": 0.74059
+    },
+    {
+      "t": "2026-11-07T03:00:00Z",
+      "index": 215.895238,
+      "equal_weight": 234.204963,
+      "top_coin": 19.222749,
+      "sol": 0.739188
+    },
+    {
+      "t": "2026-11-07T04:00:00Z",
+      "index": 215.113854,
+      "equal_weight": 233.175519,
+      "top_coin": 18.752431,
+      "sol": 0.735977
+    },
+    {
+      "t": "2026-11-07T05:00:00Z",
+      "index": 221.26006,
+      "equal_weight": 240.617758,
+      "top_coin": 18.86884,
+      "sol": 0.735735
+    },
+    {
+      "t": "2026-11-07T06:00:00Z",
+      "index": 213.756769,
+      "equal_weight": 232.771759,
+      "top_coin": 18.323884,
+      "sol": 0.73819
+    },
+    {
+      "t": "2026-11-07T07:00:00Z",
+      "index": 217.009221,
+      "equal_weight": 235.669192,
+      "top_coin": 18.531408,
+      "sol": 0.737868
+    },
+    {
+      "t": "2026-11-07T08:00:00Z",
+      "index": 211.481612,
+      "equal_weight": 229.66628,
+      "top_coin": 18.531408,
+      "sol": 0.737691
+    },
+    {
+      "t": "2026-11-07T09:00:00Z",
+      "index": 220.164679,
+      "equal_weight": 239.095978,
+      "top_coin": 18.531408,
+      "sol": 0.738326
+    },
+    {
+      "t": "2026-11-07T10:00:00Z",
+      "index": 216.137971,
+      "equal_weight": 234.92927,
+      "top_coin": 18.487519,
+      "sol": 0.736386
+    },
+    {
+      "t": "2026-11-07T11:00:00Z",
+      "index": 212.245264,
+      "equal_weight": 230.951358,
+      "top_coin": 18.886768,
+      "sol": 0.735818
+    },
+    {
+      "t": "2026-11-07T12:00:00Z",
+      "index": 214.502898,
+      "equal_weight": 233.637237,
+      "top_coin": 19.188294,
+      "sol": 0.735872
+    },
+    {
+      "t": "2026-11-07T13:00:00Z",
+      "index": 214.063921,
+      "equal_weight": 232.236072,
+      "top_coin": 19.783562,
+      "sol": 0.733898
+    },
+    {
+      "t": "2026-11-07T14:00:00Z",
+      "index": 211.035725,
+      "equal_weight": 228.08905,
+      "top_coin": 19.978416,
+      "sol": 0.735859
+    },
+    {
+      "t": "2026-11-07T15:00:00Z",
+      "index": 212.567267,
+      "equal_weight": 229.584543,
+      "top_coin": 20.258921,
+      "sol": 0.735441
+    },
+    {
+      "t": "2026-11-07T16:00:00Z",
+      "index": 212.266305,
+      "equal_weight": 228.844099,
+      "top_coin": 20.950229,
+      "sol": 0.732118
+    },
+    {
+      "t": "2026-11-07T17:00:00Z",
+      "index": 208.855299,
+      "equal_weight": 225.100939,
+      "top_coin": 20.768951,
+      "sol": 0.73227
+    },
+    {
+      "t": "2026-11-07T18:00:00Z",
+      "index": 209.05503,
+      "equal_weight": 225.278663,
+      "top_coin": 20.504937,
+      "sol": 0.733981
+    },
+    {
+      "t": "2026-11-07T19:00:00Z",
+      "index": 212.081863,
+      "equal_weight": 229.388305,
+      "top_coin": 21.740661,
+      "sol": 0.734385
+    },
+    {
+      "t": "2026-11-07T20:00:00Z",
+      "index": 207.145343,
+      "equal_weight": 223.382726,
+      "top_coin": 19.65717,
+      "sol": 0.733028
+    },
+    {
+      "t": "2026-11-07T21:00:00Z",
+      "index": 212.002047,
+      "equal_weight": 230.457259,
+      "top_coin": 17.372027,
+      "sol": 0.728145
+    },
+    {
+      "t": "2026-11-07T22:00:00Z",
+      "index": 214.3843,
+      "equal_weight": 233.885635,
+      "top_coin": 19.355557,
+      "sol": 0.729624
+    },
+    {
+      "t": "2026-11-07T23:00:00Z",
+      "index": 214.340502,
+      "equal_weight": 234.492078,
+      "top_coin": 18.891049,
+      "sol": 0.729932
+    },
+    {
+      "t": "2026-11-08T00:00:00Z",
+      "index": 220.13931,
+      "equal_weight": 241.900137,
+      "top_coin": 19.315102,
+      "sol": 0.734112
+    },
+    {
+      "t": "2026-11-08T01:00:00Z",
+      "index": 216.909885,
+      "equal_weight": 236.681741,
+      "top_coin": 19.01351,
+      "sol": 0.731249
+    },
+    {
+      "t": "2026-11-08T02:00:00Z",
+      "index": 229.481733,
+      "equal_weight": 249.778892,
+      "top_coin": 19.379425,
+      "sol": 0.728607
+    },
+    {
+      "t": "2026-11-08T03:00:00Z",
+      "index": 235.731547,
+      "equal_weight": 258.990839,
+      "top_coin": 20.024735,
+      "sol": 0.728383
+    },
+    {
+      "t": "2026-11-08T04:00:00Z",
+      "index": 229.612142,
+      "equal_weight": 250.598386,
+      "top_coin": 20.000235,
+      "sol": 0.730096
+    },
+    {
+      "t": "2026-11-08T05:00:00Z",
+      "index": 231.089393,
+      "equal_weight": 253.055815,
+      "top_coin": 20.012454,
+      "sol": 0.728193
+    },
+    {
+      "t": "2026-11-08T06:00:00Z",
+      "index": 231.012289,
+      "equal_weight": 254.235221,
+      "top_coin": 20.411496,
+      "sol": 0.72925
+    },
+    {
+      "t": "2026-11-08T07:00:00Z",
+      "index": 232.521553,
+      "equal_weight": 256.140979,
+      "top_coin": 21.208499,
+      "sol": 0.728106
+    },
+    {
+      "t": "2026-11-08T08:00:00Z",
+      "index": 228.761865,
+      "equal_weight": 252.221785,
+      "top_coin": 21.70911,
+      "sol": 0.730389
+    },
+    {
+      "t": "2026-11-08T09:00:00Z",
+      "index": 230.070933,
+      "equal_weight": 254.130001,
+      "top_coin": 21.899448,
+      "sol": 0.729986
+    },
+    {
+      "t": "2026-11-08T10:00:00Z",
+      "index": 228.469357,
+      "equal_weight": 252.284221,
+      "top_coin": 20.99541,
+      "sol": 0.72985
+    },
+    {
+      "t": "2026-11-08T11:00:00Z",
+      "index": 224.729987,
+      "equal_weight": 247.609382,
+      "top_coin": 20.541311,
+      "sol": 0.729326
+    },
+    {
+      "t": "2026-11-08T12:00:00Z",
+      "index": 229.886042,
+      "equal_weight": 253.078276,
+      "top_coin": 21.909722,
+      "sol": 0.733216
+    },
+    {
+      "t": "2026-11-08T13:00:00Z",
+      "index": 228.747612,
+      "equal_weight": 251.447219,
+      "top_coin": 21.07794,
+      "sol": 0.73213
+    },
+    {
+      "t": "2026-11-08T14:00:00Z",
+      "index": 231.407749,
+      "equal_weight": 254.995953,
+      "top_coin": 21.076849,
+      "sol": 0.729633
+    },
+    {
+      "t": "2026-11-08T15:00:00Z",
+      "index": 231.736141,
+      "equal_weight": 256.531154,
+      "top_coin": 21.439459,
+      "sol": 0.732469
+    },
+    {
+      "t": "2026-11-08T16:00:00Z",
+      "index": 226.796416,
+      "equal_weight": 252.809773,
+      "top_coin": 21.086843,
+      "sol": 0.733336
+    },
+    {
+      "t": "2026-11-08T17:00:00Z",
+      "index": 224.025651,
+      "equal_weight": 250.391445,
+      "top_coin": 20.839487,
+      "sol": 0.727843
+    },
+    {
+      "t": "2026-11-08T18:00:00Z",
+      "index": 221.107267,
+      "equal_weight": 246.196334,
+      "top_coin": 19.318784,
+      "sol": 0.728912
+    },
+    {
+      "t": "2026-11-08T19:00:00Z",
+      "index": 218.052397,
+      "equal_weight": 242.753189,
+      "top_coin": 18.26288,
+      "sol": 0.732154
+    },
+    {
+      "t": "2026-11-08T20:00:00Z",
+      "index": 222.57116,
+      "equal_weight": 248.079369,
+      "top_coin": 18.479859,
+      "sol": 0.732476
+    },
+    {
+      "t": "2026-11-08T21:00:00Z",
+      "index": 206.599292,
+      "equal_weight": 230.427266,
+      "top_coin": 16.883721,
+      "sol": 0.729014
+    },
+    {
+      "t": "2026-11-08T22:00:00Z",
+      "index": 209.816788,
+      "equal_weight": 232.910982,
+      "top_coin": 18.202028,
+      "sol": 0.701437
+    },
+    {
+      "t": "2026-11-08T23:00:00Z",
+      "index": 206.535899,
+      "equal_weight": 230.621933,
+      "top_coin": 17.73601,
+      "sol": 0.705732
+    },
+    {
+      "t": "2026-11-09T00:00:00Z",
+      "index": 200.019916,
+      "equal_weight": 223.203792,
+      "top_coin": 17.535912,
+      "sol": 0.707199
+    },
+    {
+      "t": "2026-11-09T01:00:00Z",
+      "index": 205.807307,
+      "equal_weight": 229.597802,
+      "top_coin": 18.087132,
+      "sol": 0.716512
+    },
+    {
+      "t": "2026-11-09T02:00:00Z",
+      "index": 207.198215,
+      "equal_weight": 231.194149,
+      "top_coin": 19.211086,
+      "sol": 0.718022
+    },
+    {
+      "t": "2026-11-09T03:00:00Z",
+      "index": 209.761744,
+      "equal_weight": 234.765857,
+      "top_coin": 19.136881,
+      "sol": 0.719867
+    },
+    {
+      "t": "2026-11-09T04:00:00Z",
+      "index": 205.957756,
+      "equal_weight": 229.81454,
+      "top_coin": 18.87623,
+      "sol": 0.715249
+    },
+    {
+      "t": "2026-11-09T05:00:00Z",
+      "index": 190.888908,
+      "equal_weight": 213.159298,
+      "top_coin": 17.763197,
+      "sol": 0.714476
+    },
+    {
+      "t": "2026-11-09T06:00:00Z",
+      "index": 186.571863,
+      "equal_weight": 208.898033,
+      "top_coin": 17.659991,
+      "sol": 0.708696
+    },
+    {
+      "t": "2026-11-09T07:00:00Z",
+      "index": 185.052929,
+      "equal_weight": 207.203002,
+      "top_coin": 18.072018,
+      "sol": 0.703895
+    },
+    {
+      "t": "2026-11-09T08:00:00Z",
+      "index": 192.057624,
+      "equal_weight": 215.856282,
+      "top_coin": 17.963487,
+      "sol": 0.699879
+    },
+    {
+      "t": "2026-11-09T09:00:00Z",
+      "index": 196.92947,
+      "equal_weight": 221.389972,
+      "top_coin": 18.316644,
+      "sol": 0.710786
+    },
+    {
+      "t": "2026-11-09T10:00:00Z",
+      "index": 202.377924,
+      "equal_weight": 228.147743,
+      "top_coin": 17.501783,
+      "sol": 0.706931
+    },
+    {
+      "t": "2026-11-09T11:00:00Z",
+      "index": 206.998721,
+      "equal_weight": 233.484787,
+      "top_coin": 17.838622,
+      "sol": 0.702765
+    },
+    {
+      "t": "2026-11-09T12:00:00Z",
+      "index": 213.592028,
+      "equal_weight": 242.228871,
+      "top_coin": 18.205639,
+      "sol": 0.704231
+    },
+    {
+      "t": "2026-11-09T13:00:00Z",
+      "index": 207.510083,
+      "equal_weight": 234.9197,
+      "top_coin": 18.104193,
+      "sol": 0.708449
+    },
+    {
+      "t": "2026-11-09T14:00:00Z",
+      "index": 222.72621,
+      "equal_weight": 252.653659,
+      "top_coin": 17.591375,
+      "sol": 0.709568
+    },
+    {
+      "t": "2026-11-09T15:00:00Z",
+      "index": 212.673939,
+      "equal_weight": 241.375382,
+      "top_coin": 17.654041,
+      "sol": 0.713527
+    },
+    {
+      "t": "2026-11-09T16:00:00Z",
+      "index": 207.534638,
+      "equal_weight": 235.852088,
+      "top_coin": 17.357336,
+      "sol": 0.718981
+    },
+    {
+      "t": "2026-11-09T17:00:00Z",
+      "index": 215.599482,
+      "equal_weight": 245.373246,
+      "top_coin": 17.567507,
+      "sol": 0.711811
+    },
+    {
+      "t": "2026-11-09T18:00:00Z",
+      "index": 200.296233,
+      "equal_weight": 227.517086,
+      "top_coin": 17.225821,
+      "sol": 0.70844
+    },
+    {
+      "t": "2026-11-09T19:00:00Z",
+      "index": 214.853932,
+      "equal_weight": 243.534171,
+      "top_coin": 17.519513,
+      "sol": 0.707556
+    },
+    {
+      "t": "2026-11-09T20:00:00Z",
+      "index": 210.238415,
+      "equal_weight": 237.977785,
+      "top_coin": 17.790315,
+      "sol": 0.707698
+    },
+    {
+      "t": "2026-11-09T21:00:00Z",
+      "index": 212.205096,
+      "equal_weight": 239.670941,
+      "top_coin": 17.914347,
+      "sol": 0.708599
+    },
+    {
+      "t": "2026-11-09T22:00:00Z",
+      "index": 207.845287,
+      "equal_weight": 235.28609,
+      "top_coin": 17.618601,
+      "sol": 0.706956
+    },
+    {
+      "t": "2026-11-09T23:00:00Z",
+      "index": 212.435714,
+      "equal_weight": 241.31732,
+      "top_coin": 18.013594,
+      "sol": 0.709832
+    },
+    {
+      "t": "2026-11-10T00:00:00Z",
+      "index": 206.554768,
+      "equal_weight": 235.248841,
+      "top_coin": 17.251327,
+      "sol": 0.708759
+    },
+    {
+      "t": "2026-11-10T01:00:00Z",
+      "index": 203.337787,
+      "equal_weight": 231.685195,
+      "top_coin": 17.427811,
+      "sol": 0.707277
+    },
+    {
+      "t": "2026-11-10T02:00:00Z",
+      "index": 204.929876,
+      "equal_weight": 232.846587,
+      "top_coin": 17.180696,
+      "sol": 0.70555
+    },
+    {
+      "t": "2026-11-10T03:00:00Z",
+      "index": 205.286867,
+      "equal_weight": 233.481756,
+      "top_coin": 16.527639,
+      "sol": 0.704523
+    },
+    {
+      "t": "2026-11-10T04:00:00Z",
+      "index": 209.965526,
+      "equal_weight": 238.764893,
+      "top_coin": 16.613739,
+      "sol": 0.701436
+    },
+    {
+      "t": "2026-11-10T05:00:00Z",
+      "index": 216.169327,
+      "equal_weight": 246.175106,
+      "top_coin": 16.612694,
+      "sol": 0.703361
+    },
+    {
+      "t": "2026-11-10T06:00:00Z",
+      "index": 221.652472,
+      "equal_weight": 253.128179,
+      "top_coin": 17.246643,
+      "sol": 0.705527
+    },
+    {
+      "t": "2026-11-10T07:00:00Z",
+      "index": 220.289289,
+      "equal_weight": 251.524232,
+      "top_coin": 16.827437,
+      "sol": 0.703926
+    },
+    {
+      "t": "2026-11-10T08:00:00Z",
+      "index": 222.764641,
+      "equal_weight": 254.585904,
+      "top_coin": 17.570468,
+      "sol": 0.703875
+    },
+    {
+      "t": "2026-11-10T09:00:00Z",
+      "index": 217.015298,
+      "equal_weight": 247.72975,
+      "top_coin": 17.524435,
+      "sol": 0.702191
+    },
+    {
+      "t": "2026-11-10T10:00:00Z",
+      "index": 222.129136,
+      "equal_weight": 253.505286,
+      "top_coin": 17.375836,
+      "sol": 0.699825
+    },
+    {
+      "t": "2026-11-10T11:00:00Z",
+      "index": 225.131731,
+      "equal_weight": 257.19002,
+      "top_coin": 17.237149,
+      "sol": 0.690743
+    },
+    {
+      "t": "2026-11-10T12:00:00Z",
+      "index": 234.698946,
+      "equal_weight": 267.262981,
+      "top_coin": 16.390211,
+      "sol": 0.692445
+    },
+    {
+      "t": "2026-11-10T13:00:00Z",
+      "index": 268.003552,
+      "equal_weight": 304.379133,
+      "top_coin": 15.032106,
+      "sol": 0.694481
+    },
+    {
+      "t": "2026-11-10T14:00:00Z",
+      "index": 282.362187,
+      "equal_weight": 318.453033,
+      "top_coin": 14.574482,
+      "sol": 0.688101
+    },
+    {
+      "t": "2026-11-10T15:00:00Z",
+      "index": 286.246728,
+      "equal_weight": 321.680956,
+      "top_coin": 13.41459,
+      "sol": 0.689411
+    },
+    {
+      "t": "2026-11-10T16:00:00Z",
+      "index": 283.404886,
+      "equal_weight": 321.009815,
+      "top_coin": 13.976615,
+      "sol": 0.673534
+    },
+    {
+      "t": "2026-11-10T17:00:00Z",
+      "index": 297.785831,
+      "equal_weight": 337.064613,
+      "top_coin": 14.249516,
+      "sol": 0.670161
+    },
+    {
+      "t": "2026-11-10T18:00:00Z",
+      "index": 306.919402,
+      "equal_weight": 346.180403,
+      "top_coin": 14.667315,
+      "sol": 0.673234
+    },
+    {
+      "t": "2026-11-10T19:00:00Z",
+      "index": 305.234428,
+      "equal_weight": 344.569379,
+      "top_coin": 14.226612,
+      "sol": 0.678453
+    },
+    {
+      "t": "2026-11-10T20:00:00Z",
+      "index": 302.690993,
+      "equal_weight": 342.646368,
+      "top_coin": 15.337584,
+      "sol": 0.677958
+    },
+    {
+      "t": "2026-11-10T21:00:00Z",
+      "index": 302.056406,
+      "equal_weight": 341.069755,
+      "top_coin": 15.519486,
+      "sol": 0.681334
+    },
+    {
+      "t": "2026-11-10T22:00:00Z",
+      "index": 287.773977,
+      "equal_weight": 325.322906,
+      "top_coin": 13.961013,
+      "sol": 0.68182
+    },
+    {
+      "t": "2026-11-10T23:00:00Z",
+      "index": 285.778458,
+      "equal_weight": 324.462063,
+      "top_coin": 13.487622,
+      "sol": 0.677917
+    },
+    {
+      "t": "2026-11-11T00:00:00Z",
+      "index": 277.40603,
+      "equal_weight": 313.834835,
+      "top_coin": 13.217516,
+      "sol": 0.681493
+    },
+    {
+      "t": "2026-11-11T01:00:00Z",
+      "index": 274.708148,
+      "equal_weight": 310.994919,
+      "top_coin": 12.816067,
+      "sol": 0.67978
+    },
+    {
+      "t": "2026-11-11T02:00:00Z",
+      "index": 274.412741,
+      "equal_weight": 311.390397,
+      "top_coin": 12.283159,
+      "sol": 0.680395
+    },
+    {
+      "t": "2026-11-11T03:00:00Z",
+      "index": 271.934235,
+      "equal_weight": 308.769993,
+      "top_coin": 11.842544,
+      "sol": 0.680595
+    },
+    {
+      "t": "2026-11-11T04:00:00Z",
+      "index": 292.2013,
+      "equal_weight": 331.292429,
+      "top_coin": 12.136504,
+      "sol": 0.681407
+    },
+    {
+      "t": "2026-11-11T05:00:00Z",
+      "index": 297.542158,
+      "equal_weight": 337.04365,
+      "top_coin": 12.417766,
+      "sol": 0.677153
+    },
+    {
+      "t": "2026-11-11T06:00:00Z",
+      "index": 288.85868,
+      "equal_weight": 327.334796,
+      "top_coin": 12.123865,
+      "sol": 0.681763
+    },
+    {
+      "t": "2026-11-11T07:00:00Z",
+      "index": 284.804986,
+      "equal_weight": 322.874979,
+      "top_coin": 12.151499,
+      "sol": 0.675786
+    },
+    {
+      "t": "2026-11-11T08:00:00Z",
+      "index": 284.234395,
+      "equal_weight": 322.134198,
+      "top_coin": 12.1523,
+      "sol": 0.680999
+    },
+    {
+      "t": "2026-11-11T09:00:00Z",
+      "index": 295.772779,
+      "equal_weight": 335.714327,
+      "top_coin": 12.266667,
+      "sol": 0.678358
+    },
+    {
+      "t": "2026-11-11T10:00:00Z",
+      "index": 309.201442,
+      "equal_weight": 351.536958,
+      "top_coin": 12.139769,
+      "sol": 0.683463
+    },
+    {
+      "t": "2026-11-11T11:00:00Z",
+      "index": 321.324503,
+      "equal_weight": 364.678,
+      "top_coin": 12.232872,
+      "sol": 0.685675
+    },
+    {
+      "t": "2026-11-11T12:00:00Z",
+      "index": 303.930994,
+      "equal_weight": 344.252469,
+      "top_coin": 12.479935,
+      "sol": 0.686728
+    },
+    {
+      "t": "2026-11-11T13:00:00Z",
+      "index": 328.706123,
+      "equal_weight": 371.30517,
+      "top_coin": 11.49727,
+      "sol": 0.686215
+    },
+    {
+      "t": "2026-11-11T14:00:00Z",
+      "index": 318.812426,
+      "equal_weight": 359.933543,
+      "top_coin": 6.704879,
+      "sol": 0.691469
+    },
+    {
+      "t": "2026-11-11T15:00:00Z",
+      "index": 333.444591,
+      "equal_weight": 376.045743,
+      "top_coin": 9.365878,
+      "sol": 0.687305
+    },
+    {
+      "t": "2026-11-11T16:00:00Z",
+      "index": 370.29483,
+      "equal_weight": 413.91219,
+      "top_coin": 9.458523,
+      "sol": 0.693546
+    },
+    {
+      "t": "2026-11-11T17:00:00Z",
+      "index": 353.464861,
+      "equal_weight": 397.856927,
+      "top_coin": 9.087613,
+      "sol": 0.694162
+    },
+    {
+      "t": "2026-11-11T18:00:00Z",
+      "index": 338.227622,
+      "equal_weight": 377.794119,
+      "top_coin": 8.634107,
+      "sol": 0.697926
+    },
+    {
+      "t": "2026-11-11T19:00:00Z",
+      "index": 325.691383,
+      "equal_weight": 357.955887,
+      "top_coin": 8.219255,
+      "sol": 0.69548
+    },
+    {
+      "t": "2026-11-11T20:00:00Z",
+      "index": 316.172374,
+      "equal_weight": 353.677377,
+      "top_coin": 7.20941,
+      "sol": 0.693656
+    },
+    {
+      "t": "2026-11-11T21:00:00Z",
+      "index": 303.082169,
+      "equal_weight": 340.063305,
+      "top_coin": 6.630543,
+      "sol": 0.695254
+    },
+    {
+      "t": "2026-11-11T22:00:00Z",
+      "index": 284.335224,
+      "equal_weight": 311.673918,
+      "top_coin": 6.998799,
+      "sol": 0.691389
+    },
+    {
+      "t": "2026-11-11T23:00:00Z",
+      "index": 300.36013,
+      "equal_weight": 328.652332,
+      "top_coin": 8.142001,
+      "sol": 0.682216
+    },
+    {
+      "t": "2026-11-12T00:00:00Z",
+      "index": 310.362958,
+      "equal_weight": 338.640637,
+      "top_coin": 8.516414,
+      "sol": 0.681252
+    },
+    {
+      "t": "2026-11-12T01:00:00Z",
+      "index": 317.011037,
+      "equal_weight": 349.518411,
+      "top_coin": 8.780142,
+      "sol": 0.68361
+    },
+    {
+      "t": "2026-11-12T02:00:00Z",
+      "index": 342.82647,
+      "equal_weight": 385.071252,
+      "top_coin": 8.451272,
+      "sol": 0.679501
+    },
+    {
+      "t": "2026-11-12T03:00:00Z",
+      "index": 364.08884,
+      "equal_weight": 429.475044,
+      "top_coin": 8.772455,
+      "sol": 0.681948
+    },
+    {
+      "t": "2026-11-12T04:00:00Z",
+      "index": 333.230089,
+      "equal_weight": 389.3279,
+      "top_coin": 8.977086,
+      "sol": 0.681512
+    },
+    {
+      "t": "2026-11-12T05:00:00Z",
+      "index": 339.725152,
+      "equal_weight": 395.166752,
+      "top_coin": 10.315665,
+      "sol": 0.679392
+    },
+    {
+      "t": "2026-11-12T06:00:00Z",
+      "index": 343.303358,
+      "equal_weight": 401.298136,
+      "top_coin": 10.186096,
+      "sol": 0.677709
+    },
+    {
+      "t": "2026-11-12T07:00:00Z",
+      "index": 351.150168,
+      "equal_weight": 405.76953,
+      "top_coin": 11.131485,
+      "sol": 0.676251
+    },
+    {
+      "t": "2026-11-12T08:00:00Z",
+      "index": 354.17524,
+      "equal_weight": 410.126607,
+      "top_coin": 10.967712,
+      "sol": 0.678583
+    },
+    {
+      "t": "2026-11-12T09:00:00Z",
+      "index": 355.505362,
+      "equal_weight": 411.394091,
+      "top_coin": 11.424993,
+      "sol": 0.678405
+    },
+    {
+      "t": "2026-11-12T10:00:00Z",
+      "index": 341.813389,
+      "equal_weight": 399.110445,
+      "top_coin": 9.983773,
+      "sol": 0.679674
+    },
+    {
+      "t": "2026-11-12T11:00:00Z",
+      "index": 339.793469,
+      "equal_weight": 398.608039,
+      "top_coin": 9.563248,
+      "sol": 0.67817
+    },
+    {
+      "t": "2026-11-12T12:00:00Z",
+      "index": 358.743048,
+      "equal_weight": 419.592337,
+      "top_coin": 10.267635,
+      "sol": 0.674045
+    },
+    {
+      "t": "2026-11-12T13:00:00Z",
+      "index": 343.437952,
+      "equal_weight": 400.801197,
+      "top_coin": 9.714615,
+      "sol": 0.672008
+    },
+    {
+      "t": "2026-11-12T14:00:00Z",
+      "index": 337.217984,
+      "equal_weight": 391.677433,
+      "top_coin": 11.75532,
+      "sol": 0.665786
+    },
+    {
+      "t": "2026-11-12T15:00:00Z",
+      "index": 359.603934,
+      "equal_weight": 410.593533,
+      "top_coin": 14.044088,
+      "sol": 0.663769
+    },
+    {
+      "t": "2026-11-12T16:00:00Z",
+      "index": 368.55291,
+      "equal_weight": 422.865501,
+      "top_coin": 13.670701,
+      "sol": 0.667641
+    },
+    {
+      "t": "2026-11-12T17:00:00Z",
+      "index": 360.627383,
+      "equal_weight": 414.179438,
+      "top_coin": 13.763242,
+      "sol": 0.665737
+    },
+    {
+      "t": "2026-11-12T18:00:00Z",
+      "index": 348.972305,
+      "equal_weight": 403.155273,
+      "top_coin": 11.879765,
+      "sol": 0.667747
+    },
+    {
+      "t": "2026-11-12T19:00:00Z",
+      "index": 353.309368,
+      "equal_weight": 405.208552,
+      "top_coin": 13.005209,
+      "sol": 0.667174
+    },
+    {
+      "t": "2026-11-12T20:00:00Z",
+      "index": 348.578259,
+      "equal_weight": 406.024675,
+      "top_coin": 12.416347,
+      "sol": 0.667536
+    },
+    {
+      "t": "2026-11-12T21:00:00Z",
+      "index": 317.979633,
+      "equal_weight": 368.029508,
+      "top_coin": 11.46243,
+      "sol": 0.665238
+    },
+    {
+      "t": "2026-11-12T22:00:00Z",
+      "index": 331.084569,
+      "equal_weight": 383.624046,
+      "top_coin": 12.368503,
+      "sol": 0.665606
+    },
+    {
+      "t": "2026-11-12T23:00:00Z",
+      "index": 338.655818,
+      "equal_weight": 388.950919,
+      "top_coin": 11.80127,
+      "sol": 0.666082
+    },
+    {
+      "t": "2026-11-13T00:00:00Z",
+      "index": 345.388305,
+      "equal_weight": 399.153943,
+      "top_coin": 11.244642,
+      "sol": 0.668127
+    },
+    {
+      "t": "2026-11-13T01:00:00Z",
+      "index": 365.020712,
+      "equal_weight": 418.858598,
+      "top_coin": 11.821149,
+      "sol": 0.667084
+    },
+    {
+      "t": "2026-11-13T02:00:00Z",
+      "index": 351.259454,
+      "equal_weight": 408.278966,
+      "top_coin": 11.275935,
+      "sol": 0.664925
+    },
+    {
+      "t": "2026-11-13T03:00:00Z",
+      "index": 340.190508,
+      "equal_weight": 398.613479,
+      "top_coin": 10.996231,
+      "sol": 0.655995
+    },
+    {
+      "t": "2026-11-13T04:00:00Z",
+      "index": 344.110312,
+      "equal_weight": 404.287504,
+      "top_coin": 11.238576,
+      "sol": 0.641511
+    },
+    {
+      "t": "2026-11-13T05:00:00Z",
+      "index": 347.509016,
+      "equal_weight": 409.092203,
+      "top_coin": 11.592421,
+      "sol": 0.641033
+    },
+    {
+      "t": "2026-11-13T06:00:00Z",
+      "index": 361.20511,
+      "equal_weight": 422.21345,
+      "top_coin": 12.383687,
+      "sol": 0.642216
+    },
+    {
+      "t": "2026-11-13T07:00:00Z",
+      "index": 379.52463,
+      "equal_weight": 440.880809,
+      "top_coin": 13.525218,
+      "sol": 0.655466
+    },
+    {
+      "t": "2026-11-13T08:00:00Z",
+      "index": 367.458887,
+      "equal_weight": 426.08275,
+      "top_coin": 13.615952,
+      "sol": 0.652304
+    },
+    {
+      "t": "2026-11-13T09:00:00Z",
+      "index": 371.443349,
+      "equal_weight": 427.689252,
+      "top_coin": 13.974517,
+      "sol": 0.652366
+    },
+    {
+      "t": "2026-11-13T10:00:00Z",
+      "index": 390.698595,
+      "equal_weight": 448.385853,
+      "top_coin": 13.112866,
+      "sol": 0.654486
+    },
+    {
+      "t": "2026-11-13T11:00:00Z",
+      "index": 393.051028,
+      "equal_weight": 462.379067,
+      "top_coin": 12.228698,
+      "sol": 0.658135
+    },
+    {
+      "t": "2026-11-13T12:00:00Z",
+      "index": 400.996531,
+      "equal_weight": 477.499367,
+      "top_coin": 12.590065,
+      "sol": 0.659765
+    },
+    {
+      "t": "2026-11-13T13:00:00Z",
+      "index": 418.171068,
+      "equal_weight": 502.681486,
+      "top_coin": 13.13427,
+      "sol": 0.65982
+    },
+    {
+      "t": "2026-11-13T14:00:00Z",
+      "index": 412.879449,
+      "equal_weight": 492.51951,
+      "top_coin": 12.270852,
+      "sol": 0.666552
+    },
+    {
+      "t": "2026-11-13T15:00:00Z",
+      "index": 394.53553,
+      "equal_weight": 465.121855,
+      "top_coin": 11.356401,
+      "sol": 0.660327
+    },
+    {
+      "t": "2026-11-13T16:00:00Z",
+      "index": 403.892318,
+      "equal_weight": 478.735102,
+      "top_coin": 11.280854,
+      "sol": 0.654094
+    },
+    {
+      "t": "2026-11-13T17:00:00Z",
+      "index": 404.04694,
+      "equal_weight": 479.478232,
+      "top_coin": 11.149886,
+      "sol": 0.650948
+    },
+    {
+      "t": "2026-11-13T18:00:00Z",
+      "index": 414.622546,
+      "equal_weight": 487.254764,
+      "top_coin": 10.912695,
+      "sol": 0.653721
+    },
+    {
+      "t": "2026-11-13T19:00:00Z",
+      "index": 412.036695,
+      "equal_weight": 487.189862,
+      "top_coin": 11.010598,
+      "sol": 0.655272
+    },
+    {
+      "t": "2026-11-13T20:00:00Z",
+      "index": 407.822032,
+      "equal_weight": 482.941645,
+      "top_coin": 11.377783,
+      "sol": 0.656322
+    },
+    {
+      "t": "2026-11-13T21:00:00Z",
+      "index": 393.036008,
+      "equal_weight": 461.551615,
+      "top_coin": 11.060842,
+      "sol": 0.653731
+    },
+    {
+      "t": "2026-11-13T22:00:00Z",
+      "index": 398.402587,
+      "equal_weight": 464.303008,
+      "top_coin": 11.178896,
+      "sol": 0.643374
+    },
+    {
+      "t": "2026-11-13T23:00:00Z",
+      "index": 416.813132,
+      "equal_weight": 479.500643,
+      "top_coin": 10.979855,
+      "sol": 0.635763
+    },
+    {
+      "t": "2026-11-14T00:00:00Z",
+      "index": 414.934391,
+      "equal_weight": 479.596316,
+      "top_coin": 11.434058,
+      "sol": 0.640445
+    },
+    {
+      "t": "2026-11-14T01:00:00Z",
+      "index": 419.110019,
+      "equal_weight": 485.451099,
+      "top_coin": 12.083342,
+      "sol": 0.635549
+    },
+    {
+      "t": "2026-11-14T02:00:00Z",
+      "index": 413.151418,
+      "equal_weight": 480.503382,
+      "top_coin": 11.690357,
+      "sol": 0.629986
+    },
+    {
+      "t": "2026-11-14T03:00:00Z",
+      "index": 418.654821,
+      "equal_weight": 482.839366,
+      "top_coin": 11.57703,
+      "sol": 0.622938
+    },
+    {
+      "t": "2026-11-14T04:00:00Z",
+      "index": 446.716426,
+      "equal_weight": 508.90013,
+      "top_coin": 11.973054,
+      "sol": 0.6142
+    },
+    {
+      "t": "2026-11-14T05:00:00Z",
+      "index": 481.407408,
+      "equal_weight": 542.567282,
+      "top_coin": 12.531468,
+      "sol": 0.618073
+    },
+    {
+      "t": "2026-11-14T06:00:00Z",
+      "index": 502.32674,
+      "equal_weight": 566.740781,
+      "top_coin": 11.832207,
+      "sol": 0.62128
+    },
+    {
+      "t": "2026-11-14T07:00:00Z",
+      "index": 498.609433,
+      "equal_weight": 560.329075,
+      "top_coin": 12.254626,
+      "sol": 0.6192
+    },
+    {
+      "t": "2026-11-14T08:00:00Z",
+      "index": 507.115707,
+      "equal_weight": 567.513267,
+      "top_coin": 10.438458,
+      "sol": 0.615585
+    },
+    {
+      "t": "2026-11-14T09:00:00Z",
+      "index": 500.033756,
+      "equal_weight": 568.827378,
+      "top_coin": 9.655498,
+      "sol": 0.615337
+    },
+    {
+      "t": "2026-11-14T10:00:00Z",
+      "index": 492.296599,
+      "equal_weight": 558.10625,
+      "top_coin": 9.983982,
+      "sol": 0.621219
+    },
+    {
+      "t": "2026-11-14T11:00:00Z",
+      "index": 481.703958,
+      "equal_weight": 546.802755,
+      "top_coin": 9.932528,
+      "sol": 0.619316
+    },
+    {
+      "t": "2026-11-14T12:00:00Z",
+      "index": 466.915762,
+      "equal_weight": 532.873459,
+      "top_coin": 9.546677,
+      "sol": 0.621081
+    },
+    {
+      "t": "2026-11-14T13:00:00Z",
+      "index": 466.642545,
+      "equal_weight": 532.469958,
+      "top_coin": 10.042962,
+      "sol": 0.618374
+    },
+    {
+      "t": "2026-11-14T14:00:00Z",
+      "index": 473.10191,
+      "equal_weight": 536.825552,
+      "top_coin": 9.608993,
+      "sol": 0.617702
+    },
+    {
+      "t": "2026-11-14T15:00:00Z",
+      "index": 467.625024,
+      "equal_weight": 530.442698,
+      "top_coin": 9.186948,
+      "sol": 0.605873
+    },
+    {
+      "t": "2026-11-14T16:00:00Z",
+      "index": 458.004889,
+      "equal_weight": 523.335349,
+      "top_coin": 9.509442,
+      "sol": 0.604241
+    },
+    {
+      "t": "2026-11-14T17:00:00Z",
+      "index": 448.304262,
+      "equal_weight": 516.564267,
+      "top_coin": 9.363144,
+      "sol": 0.592196
+    },
+    {
+      "t": "2026-11-14T18:00:00Z",
+      "index": 453.654455,
+      "equal_weight": 520.954074,
+      "top_coin": 10.470616,
+      "sol": 0.595609
+    },
+    {
+      "t": "2026-11-14T19:00:00Z",
+      "index": 491.172137,
+      "equal_weight": 561.883813,
+      "top_coin": 10.05169,
+      "sol": 0.590854
+    },
+    {
+      "t": "2026-11-14T20:00:00Z",
+      "index": 496.185665,
+      "equal_weight": 567.16505,
+      "top_coin": 9.942828,
+      "sol": 0.591536
+    },
+    {
+      "t": "2026-11-14T21:00:00Z",
+      "index": 522.103767,
+      "equal_weight": 581.1134,
+      "top_coin": 9.719993,
+      "sol": 0.57742
+    },
+    {
+      "t": "2026-11-14T22:00:00Z",
+      "index": 501.10832,
+      "equal_weight": 561.371356,
+      "top_coin": 9.521377,
+      "sol": 0.571492
+    },
+    {
+      "t": "2026-11-14T23:00:00Z",
+      "index": 510.944416,
+      "equal_weight": 573.691764,
+      "top_coin": 9.117952,
+      "sol": 0.565434
+    },
+    {
+      "t": "2026-11-15T00:00:00Z",
+      "index": 520.658201,
+      "equal_weight": 589.012084,
+      "top_coin": 9.293022,
+      "sol": 0.574843
+    },
+    {
+      "t": "2026-11-15T01:00:00Z",
+      "index": 507.911767,
+      "equal_weight": 570.788636,
+      "top_coin": 8.986157,
+      "sol": 0.568081
+    },
+    {
+      "t": "2026-11-15T02:00:00Z",
+      "index": 532.16662,
+      "equal_weight": 593.34957,
+      "top_coin": 10.233299,
+      "sol": 0.55533
+    },
+    {
+      "t": "2026-11-15T03:00:00Z",
+      "index": 542.011849,
+      "equal_weight": 610.083758,
+      "top_coin": 9.786026,
+      "sol": 0.58374
+    },
+    {
+      "t": "2026-11-15T04:00:00Z",
+      "index": 548.836726,
+      "equal_weight": 618.600176,
+      "top_coin": 9.490076,
+      "sol": 0.583883
+    },
+    {
+      "t": "2026-11-15T05:00:00Z",
+      "index": 553.410804,
+      "equal_weight": 622.803973,
+      "top_coin": 9.672115,
+      "sol": 0.580577
+    },
+    {
+      "t": "2026-11-15T06:00:00Z",
+      "index": 526.29833,
+      "equal_weight": 595.856896,
+      "top_coin": 9.42007,
+      "sol": 0.579378
+    },
+    {
+      "t": "2026-11-15T07:00:00Z",
+      "index": 527.880803,
+      "equal_weight": 604.32341,
+      "top_coin": 9.765506,
+      "sol": 0.576533
+    },
+    {
+      "t": "2026-11-15T08:00:00Z",
+      "index": 546.299284,
+      "equal_weight": 620.103629,
+      "top_coin": 10.412412,
+      "sol": 0.572307
+    },
+    {
+      "t": "2026-11-15T09:00:00Z",
+      "index": 539.675217,
+      "equal_weight": 623.596976,
+      "top_coin": 9.9227,
+      "sol": 0.580661
+    },
+    {
+      "t": "2026-11-15T10:00:00Z",
+      "index": 535.344732,
+      "equal_weight": 620.949184,
+      "top_coin": 10.034427,
+      "sol": 0.586726
+    },
+    {
+      "t": "2026-11-15T11:00:00Z",
+      "index": 549.494851,
+      "equal_weight": 642.385207,
+      "top_coin": 11.252732,
+      "sol": 0.590107
+    },
+    {
+      "t": "2026-11-15T12:00:00Z",
+      "index": 551.952347,
+      "equal_weight": 640.976741,
+      "top_coin": 11.259694,
+      "sol": 0.591903
+    },
+    {
+      "t": "2026-11-15T13:00:00Z",
+      "index": 542.161807,
+      "equal_weight": 632.083088,
+      "top_coin": 10.684918,
+      "sol": 0.595734
+    },
+    {
+      "t": "2026-11-15T14:00:00Z",
+      "index": 546.591119,
+      "equal_weight": 637.409173,
+      "top_coin": 10.538345,
+      "sol": 0.594485
+    },
+    {
+      "t": "2026-11-15T15:00:00Z",
+      "index": 530.452095,
+      "equal_weight": 626.477852,
+      "top_coin": 10.39781,
+      "sol": 0.583854
+    },
+    {
+      "t": "2026-11-15T16:00:00Z",
+      "index": 529.118549,
+      "equal_weight": 627.699962,
+      "top_coin": 10.329708,
+      "sol": 0.582694
+    },
+    {
+      "t": "2026-11-15T17:00:00Z",
+      "index": 535.899514,
+      "equal_weight": 635.772274,
+      "top_coin": 10.329375,
+      "sol": 0.584344
+    },
+    {
+      "t": "2026-11-15T18:00:00Z",
+      "index": 542.67539,
+      "equal_weight": 641.80889,
+      "top_coin": 10.50164,
+      "sol": 0.584178
+    },
+    {
+      "t": "2026-11-15T19:00:00Z",
+      "index": 546.200502,
+      "equal_weight": 649.632985,
+      "top_coin": 9.991751,
+      "sol": 0.581813
+    },
+    {
+      "t": "2026-11-15T20:00:00Z",
+      "index": 544.067263,
+      "equal_weight": 645.323731,
+      "top_coin": 9.914646,
+      "sol": 0.586495
+    },
+    {
+      "t": "2026-11-15T21:00:00Z",
+      "index": 553.869605,
+      "equal_weight": 654.094853,
+      "top_coin": 10.10796,
+      "sol": 0.58821
+    },
+    {
+      "t": "2026-11-15T22:00:00Z",
+      "index": 553.637894,
+      "equal_weight": 655.897708,
+      "top_coin": 9.75521,
+      "sol": 0.588286
+    },
+    {
+      "t": "2026-11-15T23:00:00Z",
+      "index": 581.976268,
+      "equal_weight": 698.979982,
+      "top_coin": 9.90569,
+      "sol": 0.592776
+    },
+    {
+      "t": "2026-11-16T00:00:00Z",
+      "index": 612.81526,
+      "equal_weight": 732.636813,
+      "top_coin": 10.644365,
+      "sol": 0.595047
+    },
+    {
+      "t": "2026-11-16T01:00:00Z",
+      "index": 590.355441,
+      "equal_weight": 704.135852,
+      "top_coin": 10.520082,
+      "sol": 0.588611
+    },
+    {
+      "t": "2026-11-16T02:00:00Z",
+      "index": 583.840847,
+      "equal_weight": 689.806253,
+      "top_coin": 10.732217,
+      "sol": 0.583847
+    },
+    {
+      "t": "2026-11-16T03:00:00Z",
+      "index": 593.862666,
+      "equal_weight": 699.654836,
+      "top_coin": 11.415199,
+      "sol": 0.590931
+    },
+    {
+      "t": "2026-11-16T04:00:00Z",
+      "index": 595.143216,
+      "equal_weight": 699.302396,
+      "top_coin": 10.814147,
+      "sol": 0.59023
+    },
+    {
+      "t": "2026-11-16T05:00:00Z",
+      "index": 575.27261,
+      "equal_weight": 676.306539,
+      "top_coin": 11.08164,
+      "sol": 0.585567
+    },
+    {
+      "t": "2026-11-16T06:00:00Z",
+      "index": 588.03891,
+      "equal_weight": 696.771242,
+      "top_coin": 11.51685,
+      "sol": 0.582188
+    },
+    {
+      "t": "2026-11-16T07:00:00Z",
+      "index": 590.716157,
+      "equal_weight": 701.944451,
+      "top_coin": 11.612555,
+      "sol": 0.582851
+    },
+    {
+      "t": "2026-11-16T08:00:00Z",
+      "index": 580.733457,
+      "equal_weight": 689.207568,
+      "top_coin": 13.854202,
+      "sol": 0.583983
+    },
+    {
+      "t": "2026-11-16T09:00:00Z",
+      "index": 595.090315,
+      "equal_weight": 707.119962,
+      "top_coin": 15.980014,
+      "sol": 0.579497
+    },
+    {
+      "t": "2026-11-16T10:00:00Z",
+      "index": 559.800862,
+      "equal_weight": 666.250428,
+      "top_coin": 14.540311,
+      "sol": 0.579501
+    },
+    {
+      "t": "2026-11-16T11:00:00Z",
+      "index": 573.254758,
+      "equal_weight": 680.686805,
+      "top_coin": 14.62832,
+      "sol": 0.586249
+    },
+    {
+      "t": "2026-11-16T12:00:00Z",
+      "index": 569.110915,
+      "equal_weight": 672.358313,
+      "top_coin": 14.564731,
+      "sol": 0.583814
+    },
+    {
+      "t": "2026-11-16T13:00:00Z",
+      "index": 578.96153,
+      "equal_weight": 682.068547,
+      "top_coin": 15.924266,
+      "sol": 0.578143
+    },
+    {
+      "t": "2026-11-16T14:00:00Z",
+      "index": 576.574719,
+      "equal_weight": 685.532243,
+      "top_coin": 15.595954,
+      "sol": 0.579172
+    },
+    {
+      "t": "2026-11-16T15:00:00Z",
+      "index": 570.380314,
+      "equal_weight": 670.884965,
+      "top_coin": 17.920593,
+      "sol": 0.587267
+    },
+    {
+      "t": "2026-11-16T16:00:00Z",
+      "index": 594.392473,
+      "equal_weight": 695.827286,
+      "top_coin": 20.111205,
+      "sol": 0.578977
+    },
+    {
+      "t": "2026-11-16T17:00:00Z",
+      "index": 600.069176,
+      "equal_weight": 704.990549,
+      "top_coin": 18.442478,
+      "sol": 0.583894
+    },
+    {
+      "t": "2026-11-16T18:00:00Z",
+      "index": 610.2957,
+      "equal_weight": 717.447681,
+      "top_coin": 18.548795,
+      "sol": 0.582584
+    },
+    {
+      "t": "2026-11-16T19:00:00Z",
+      "index": 634.124751,
+      "equal_weight": 736.094327,
+      "top_coin": 19.736549,
+      "sol": 0.584335
+    },
+    {
+      "t": "2026-11-16T20:00:00Z",
+      "index": 621.503842,
+      "equal_weight": 725.409615,
+      "top_coin": 21.030164,
+      "sol": 0.584817
+    },
+    {
+      "t": "2026-11-16T21:00:00Z",
+      "index": 695.906349,
+      "equal_weight": 825.865982,
+      "top_coin": 22.581361,
+      "sol": 0.583963
+    },
+    {
+      "t": "2026-11-16T22:00:00Z",
+      "index": 664.834859,
+      "equal_weight": 774.052231,
+      "top_coin": 26.277155,
+      "sol": 0.588365
+    },
+    {
+      "t": "2026-11-16T23:00:00Z",
+      "index": 744.667645,
+      "equal_weight": 867.306653,
+      "top_coin": 23.89959,
+      "sol": 0.586672
+    },
+    {
+      "t": "2026-11-17T00:00:00Z",
+      "index": 708.535737,
+      "equal_weight": 834.717703,
+      "top_coin": 19.033032,
+      "sol": 0.585303
+    },
+    {
+      "t": "2026-11-17T01:00:00Z",
+      "index": 728.395413,
+      "equal_weight": 851.231557,
+      "top_coin": 22.812018,
+      "sol": 0.58479
+    },
+    {
+      "t": "2026-11-17T02:00:00Z",
+      "index": 713.680347,
+      "equal_weight": 828.726522,
+      "top_coin": 22.57603,
+      "sol": 0.587255
+    },
+    {
+      "t": "2026-11-17T03:00:00Z",
+      "index": 695.067273,
+      "equal_weight": 811.288037,
+      "top_coin": 22.001497,
+      "sol": 0.586687
+    },
+    {
+      "t": "2026-11-17T04:00:00Z",
+      "index": 706.437404,
+      "equal_weight": 830.880567,
+      "top_coin": 19.414418,
+      "sol": 0.595352
+    },
+    {
+      "t": "2026-11-17T05:00:00Z",
+      "index": 725.202943,
+      "equal_weight": 841.069003,
+      "top_coin": 21.788268,
+      "sol": 0.597217
+    },
+    {
+      "t": "2026-11-17T06:00:00Z",
+      "index": 755.478427,
+      "equal_weight": 873.461799,
+      "top_coin": 23.715032,
+      "sol": 0.594364
+    },
+    {
+      "t": "2026-11-17T07:00:00Z",
+      "index": 753.831885,
+      "equal_weight": 871.849638,
+      "top_coin": 22.230541,
+      "sol": 0.594067
+    },
+    {
+      "t": "2026-11-17T08:00:00Z",
+      "index": 761.306048,
+      "equal_weight": 880.992164,
+      "top_coin": 24.219483,
+      "sol": 0.596578
+    },
+    {
+      "t": "2026-11-17T09:00:00Z",
+      "index": 770.639796,
+      "equal_weight": 905.912508,
+      "top_coin": 25.073441,
+      "sol": 0.592353
+    },
+    {
+      "t": "2026-11-17T10:00:00Z",
+      "index": 775.76627,
+      "equal_weight": 895.557934,
+      "top_coin": 26.886955,
+      "sol": 0.59474
+    },
+    {
+      "t": "2026-11-17T11:00:00Z",
+      "index": 790.756405,
+      "equal_weight": 912.566873,
+      "top_coin": 25.911738,
+      "sol": 0.589712
+    },
+    {
+      "t": "2026-11-17T12:00:00Z",
+      "index": 779.613915,
+      "equal_weight": 898.034181,
+      "top_coin": 27.200109,
+      "sol": 0.600841
+    },
+    {
+      "t": "2026-11-17T13:00:00Z",
+      "index": 774.170031,
+      "equal_weight": 881.855194,
+      "top_coin": 30.392412,
+      "sol": 0.602385
+    },
+    {
+      "t": "2026-11-17T14:00:00Z",
+      "index": 747.70988,
+      "equal_weight": 857.833106,
+      "top_coin": 27.464983,
+      "sol": 0.603286
+    },
+    {
+      "t": "2026-11-17T15:00:00Z",
+      "index": 730.723526,
+      "equal_weight": 837.00261,
+      "top_coin": 27.637957,
+      "sol": 0.603243
+    },
+    {
+      "t": "2026-11-17T16:00:00Z",
+      "index": 758.945514,
+      "equal_weight": 867.923891,
+      "top_coin": 29.5344,
+      "sol": 0.592606
+    },
+    {
+      "t": "2026-11-17T17:00:00Z",
+      "index": 763.7612,
+      "equal_weight": 889.584333,
+      "top_coin": 27.752609,
+      "sol": 0.589245
+    },
+    {
+      "t": "2026-11-17T18:00:00Z",
+      "index": 793.993624,
+      "equal_weight": 938.612523,
+      "top_coin": 26.317543,
+      "sol": 0.591775
+    },
+    {
+      "t": "2026-11-17T19:00:00Z",
+      "index": 755.336893,
+      "equal_weight": 869.568266,
+      "top_coin": 25.062474,
+      "sol": 0.592342
+    },
+    {
+      "t": "2026-11-17T20:00:00Z",
+      "index": 785.548419,
+      "equal_weight": 906.669989,
+      "top_coin": 23.581426,
+      "sol": 0.595524
+    },
+    {
+      "t": "2026-11-17T21:00:00Z",
+      "index": 847.768408,
+      "equal_weight": 986.731326,
+      "top_coin": 25.665888,
+      "sol": 0.597378
+    },
+    {
+      "t": "2026-11-17T22:00:00Z",
+      "index": 817.870176,
+      "equal_weight": 942.775086,
+      "top_coin": 27.321856,
+      "sol": 0.601023
+    },
+    {
+      "t": "2026-11-17T23:00:00Z",
+      "index": 777.573412,
+      "equal_weight": 903.106313,
+      "top_coin": 26.012151,
+      "sol": 0.605699
+    },
+    {
+      "t": "2026-11-18T00:00:00Z",
+      "index": 758.838458,
+      "equal_weight": 880.740928,
+      "top_coin": 24.235687,
+      "sol": 0.614813
+    },
+    {
+      "t": "2026-11-18T01:00:00Z",
+      "index": 764.240827,
+      "equal_weight": 887.136414,
+      "top_coin": 25.63339,
+      "sol": 0.612989
+    },
+    {
+      "t": "2026-11-18T02:00:00Z",
+      "index": 710.840533,
+      "equal_weight": 820.029806,
+      "top_coin": 23.216898,
+      "sol": 0.607122
+    },
+    {
+      "t": "2026-11-18T03:00:00Z",
+      "index": 716.831689,
+      "equal_weight": 836.453433,
+      "top_coin": 23.386238,
+      "sol": 0.609503
+    },
+    {
+      "t": "2026-11-18T04:00:00Z",
+      "index": 734.664575,
+      "equal_weight": 851.52277,
+      "top_coin": 24.750389,
+      "sol": 0.611709
+    },
+    {
+      "t": "2026-11-18T05:00:00Z",
+      "index": 740.080814,
+      "equal_weight": 844.293387,
+      "top_coin": 24.982789,
+      "sol": 0.6127
+    },
+    {
+      "t": "2026-11-18T06:00:00Z",
+      "index": 711.625492,
+      "equal_weight": 806.245608,
+      "top_coin": 25.302262,
+      "sol": 0.614209
+    },
+    {
+      "t": "2026-11-18T07:00:00Z",
+      "index": 727.919167,
+      "equal_weight": 842.475603,
+      "top_coin": 24.376406,
+      "sol": 0.610964
+    },
+    {
+      "t": "2026-11-18T08:00:00Z",
+      "index": 745.241152,
+      "equal_weight": 870.564261,
+      "top_coin": 22.650895,
+      "sol": 0.614881
+    },
+    {
+      "t": "2026-11-18T09:00:00Z",
+      "index": 777.261124,
+      "equal_weight": 929.959945,
+      "top_coin": 24.197943,
+      "sol": 0.611367
+    },
+    {
+      "t": "2026-11-18T10:00:00Z",
+      "index": 720.986548,
+      "equal_weight": 888.092592,
+      "top_coin": 20.819933,
+      "sol": 0.614567
+    },
+    {
+      "t": "2026-11-18T11:00:00Z",
+      "index": 741.640303,
+      "equal_weight": 968.279162,
+      "top_coin": 18.646652,
+      "sol": 0.610894
+    },
+    {
+      "t": "2026-11-18T12:00:00Z",
+      "index": 758.680041,
+      "equal_weight": 1014.685882,
+      "top_coin": 13.837529,
+      "sol": 0.608865
+    },
+    {
+      "t": "2026-11-18T13:00:00Z",
+      "index": 734.356959,
+      "equal_weight": 991.654186,
+      "top_coin": 17.45868,
+      "sol": 0.607546
+    },
+    {
+      "t": "2026-11-18T14:00:00Z",
+      "index": 748.68,
+      "equal_weight": 1011.334196,
+      "top_coin": 19.129511,
+      "sol": 0.606686
+    },
+    {
+      "t": "2026-11-18T15:00:00Z",
+      "index": 732.242104,
+      "equal_weight": 992.848411,
+      "top_coin": 19.078429,
+      "sol": 0.599918
+    }
+  ],
+  "coins_in_anchor": 10
+}
