@@ -24,6 +24,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+INPUTS_KEEP_SECONDS = 48 * 3600
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
@@ -40,7 +41,7 @@ from index.filters import (  # noqa: E402
     keyword_hit,
 )
 from index.params import IndexParams, Overrides, frac  # noqa: E402
-from index.select import canonical_json, run_index  # noqa: E402
+from index.select import canonical_json, inputs_doc, run_index  # noqa: E402
 
 
 class OfficialRefusal(Exception):
@@ -145,6 +146,15 @@ def _rebalance(args, client, params, overrides, as_of, measure, discover) -> Non
     if held:
         payload["data_hold"] = held
     _atomic(Path(args.out) / _out_name(as_of, params, bool(payload["dry_run"])), payload)
+    # #251: keep the exact inputs_hash preimage locally (NOT published) so the run can be
+    # replayed offline, e.g. tools/index_f2_sensitivity.py. Pruned after 48h.
+    doc = inputs_doc(rows, prev, overrides)
+    doc.update(as_of=payload["as_of"], inputs_hash=payload["inputs_hash"])
+    inputs_dir = Path(args.inputs_dir or Path(args.samples).parent / "inputs")
+    _atomic(inputs_dir / _out_name(as_of, params, bool(payload["dry_run"])), doc)
+    for old in inputs_dir.glob("*.json"):
+        if as_of - old.stat().st_mtime > INPUTS_KEEP_SECONDS:
+            old.unlink(missing_ok=True)
 
 
 def _mints(args, client, params, overrides, discover) -> list[str]:
@@ -303,6 +313,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--params", default="index/params.json")
     parser.add_argument("--overrides", default="index/overrides.json")
     parser.add_argument("--samples", default="data/index/samples")
+    parser.add_argument("--inputs-dir")  # #251, local only; default <samples>/../inputs
     parser.add_argument("--mints-file")
     parser.add_argument("--discover-pages", type=int, default=25)
     parser.add_argument("--max-history-pages", type=int, default=30)
