@@ -188,3 +188,18 @@ All eight fields are unused by `run_epoch` today (enforced weights live in `engi
 sim re-run is unchanged: only goldens' `inputs_hash` moves, payouts/scores/state are byte-identical
 (`tools/regen_golden.py --check`, 33 acceptance rows PASS). `KNOWN_DRIFT` is now empty; the consistency
 test fails hard on any future movement. No kiwi decision needed (spec values, not new choices).
+
+## D26 · 2026-11-17 · GTASP10, Helius, hourly basket index (kiwi, #156)
+kiwi, 18 Nov 00:38–00:59 Rome, via Grok on #156. Temporary name/ticker **GTASP10**.
+Data source is Helius mainnet RPC + DAS + Parsed Events (key only in `HELIUS_API_KEY`, never
+committed or logged). DAS cannot search by name, so discovery is pump.fun create history plus
+explicit mints. F4 is the parsed `fee` (base + priority, already one total) plus native tips to
+the eight Jito tip accounts in `adapters/helius_parse.py`, once per successful swap of that mint.
+A truncated history leaves the fee fields empty. DexScreener is only pool liquidity, price/MC
+when DAS has no `price_info`, and `volume.h24` from that same pair. No `/search`, no GMGN scrape.
+Rebalance and the draw are hourly. The score window stays 24h with 5-minute samples. Rank exits
+wait one extra hour; a current member with `insufficient_data` keeps its last passing metrics.
+This coin's fees are 70% holder rewards (daily) and 30% draw pot, both paid in the basket, with
+no team share and no buyback. A prize part below 0.01 SOL carries over. `config/coin.json` is
+unchanged, so there is no sim re-run; basket buys are not built and still need `APPROVED`.
+#164 is postponed. Still open: dev wallet, X link, keyword OK, index treasury address.

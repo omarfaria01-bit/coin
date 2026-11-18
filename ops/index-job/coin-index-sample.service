@@ -1,0 +1,6 @@
+[Unit]
+Description=GTASP10 5-minute index quote sample (read-only)
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/coin/index.env
+ExecStart=/opt/coin/ops/index-job/index-job.sh sample

@@ -23,6 +23,9 @@ def test_shipped_params_and_overrides_load() -> None:
     assert p.filters.top10_min_pct == 13 and p.filters.top10_max_pct == 27  # kiwi
     assert p.filters.min_total_fees_sol == 10  # kiwi
     assert (p.membership.size, p.membership.enter_rank, p.membership.exit_rank) == (10, 8, 12)
+    assert p.rebalance_hours == 1
+    assert p.payout.holder_rewards == "7/10"
+    assert p.payout.draw_pot == "3/10" and p.payout.pay_in == "basket"
     assert p.dry_run.skip_filters == ()
     assert o.allow == () and o.deny == ()
 

@@ -5,9 +5,9 @@ Read `coord/STATE.md`, then `INDEX_RULES.md` (the rules), then this brief. Track
 ## What and why
 
 kiwi decided (17 Nov 2026) that the first coin on our reward engine is an **index coin for the GTA 6 narrative**:
-- it tracks the top 10 GTA 6 memecoins chosen daily by `INDEX_RULES.md`;
-- holders earn **SOL** from the existing engine (COIN_MATH v0.3.3, current params);
-- draw winners get **prizes paid in the index basket** (INDEX_RULES §7); draws stay off until COIN_MATH §9's enable condition holds.
+- it tracks the top 10 GTA 6 memecoins chosen every hour by `INDEX_RULES.md`; the temporary name and ticker are **GTASP10** (D26);
+- holder rewards (70%, daily) and the hourly draw (30%) are both paid in the index basket. No team share, no buyback. `config/coin.json` is not this split;
+- buying the basket is a mainnet write and stays off until kiwi's `APPROVED <issue#>`.
 
 GTA 6 releases on **19 Nov 2026**. Ship the smallest correct version.
 
@@ -19,7 +19,7 @@ GTA 6 releases on **19 Nov 2026**. Ship the smallest correct version.
 
 - 18 Nov 12:00 — `INDEX_RULES.md` + params merged (#156), G1 report in `reports/`.
 - 18 Nov 22:00 — first dry-run top 10 from live data; site preview online.
-- 19 Nov — first official index at the 18:00 UTC rebalance. Coin launch only after kiwi's `APPROVED <issue#>`.
+- 19 Nov — first official index at an hourly rebalance, once F4 has a source and the sampler has covered the window. Coin launch only after kiwi's `APPROVED <issue#>`. Website (#164) is postponed.
 
 ## Who does what
 
@@ -29,9 +29,9 @@ Grok was offline on 17 Nov evening; the cloud Claude session wrote the rules and
 |---|---|---|
 | Rules + `index/` pure code + tests | cloud Claude | #157 → #158 → #159 → #160 (stacked, merge in order) |
 | G1 data research | researcher subagent | done: `reports/research_index_data_2026-11.md` |
-| G2 data adapter `adapters/market_data.py` | **Grok** | own issue; F4 source waits on kiwi |
-| G3 daily job | Claude session on the Hetzner box | cron on the server at 18:00 UTC; no GitHub `workflow` scope needed |
-| G4 website | Claude session on the Hetzner box | own issue |
+| G2 data adapter | this session, Helius (D26) | #161, stacked PRs; DexScreener only for liquidity and price/MC fallback |
+| G3 hourly job | files in `ops/index-job/`; the assistant installs them | hourly rebalance + emergency; 5-minute sampler so the 24h window can pass |
+| G4 website | postponed (#164) | do not build it in this session |
 | G5 red team | **Grok** | after G2 |
 
 **Free LLM CLIs on the box (Gemini CLI, OpenCode free models):** only public-docs research and generic code (e.g. reading DexScreener or RPC docs, boilerplate). Never send them `coord/`, this brief, launch timing, wallet addresses or strategy (docs/tooling/CREDIT_SAVING.md, free-tier privacy).
@@ -42,7 +42,7 @@ Mobile first, static. Sections:
 - what the index is;
 - live top 10 from the latest `index/out/*.json` (ticker, weight, MC, liquidity, fees, traders, rank change);
 - collapsible list of excluded coins with the reason;
-- how holders earn, in plain English: SOL rewards and basket prizes, with the date rewards go live once kiwi sets it;
+- how holders earn, in plain English: basket rewards (70/30), with the date rewards go live once kiwi sets it;
 - transparency: declared dev wallet, team and fee wallets, CA placeholder, links to the index JSON;
 - FAQ.
 
@@ -56,4 +56,4 @@ Every hard rule in CLAUDE.md. Computing the index is read-only. Claiming creator
 
 ## kiwi must provide
 
-Name and ticker · public dev wallet address · X link · OK on keywords and overrides · F4 data source decision · static host account.
+Done (D26): name/ticker GTASP10, F4 from Helius parsed fees plus Jito tips, Helius as the data source, hourly rebalance, 70/30 basket split. Still open: public dev wallet, X link, OK on keywords and overrides, the index treasury address, static host when #164 resumes.
