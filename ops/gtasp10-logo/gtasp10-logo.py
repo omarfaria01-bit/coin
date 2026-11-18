@@ -77,10 +77,65 @@ def log(*a):
     print(*a, file=sys.stderr, flush=True)
 
 
+# Hardening (audit #271 M5, D39): https only, host allowlist (also on redirects), size and
+# pixel caps. Coin images come from third parties via DexScreener; never trust them.
+ALLOWED_HOSTS = frozenset(
+    {
+        "api.dexscreener.com",
+        "cdn.dexscreener.com",
+        "dd.dexscreener.com",
+        "ipfs.io",
+        "gateway.pinata.cloud",
+        "cf-ipfs.com",
+        "dweb.link",
+    }
+)
+MAX_BYTES = 5 * 1024 * 1024  # 5 MB per response
+MAX_PIXELS = 4096 * 4096  # decompression-bomb guard
+Image.MAX_IMAGE_PIXELS = MAX_PIXELS  # Pillow raises DecompressionBombError above 2x this
+
+
+def _check_url(url):
+    u = urllib.parse.urlsplit(url)
+    host = (u.hostname or "").lower()
+    if u.scheme != "https" or host not in ALLOWED_HOSTS or u.port not in (None, 443):
+        raise ValueError(f"blocked URL (scheme/host not allowed): {u.scheme}://{host}")
+    return url
+
+
+class _SafeRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        _check_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+_OPENER = urllib.request.build_opener(
+    _SafeRedirect, urllib.request.HTTPSHandler, urllib.request.HTTPErrorProcessor
+)
+
+
 def http_get(url, timeout=20):
-    req = urllib.request.Request(url, headers=UA)
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read()
+    req = urllib.request.Request(_check_url(url), headers=UA)
+    with _OPENER.open(req, timeout=timeout) as r:
+        n = r.headers.get("Content-Length")
+        if n and n.isdigit() and int(n) > MAX_BYTES:
+            raise ValueError(f"response too large: {n} bytes")
+        data = r.read(MAX_BYTES + 1)
+    if len(data) > MAX_BYTES:
+        raise ValueError("response too large")
+    return data
+
+
+def open_image(data):
+    """Decode an untrusted image with size checks before and after decoding."""
+    img = Image.open(io.BytesIO(data))
+    w, h = img.size
+    if w * h > MAX_PIXELS or w <= 0 or h <= 0:
+        raise ValueError(f"image too large: {w}x{h}")
+    if img.format not in ("PNG", "JPEG", "WEBP", "GIF"):
+        raise ValueError(f"image format not allowed: {img.format}")
+    img.load()
+    return img
 
 
 def dex_pairs(mints):
@@ -200,8 +255,7 @@ def logo_for(mint):
                 url = urllib.parse.urlunsplit(
                     (u.scheme, u.netloc, u.path, "width=800&height=800&quality=95&format=auto", "")
                 )
-                img = Image.open(io.BytesIO(http_get(url)))
-                img.load()
+                img = open_image(http_get(url))
                 img.convert("RGBA").save(path + ".tmp", "PNG")
                 os.replace(path + ".tmp", path)
                 meta["image"] = url

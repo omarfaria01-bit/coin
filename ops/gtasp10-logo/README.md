@@ -13,3 +13,12 @@ logos of the current GTASP10 top 10 (index weight order); the 11th face is a gol
 - Deploy: script -> `/usr/local/bin/gtasp10-logo.py`, template -> `/usr/local/share/gtasp10/logo_template.jpg`,
   units -> `/etc/systemd/system/`, `systemctl enable --now gtasp10-logo.timer` (hourly at :07 UTC).
 - Read-only on index data; only public DexScreener GETs. No wallets, no posting.
+
+## Hardening (audit #271 M5, D39, live since 18 Nov 2026)
+- `http_get`: https only, host allowlist (DexScreener API/CDN, ipfs.io, Pinata, cf-ipfs, dweb.link), also checked on
+  redirects; 5 MB response cap; `Image.MAX_IMAGE_PIXELS` = 4096² and a PNG/JPEG/WEBP/GIF check before decoding.
+- Runs as the unprivileged `gtasp10-logo` user (drop-in `gtasp10-logo.hardening.conf` →
+  `/etc/systemd/system/gtasp10-logo.service.d/hardening.conf`); write access only to `/var/www/gtasp10` (ACL) and its
+  cache dir. Install: `useradd --system --no-create-home --shell /usr/sbin/nologin gtasp10-logo;
+  setfacl -m u:gtasp10-logo:rwx /var/www/gtasp10`.
+- The rendered logo contains third-party coin images: any change of the X avatar/banner needs a human look first.
