@@ -178,8 +178,9 @@
     "liquidity_drop_pct_1h": 50
   },
   "weights": {
-    "mode": "mc_volume_capped",
-    "cap_pct": 25
+    "mode": "sqrt_mc_capped",
+    "cap_pct": 18,
+    "floor_pct": 5
   },
   "prize": {
     "slippage_bps": 300

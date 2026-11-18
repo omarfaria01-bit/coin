@@ -77,7 +77,8 @@ So a newcomer must reach the top 8 to enter, and a member is only replaced when 
 
 ## 6. Weights
 
-- `mc_volume_capped` (default, D36, kiwi 18 Nov): `weight_i = 0.5 * MC_i / sum MC + 0.5 * Volume_i / sum Volume`, with MC the window-average market cap and Volume the raw Helius window volume (a half whose sum is 0 counts as equal). Then capped at 25% per coin with water-filling. With fewer than 4 members the cap can't hold, so weights fall back to `equal`.
+- `sqrt_mc_capped` (default, D40, kiwi delegated 18 Nov 14:20 Rome): `w_i = clip(lam * sqrt(MC_i), 5%, 18%)` with `lam` found by bisection so the weights sum to exactly 100% (`cap_pct` 18, `floor_pct` 5). MC is the window market cap. A member with zero/unknown MC weighs like the smallest coin. When the bounds can't hold (fewer than 6 members: `n * 18% < 100%`; more than 20 members: `n * 5% > 100%`) every member weighs `1/n`. Capped and floored members are published at exactly 1800 / 500 bp.
+- `mc_volume_capped` (D36, superseded by D40): `weight_i = 0.5 * MC_i / sum MC + 0.5 * Volume_i / sum Volume`, with MC the window-average market cap and Volume the raw Helius window volume (a half whose sum is 0 counts as equal). Then capped at 25% per coin with water-filling. With fewer than 4 members the cap can't hold, so weights fall back to `equal`.
 - `equal` (option): every member weighs `1/n`.
 - `score_capped` (option): proportional to S, capped at `cap_pct` with water-filling; same fallback rule.
 
