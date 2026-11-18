@@ -318,7 +318,20 @@ def measure_mints(
                     break
                 except Exception as exc:  # noqa: BLE001 - one mint's failure is published, not fatal
                     facts = dict(dex, error=type(exc).__name__)
-        facts = dict(facts, trading_fees_24h_sol=_trading_fees(found, mint, sol_usd, dex_fee_rate))
+        pools = _all_pools(client, mint) if not facts.get("prescreen") else None
+        if pools:  # D38: liquidity, volume and fees summed over every real pool, not the top one
+            liq_sum, vol_sum = _pool_totals(pools, mint)
+            top_vol = dex.get("volume_usd")
+            if liq_sum > 0 and isinstance(liq, float) and liq > 0:
+                # The window median of 5-min samples is top-pool only; scale it by today's
+                # all-pools / top-pool ratio (never below 1: the top pool always counts).
+                facts = dict(facts, pool_liq_factor=max(1.0, liq_sum / liq))
+                if isinstance(top_vol, float) and top_vol > 0:
+                    facts["pool_vol_factor"] = max(1.0, vol_sum / top_vol)
+            fees24 = vol_sum * dex_fee_rate / sol_usd if sol_usd and liq_sum > 0 else None
+        else:
+            fees24 = _trading_fees(found, mint, sol_usd, dex_fee_rate)
+        facts = dict(facts, trading_fees_24h_sol=fees24)
         start = window_start
         age = facts.get("age_hours")
         if isinstance(age, (int, float)) and not isinstance(age, bool) and age >= 0:
@@ -339,6 +352,44 @@ def measure_mints(
 
 
 WSOL = "So11111111111111111111111111111111111111112"
+POOL_MIN_LIQUIDITY_USD = 10_000.0  # D38: a pool below this is ignored (dust / wash pools)
+
+
+def _all_pools(client: HeliusClient, mint: str) -> list[Mapping[str, object]] | None:
+    fetch = getattr(client, "token_pools", None)
+    if fetch is None:
+        return None
+    try:
+        return fetch(mint)
+    except Exception:  # noqa: BLE001 - fall back to the top pool from the batch
+        return None
+
+
+def _pool_totals(pools: Sequence[Mapping[str, object]], mint: str) -> tuple[float, float]:
+    """Sum (liquidity USD, h24 volume USD) over pools where `mint` is the base token and the
+    pool holds at least POOL_MIN_LIQUIDITY_USD. Each pool address counts once."""
+    liq_sum = vol_sum = 0.0
+    seen: set[object] = set()
+    for p in pools:
+        base = p.get("baseToken")
+        if not isinstance(base, Mapping) or base.get("address") != mint:
+            continue
+        addr = p.get("pairAddress")
+        if addr in seen:
+            continue
+        seen.add(addr)
+        liq = p.get("liquidity")
+        usd = liq.get("usd") if isinstance(liq, Mapping) else None
+        if isinstance(usd, bool) or not isinstance(usd, (int, float)) or not math.isfinite(usd):
+            continue
+        if usd < POOL_MIN_LIQUIDITY_USD:
+            continue
+        vol = p.get("volume")
+        h24 = vol.get("h24") if isinstance(vol, Mapping) else None
+        liq_sum += float(usd)
+        if isinstance(h24, (int, float)) and not isinstance(h24, bool) and math.isfinite(h24):
+            vol_sum += max(float(h24), 0.0)
+    return liq_sum, vol_sum
 
 
 def _sol_usd(pairs: Sequence[Mapping[str, object]]) -> float | None:

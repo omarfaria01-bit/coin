@@ -159,7 +159,10 @@ def weights_bps(
                 break
             budget = 1 - cap * (n - len(free))
             base = sum(raw[i] for i in free)
-            w = [cap if capped[i] else raw[i] / base * budget for i in range(n)]
+            if base <= 0:  # every free member has a zero share: split the budget equally
+                w = [cap if capped[i] else budget / len(free) for i in range(n)]
+            else:
+                w = [cap if capped[i] else raw[i] / base * budget for i in range(n)]
             over = [i for i in free if w[i] > cap]
             if not over:
                 break

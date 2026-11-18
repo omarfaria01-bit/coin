@@ -356,6 +356,10 @@ not lowered.
    network fees from at most 3000 recent swaps, a lower bound that shrinks the busier a coin is: GTA VI (6.8M$ 24h volume)
    scored 0.08 SOL vs AudaCity 0.20 SOL, which put GTA VI below AudaCity despite 2.3x the market cap. Traders in the score
    are still window wallets from the fetched swaps (lower bound for the busiest coins).
+11. All pools: DexScreener `/tokens/v1` returns only each coin's top pool. For every coin that passes the prescreen,
+   liquidity (F2, F11, score), 24h volume and F4/score fees are now summed over all its pools from `/token-pairs/v1`
+   where the coin is the base token and the pool holds >= $10,000 (smaller pools ignored as dust/wash). GTA VI: top pool
+   $169k liquidity / $7.1M volume vs all pools ~$1.16M / ~$9.9M; AudaCity: $408k / $3.6M vs ~$0.75M / ~$5.5M.
 Risk, said plainly: F4 now trusts DexScreener volume (wash volume counts, as D35 already accepts), and F9 no longer needs 0.05 SOL
 per wallet, so ~50 dust wallets can satisfy it (red-team case updated: tests/test_index_hourly_attacks.py).
 
