@@ -420,3 +420,27 @@ def test_main_official_exits_3_and_dry_run_still_writes(tmp_path: Path) -> None:
     assert main([*base, "--params", str(params)]) == 0
     data = json.loads((tmp_path / "out" / "2026-11-18.dryrun.json").read_bytes())
     assert data["dry_run"] is True
+
+
+@pytest.mark.parametrize(
+    "url", ["http://x.io", "file:///etc/passwd", "", "https://", "ftp://a.b", None]
+)
+def test_require_https_rejects(url) -> None:
+    with pytest.raises(ValueError):
+        md.require_https(url)
+
+
+def test_require_https_accepts_and_clients_refuse_before_network() -> None:
+    assert md.require_https("https://api.example.com/x") == "https://api.example.com/x"
+    with pytest.raises(ValueError):
+        md.get_json("file:///etc/passwd")
+    with pytest.raises(ValueError):
+        md.post_json("http://x.io", {})
+
+
+def test_run_index_and_check_hubs_reject_non_https_rpc(capsys) -> None:
+    from tools import check_hubs, run_index
+
+    assert run_index.main(["--as-of", "2026-11-18T00:00:00Z", "--rpc-url", "http://x.io"]) == 2
+    assert check_hubs.main(["--rpc", "file:///x"]) == 2
+    assert "only https" in capsys.readouterr().err

@@ -18,7 +18,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 from urllib.request import Request, urlopen
 
 import base58
@@ -57,13 +57,23 @@ Poster = Callable[[str, Any], Any]
 # ------------------------------------------------------------------ HTTP
 
 
+def require_https(url: str) -> str:
+    """Return url if it is an https URL with a host; else ValueError (blocks file:, http:, ...)."""
+    parsed = urlparse(url) if isinstance(url, str) else None
+    if parsed is None or parsed.scheme != "https" or not parsed.netloc:
+        raise ValueError(f"only https URLs are allowed, got {url!r}")
+    return url
+
+
 def get_json(url: str, timeout: float = 20.0) -> Any:
+    require_https(url)
     req = Request(url, headers={"User-Agent": "coin-index/0.1", "Accept": "application/json"})
     with urlopen(req, timeout=timeout) as resp:  # noqa: S310 - fixed https bases
         return json.loads(resp.read().decode())
 
 
 def post_json(url: str, payload: Any, timeout: float = 30.0) -> Any:
+    require_https(url)
     req = Request(
         url,
         data=json.dumps(payload).encode(),
