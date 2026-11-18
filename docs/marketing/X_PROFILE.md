@@ -111,7 +111,7 @@ https://desk.linkgox.com/gtasp10/
 
 ## Notes for kiwi
 
-1. **Il tuo ~2% della supply (da confermare).** Se lo confermi, va dichiarato pubblicamente. Opzioni:
+1. **~2% della supply del team: CONFERMATO da kiwi (18 Nov 14:45 Rome), va dichiarato.** Il sito lo dichiara già. Per X serve il tuo APPROVED sul testo esatto. Opzioni:
    - Bio (153 / 160), sostituisce la bio sopra:
      `GTA 6 memecoin index on Solana. Top 10 GTA coins, rebalanced hourly by a public formula. 0% of fees to the team. 100% to holders. Founder holds ~2%. NFA.`
    - Post 4/6, aggiungere prima di `(4/6)` (totale 264 / 280):
