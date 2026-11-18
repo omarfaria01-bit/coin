@@ -202,6 +202,23 @@ class HeliusClient:
             found.extend(row for row in payload if isinstance(row, Mapping))
         return found
 
+    def token_pools(self, mint: str) -> list[Mapping[str, object]]:
+        """DexScreener `/token-pairs/v1/solana/{mint}`: every pool of one mint (D38).
+
+        `/tokens/v1` returns only the top pool per mint, which under-counts coins whose
+        liquidity and volume are spread over many pools.
+        """
+        payload = self._send(
+            "GET",
+            f"https://api.dexscreener.com/token-pairs/v1/solana/{mint}",
+            None,
+            self._dex_pace,
+            "dex",
+        )
+        if not isinstance(payload, list):
+            raise RuntimeError("dexscreener token-pairs failed")
+        return [row for row in payload if isinstance(row, Mapping)]
+
     def search(self, query: str) -> list[Mapping[str, object]]:
         """DexScreener `/latest/dex/search` (D37 top-down discovery). Read-only, public."""
         from urllib.parse import quote

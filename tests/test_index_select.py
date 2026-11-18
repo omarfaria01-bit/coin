@@ -157,7 +157,14 @@ def test_run_index_is_deterministic_and_complete() -> None:
     assert a["members"][0]["ticker"] == "GTA13"  # highest MC
     assert sum(m["weight_bps"] for m in a["members"]) == 10_000
     reasons = {e["ticker"]: e["reason"] for e in a["excluded"]}
-    assert reasons == {"GTA50": "F3"}
+    assert reasons == {  # D38: no_keyword and below-top-N coins are listed too
+        "GTA50": "F3",
+        "DOG": "no_keyword",
+        "GTA0": "rank_14",
+        "GTA1": "rank_13",
+        "GTA2": "rank_12",
+        "GTA3": "rank_11",
+    }
     assert a["dry_run"] is False and a["changes"]["exited"] == []
 
 
@@ -173,8 +180,9 @@ def test_exit_reasons_reported() -> None:
 # ------------------------------------------------------------------ D36 mc_volume_capped
 
 
-def test_default_weights_mode_is_mc_volume_capped_25() -> None:
-    assert P.weights.mode == "mc_volume_capped" and P.weights.cap_pct == 25
+def test_default_weights_mode_is_sqrt_mc_18_cap_5_floor() -> None:  # D40
+    w = P.weights
+    assert w.mode == "sqrt_mc_capped" and w.cap_pct == 18 and w.floor_pct == 5
 
 
 def test_mc_volume_weights_example() -> None:
@@ -186,7 +194,10 @@ def test_mc_volume_weights_example() -> None:
         members[3]: (100.0, 100.0),
         members[4]: (100.0, 100.0),
     }
-    bps = weights_bps(members, dict.fromkeys(members, 0.0), P, mcv)
+    d36 = P.model_copy(
+        update={"weights": P.weights.model_copy(update={"mode": "mc_volume_capped", "cap_pct": 25})}
+    )
+    bps = weights_bps(members, dict.fromkeys(members, 0.0), d36, mcv)  # legacy D36 mode
     # raw: 0.5*mc + 0.5*0.2 -> .4, .3, .3, .2, .2 ... mc shares .4 .2 .2 .1 .1, vol .2 each
     # = .3 .2 .2 .15 .15 (all under the 25% cap except rank 1 at 30%)
     assert sum(bps.values()) == 10_000

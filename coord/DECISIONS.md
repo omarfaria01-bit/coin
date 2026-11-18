@@ -356,6 +356,15 @@ not lowered.
    network fees from at most 3000 recent swaps, a lower bound that shrinks the busier a coin is: GTA VI (6.8M$ 24h volume)
    scored 0.08 SOL vs AudaCity 0.20 SOL, which put GTA VI below AudaCity despite 2.3x the market cap. Traders in the score
    are still window wallets from the fetched swaps (lower bound for the busiest coins).
+11. All pools: DexScreener `/tokens/v1` returns only each coin's top pool. For every coin that passes the prescreen,
+   liquidity (F2, F11, score), 24h volume and F4/score fees are now summed over all its pools from `/token-pairs/v1`
+   where the coin is the base token and the pool holds >= $10,000 (smaller pools ignored as dust/wash). GTA VI: top pool
+   $169k liquidity / $7.1M volume vs all pools ~$1.16M / ~$9.9M; AudaCity: $408k / $3.6M vs ~$0.75M / ~$5.5M.
+12. No silent coins: every measured candidate is a member or an `excluded` row with a reason. `no_keyword` rows are
+   now listed (with the `name` the vocabulary saw) and coins that pass every filter but rank below the top N get
+   `rank_<n>`. `run_index` raises if any candidate is missing from the output. Root cause: Dacity Coin and rockstar
+   passed every filter but ranked 11th/12th, and the old output listed neither members nor below-top-N coins. A mint
+   with no name at all (no DexScreener pool, no metadata) is `insufficient_data`, not `no_keyword`.
 Risk, said plainly: F4 now trusts DexScreener volume (wash volume counts, as D35 already accepts), and F9 no longer needs 0.05 SOL
 per wallet, so ~50 dust wallets can satisfy it (red-team case updated: tests/test_index_hourly_attacks.py).
 
@@ -382,4 +391,24 @@ decisions delegated by kiwi to Grok (orchestrator). Supersedes the sqrt weight o
   on-chain, block on unresolved intents.
 - Params live as constants in `engine/hourly_draw.py` (not `coin.json`, so `params_hash` and goldens of the daily
   epoch do not move); they are committed in every draw's snapshot hash. Draws stay **off**.
+
+## D40 · 2026-11-18 · Index weights: sqrt(market cap), cap 18%, floor 5% (#156, kiwi delegated "scelgo tu in base alla matematica" 14:20 Rome, relayed by Grok)
+Replaces D36 (50% MC share + 50% volume share, cap 25%).
+1. `weights.mode = "sqrt_mc_capped"`, `cap_pct = 18`, `floor_pct = 5`: `w_i = clip(lam * sqrt(MC_i), 5%, 18%)`, `lam` by
+   bisection so the sum is exactly 100%; integer bp by largest remainder with capped/floored members pinned at 1800/500.
+2. Why sqrt: MC-proportional weights put ~60% in the two biggest coins (GTA VI $14.8M, AudaCity $7.5M); sqrt keeps the
+   order but spreads exposure; volume is dropped from weights (it is already in the score and is the easiest to wash).
+3. Infeasible bounds relax gracefully: n <= 5 (18% x n < 100%) or n > 20 (5% x n > 100%) -> equal weights `1/n`.
+   A zero/unknown MC weighs like the smallest member (never below the floor).
+4. 18 Nov 12:00Z dry run: GTA VI 18.00, AudaCity 18.00, Leonida 10.22, WASTED 10.13, Grand Trench 9.92, Macca 8.80,
+   GTA memes 7.18, Lucia 6.45, Rocco 6.08, DacityCoin 5.22 (%).
+5. Tests: tests/test_index_d40_weights.py (golden, hypothesis sweep n=1..25 incl. zero MC, emergency recompute).
+
+## D41 · 2026-11-18 · Vocabulary: GTA 6 in-game apps / Snapmatic meme narrative (#156, kiwi chat 14:24 Rome relayed by Grok)
+1. New `strong` words: Snapmatic, Hugh Johnson, HughJohnson, Hugh Johnson Core, Lifeinvader, Bleeter, In-game meme,
+   Eyefind, iFruit, Weazel, Weazel News (GTA in-game phone/social/news apps; Snapmatic = in-game photo app).
+2. New `keywords.generic` tier: Hugh, Johnson, Core, Meme. They count only next to a strong word or a non-generic
+   `needs_context` word (Jason, Vice...); two generic words together ("Core Meme") are never GTA context.
+3. Discovery search terms add: Snapmatic, Hugh Johnson, Lifeinvader, Bleeter, Weazel, iFruit, Eyefind.
+4. Nothing is allowlisted: a coin found this way must pass F1-F11 on its own.
 

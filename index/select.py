@@ -124,6 +124,49 @@ def _mc_volume_shares(
     return out
 
 
+def sqrt_mc_weights(
+    mcs: Sequence[float], cap: float, floor: float
+) -> tuple[list[float], float, float]:
+    """D40: w_i = clip(lam * sqrt(MC_i), floor, cap) with lam chosen so sum w == 1.
+
+    Returns (weights, effective cap, effective floor). When n * cap < 1 the cap is relaxed to
+    1/n; when n * floor > 1 the floor is relaxed to 1/n (both then give equal weights).
+    """
+    n = len(mcs)
+    cap_eff = max(cap, 1 / n)
+    floor_eff = min(floor, 1 / n)
+    raw = [math.sqrt(m) if math.isfinite(m) and m > 0 else 0.0 for m in mcs]
+    if n * cap <= 1 or n * floor >= 1 or max(raw) <= 0:  # infeasible bounds: equal weights
+        return [1 / n] * n, cap_eff, floor_eff
+    smallest = min(r for r in raw if r > 0)  # an unknown/zero MC weighs like the smallest coin
+    raw = [r if r > 0 else smallest for r in raw]
+
+    def total(lam: float) -> float:
+        return sum(min(cap_eff, max(floor_eff, lam * r)) for r in raw)
+
+    lo, hi = 0.0, 1.0
+    while total(hi) < 1:  # sum is n*floor <= 1 at 0 and n*cap >= 1 for large lam (or all-zero)
+        hi *= 2
+        if hi > 1e300:
+            break
+    for _ in range(200):  # bisection: deterministic, monotone
+        mid = (lo + hi) / 2
+        if total(mid) < 1:
+            lo = mid
+        else:
+            hi = mid
+    w = [min(cap_eff, max(floor_eff, hi * r)) for r in raw]
+    s = sum(w)
+    free = [i for i in range(n) if floor_eff < w[i] < cap_eff]
+    if free and s != 1:  # put the float residue on the unclamped members
+        adj = (1 - s) / len(free)
+        for i in free:
+            w[i] += adj
+    elif not free:  # all clamped: only possible when floor or cap was relaxed to 1/n
+        w = [x / s for x in w]
+    return w, cap_eff, floor_eff
+
+
 def weights_bps(
     members: Sequence[str],
     log_s: Mapping[str, float],
@@ -141,10 +184,31 @@ def weights_bps(
     cap_bps = frac(params.weights.cap_pct) * 100  # exact, e.g. 2000
     cap = float(cap_bps) / BPS
     frozen: frozenset[int] = frozenset()
+    if params.weights.mode == "sqrt_mc_capped":  # D40
+        if mc_volume is None:
+            raise ValueError("sqrt_mc_capped needs market cap per member")
+        floor = float(frac(params.weights.floor_pct)) / 100
+        w, cap_eff, floor_eff = sqrt_mc_weights([mc_volume[m][0] for m in members], cap, floor)
+        cap_b, floor_b = round(cap_eff * BPS), round(floor_eff * BPS)
+        exact = []
+        pinned = set()
+        for i, x in enumerate(w):
+            if math.isclose(x, cap_eff, abs_tol=1e-12) and cap_eff * BPS == cap_b:
+                exact.append(float(cap_b))
+                pinned.add(i)
+            elif math.isclose(x, floor_eff, abs_tol=1e-12) and floor_eff * BPS == floor_b:
+                exact.append(float(floor_b))
+                pinned.add(i)
+            else:
+                exact.append(x * BPS)
+        if len(pinned) == n:
+            pinned = set()
+        bps = _largest_remainder(exact, BPS, frozenset(pinned))
+        return dict(zip(members, bps, strict=True))
     if params.weights.mode == "equal" or n * cap_bps < BPS:
         exact = [BPS / n] * n
     else:
-        if params.weights.mode == "mc_volume_capped":
+        if params.weights.mode == "mc_volume_capped":  # D36, superseded by D40
             if mc_volume is None:
                 raise ValueError("mc_volume_capped needs market cap and volume per member")
             raw = _mc_volume_shares(members, mc_volume)
@@ -226,6 +290,9 @@ def run_index(
     for mint in sorted(by_mint, key=mint_key):
         m = by_mint[mint]
         reason = candidate_status(m, params, overrides)
+        nodata = reason == "no_keyword" and not (m.name or m.ticker or m.description)
+        if nodata:  # D38: no name at all means no data (dead/unknown mint), not a vocabulary miss
+            reason = MISSING
         if reason is None:
             reason = first_failed_filter(m, params)
         missing: list[str] = []
@@ -236,6 +303,8 @@ def run_index(
                 missing = ["score_inputs"]
             else:
                 scored[mint] = ls
+        elif nodata:
+            missing = ["name (no DexScreener pool, no on-chain metadata)"]
         elif reason == MISSING:
             missing = missing_metrics(m, params) or ["unknown"]
             for tag in ("error", "onchain"):
@@ -243,18 +312,31 @@ def run_index(
                     missing.insert(0, m.sources[tag].rsplit("@", 1)[0])
         if reason is not None:
             status[mint] = reason
-            if reason != "no_keyword":
-                row: dict = {"mint": mint, "ticker": m.ticker, "reason": reason}
-                if missing:  # D37: never silent, name what was missing
-                    row["missing"] = missing
-                if m.mc_usd is not None and math.isfinite(m.mc_usd):
-                    row["mc_usd"] = round(m.mc_usd, 2)
-                excluded.append(row)
+            # D38: every candidate is listed, no_keyword included (never silent)
+            row: dict = {"mint": mint, "ticker": m.ticker, "reason": reason}
+            if reason == "no_keyword":
+                row["name"] = m.name  # shows what the vocabulary saw (empty = no data)
+            if missing:  # D37: never silent, name what was missing
+                row["missing"] = missing
+            if m.mc_usd is not None and math.isfinite(m.mc_usd):
+                row["mc_usd"] = round(m.mc_usd, 2)
+            excluded.append(row)
 
     ranked = rank(scored)
     pos = {mint: i + 1 for i, mint in enumerate(ranked)}
     members = select_members(ranked, prev_members, params)
     bps = weights_bps(members, scored, params, _mc_volume(by_mint, members))
+    chosen = set(members)
+    for mint in ranked:  # D38: passed every filter but outside the top N -> listed with its rank
+        if mint not in chosen:
+            m = by_mint[mint]
+            row = {"mint": mint, "ticker": m.ticker, "reason": f"rank_{pos[mint]}"}
+            if m.mc_usd is not None and math.isfinite(m.mc_usd):
+                row["mc_usd"] = round(m.mc_usd, 2)
+            excluded.append(row)
+    listed = chosen | {row["mint"] for row in excluded}
+    if listed != set(by_mint):  # invariant: no candidate disappears
+        raise RuntimeError(f"{len(set(by_mint) - listed)} candidate(s) missing from output")
 
     changes = {
         "entered": sorted(set(members) - set(prev_members), key=lambda x: pos[x]),

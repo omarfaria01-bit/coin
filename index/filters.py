@@ -78,7 +78,8 @@ def gta_match(text: str, params: IndexParams) -> bool:
     if any(keyword_hit(text, k) for k in kw.strong):
         return True
     hits = {k.lower() for k in kw.needs_context if keyword_hit(text, k)}
-    return len(hits) >= 2
+    generic = {k.lower() for k in kw.generic if keyword_hit(text, k)}
+    return len(hits) >= 1 and len(hits | generic) >= 2  # D41: generic words never count alone
 
 
 # ------------------------------------------------------------------ §3 filters

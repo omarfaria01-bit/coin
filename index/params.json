@@ -93,7 +93,15 @@
       "Lombank",
       "Bleeter",
       "Jason and Lucia",
-      "Jason & Lucia"
+      "Jason & Lucia",
+      "Snapmatic",
+      "Hugh Johnson",
+      "HughJohnson",
+      "Hugh Johnson Core",
+      "In-game meme",
+      "Eyefind",
+      "iFruit",
+      "Weazel News"
     ],
     "needs_context": [
       "Jason",
@@ -112,6 +120,12 @@
       "Kifflom",
       "Epsilon",
       "Ryder"
+    ],
+    "generic": [
+      "Hugh",
+      "Johnson",
+      "Core",
+      "Meme"
     ]
   },
   "discovery": {
@@ -135,7 +149,14 @@
       "Los Santos",
       "Vercetti",
       "Wasted",
-      "GTA memes"
+      "GTA memes",
+      "Snapmatic",
+      "Hugh Johnson",
+      "Lifeinvader",
+      "Bleeter",
+      "Weazel",
+      "iFruit",
+      "Eyefind"
     ],
     "max_by_mc": 40,
     "max_trending": 10,
@@ -178,8 +199,9 @@
     "liquidity_drop_pct_1h": 50
   },
   "weights": {
-    "mode": "mc_volume_capped",
-    "cap_pct": 25
+    "mode": "sqrt_mc_capped",
+    "cap_pct": 18,
+    "floor_pct": 5
   },
   "prize": {
     "slippage_bps": 300
