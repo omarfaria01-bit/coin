@@ -19,6 +19,8 @@ A token is a **candidate** if it is a Solana token and its name, ticker or descr
 - **D42 (#300):** `buckme`, `$B`, `GTA 6 bank app`, `gta6 bank`, `bank app` are strong discovery words
   (reference coin `buckme` / `$B`, CA `Cr8kuNqKwiVVuzqLYKcJhmpSHy767837BwLFr9GDYXUf`, X `@buckme_sol`).
   No mint is included by hand. Bare `b` is not a keyword.
+- **#326 (kiwi 18 Nov 20:20):** `Founder` is an ambiguous word (`keywords.needs_context`): an everyday English word, so it
+  counts only with GTA context, like Jason or Vice. The Founder coin (CA `8HXsCMy8ma8QP2yVZXG5SZYyaTZw5AUrUDha1G4upump`) is seeded.
 - **Discovery (D37):** top-down, never new launches. DexScreener search for the vocabulary terms (Solana); the top h24-volume
   (trending) coins are collected first, then the biggest market caps (`discovery` in params). Seed file and last members too.
 
