@@ -1,0 +1,60 @@
+name: Security scans
+
+# #186: free, no-login scanners. Existing jobs in ci.yml (ruff, schema, pytest+Hypothesis, gitleaks) are unchanged.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  osv-scanner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: google/osv-scanner-action/osv-scanner-action@v2.7.1
+        with:
+          scan-args: |-
+            --lockfile=uv.lock
+
+  semgrep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v6
+      # Semgrep CE: `semgrep scan` with public rules, no login, no SEMGREP_APP_TOKEN, no `semgrep ci`.
+      - run: >-
+          uvx --from semgrep==1.185.0 semgrep scan
+          --config p/python --config p/secrets --metrics off --error .
+
+  bandit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v6
+      # Known findings (incl. B310) live in the baselines and are NOT silenced: they stay listed there.
+      # CI fails only on NEW findings. B105 skipped everywhere, B101 only under tests/.
+      # Regenerate a baseline (only when a known finding is fixed or reviewed):
+      #   bandit -r . -x ./tests,./.venv -s B105 -f json -o .bandit-baseline.json
+      - run: uvx --from 'bandit[toml]==1.9.4' bandit -r . -x ./tests,./.venv -s B105 -b .bandit-baseline.json
+      - run: uvx --from 'bandit[toml]==1.9.4' bandit -r tests -s B101,B105 -b .bandit-baseline-tests.json
+
+  codeql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write # upload CodeQL results; only this job gets it
+    steps:
+      - uses: actions/checkout@v6
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: python
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:python
