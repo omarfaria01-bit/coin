@@ -347,6 +347,8 @@ not lowered.
    18 Nov ~12:02 Rome, so F1 (4h) holds it out until ~16:02 Rome; not changed.
 6. F5 measurement fix: only swaps in the launch window count as bundle buys (the launch mint-to and pool deposit made GTA VI
    read 102%).
+7. Coverage fix: a sample in the last partial 5-min bucket of a young coin's window was dropped (coverage 0 ->
+   insufficient_data for GTA Vice Inu 6wiaCq, Leonida 9rbKkz and others); it now counts.
 Risk, said plainly: F4 now trusts DexScreener volume (wash volume counts, as D35 already accepts), and F9 no longer needs 0.05 SOL
 per wallet, so ~50 dust wallets can satisfy it (red-team case updated: tests/test_index_hourly_attacks.py).
 

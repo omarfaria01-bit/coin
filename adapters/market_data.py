@@ -71,11 +71,9 @@ def coverage(times: Iterable[int], start: int, end: int, bucket_seconds: int) ->
     if bucket_seconds <= 0 or end <= start:
         return 0.0
     expected = max(1, (end - start) // bucket_seconds)
-    filled = {
-        (t - start) // bucket_seconds
-        for t in times
-        if start <= t < end and 0 <= (t - start) // bucket_seconds < expected
-    }
+    # D38: a window that is not a whole number of buckets (young coin) puts its last moments in a
+    # partial bucket; fold that into the last full one instead of dropping the sample.
+    filled = {min((t - start) // bucket_seconds, expected - 1) for t in times if start <= t < end}
     return len(filled) / expected
 
 
