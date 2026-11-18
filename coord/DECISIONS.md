@@ -303,3 +303,27 @@ volume; then cap 25% per coin with water-filling; fewer than 4 members -> equal 
 (`equal`, `score_capped` stay as options). Rank/membership still use the score S (§4); only the weights changed.
 Risk, said plainly: volume is raw (no wash cleanup, D35), so a coin with inflated volume gets up to half-weight pull from
 it; the 25% cap and F9 (200 traders) are the only limits. A half whose total is 0 counts as equal. Hetzner: pull /opt/coin.
+
+## D37 · 2026-11-18 · Index: top-down discovery, GTA vocabulary with context, no silent gaps (#156, kiwi chat 18 Nov relayed by Grok)
+Source: kiwi in chat 18 Nov (relayed by the Grok executor): one big GTA vocabulary, ambiguous words need GTA context, no weak
+tier, no manual allow; trending coins first in data collection; discovery top-down from the most established coins by market
+cap via vocabulary search, never hunting new launches. Root cause of the empty top 10 (18 Nov 09-10 UTC): (a) discovery walked
+recent pump.fun creates, so big coins like AudaCity were never candidates; (b) big coins have more history than the 30-page cap,
+so lifetime fees, window traders and the launch-block bundle were blanked as `insufficient_data`; (c) top10 holders came only
+from 5-min samples taken in minute 0-4 of each hour, and the hourly run's own holder read was ignored when any sample existed;
+(d) one Helius JSON-RPC error aborted or blanked whole rows.
+1. Discovery: DexScreener search for `discovery.search_terms`, Solana only; `max_trending` top h24-volume coins first, then the
+   `max_by_mc` biggest market caps. Seed file and previous members still added. The pump.fun walk is gone.
+2. Vocabulary: `keywords.strong` grows to the whole GTA series (+ #267's Dacity/AudaCity/DacityCoin/BAWSAQ/Macca/Rocco/GTA memes);
+   new `keywords.needs_context` (Jason, Vice, Trevor, ...) counts only with a strong word or a second different ambiguous word.
+3. Big coins: window metrics are exact when the newest-first pages reach before the window start; F4 accepts the lifetime
+   fees of the fetched pages when that lower bound already >= 8 SOL; F9 likewise accepts a lower bound >= 200; bundle uses the
+   oldest page (launch block). Lower-bound metrics are tagged `helius-parsed-events-lower-bound` in `sources`.
+4. Holder data: the hourly getTokenLargestAccounts reading is always one more sample; an owner with no account on chain counts
+   as a plain wallet (it can only raise top10). 5. Output: `excluded[].missing` names the missing metric(s); `mc_usd` shown.
+6. Speed: a coin whose best DexScreener pool is below `prescreen_liquidity_share` (1/2) of F2's $50k is not walked on chain and
+   is listed as F2 from DexScreener; JSON-RPC errors are retried twice; one mint's error no longer aborts the pass.
+Unchanged: F1 4h, F2 $50k, F3 13-27%, F4 8 SOL, F5 30%, no F6, F7, F8, F9 200, F10 raw volume, F11, D36 weights.
+Risk, said plainly: lower bounds can only make a coin pass a minimum it truly passes; scores of big coins use lower-bound
+window fees/traders when their window is longer than the page cap (they rank a bit low, never high). Hetzner: pull /opt/coin.
+

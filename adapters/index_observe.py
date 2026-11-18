@@ -61,7 +61,9 @@ def metrics_from(
         top10_pct=_opt(facts.get("top10_pct")),
     )
     own = [s for s in samples if s.mint == mint and window_start <= s.t < as_of]
-    rows = own or [spot]
+    # D37: this run's own fresh reading is one more sample, so a coin whose 5-min samples carry
+    # no holder data still gets its top10 from the hourly getTokenLargestAccounts read.
+    rows = [*own, spot]
     stats = aggregate_samples(rows, window_start, as_of, sample_seconds, holder_seconds)
     src = str(facts.get("price_source") or "missing")
     tag = {
@@ -70,6 +72,12 @@ def metrics_from(
     }.get(src, f"missing@{fetched_at}")
     chain = f"helius-parsed-events@{fetched_at}"
     rpc = f"helius-rpc@{fetched_at}"
+    lower = {k for k in facts.get("lower_bounds") or () if isinstance(k, str)}
+    extra: dict[str, str] = {}
+    if facts.get("prescreen"):
+        extra["onchain"] = f"skipped: dexscreener liquidity below prescreen@{fetched_at}"
+    if facts.get("error"):
+        extra["error"] = f"helius {facts.get('error')}@{fetched_at}"
     return Metrics(
         mint=mint,
         ticker=str(facts.get("symbol") or ""),
@@ -114,6 +122,8 @@ def metrics_from(
             "mint_authority_revoked": rpc,
             "freeze_authority_revoked": rpc,
             "mint_program": f"{facts.get('program')}@{fetched_at}",
+            **{k: f"helius-parsed-events-lower-bound@{fetched_at}" for k in sorted(lower)},
+            **extra,
         },
     )
 

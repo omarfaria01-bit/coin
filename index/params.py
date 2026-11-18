@@ -34,11 +34,17 @@ class _Strict(BaseModel):
 
 
 class Keywords(_Strict):
-    """One single tier (D35): any coin matching any word is a candidate."""
+    """One GTA vocabulary (D35, D37). Any `strong` word makes a coin a candidate.
+
+    `needs_context` words are ambiguous outside GTA (Jason, Vice, Trevor...): they count only when
+    the same name/ticker/description also has a strong word or a second, different
+    `needs_context` word (GTA context). This is not a weaker tier: a match is a full candidate.
+    """
 
     strong: tuple[str, ...]
+    needs_context: tuple[str, ...] = ()
 
-    @field_validator("strong")
+    @field_validator("strong", "needs_context")
     @classmethod
     def _non_empty_words(cls, v: tuple[str, ...]) -> tuple[str, ...]:
         if any(not w.strip() for w in v):
@@ -174,6 +180,17 @@ class Payout(_Strict):
         return self
 
 
+class Discovery(_Strict):
+    """D37: top-down discovery from DexScreener search, by market cap, never new launches."""
+
+    search_terms: tuple[str, ...] = ("GTA", "GTA 6", "GTA VI", "Vice City", "Leonida")
+    max_by_mc: int = Field(40, ge=1)  # most established first
+    max_trending: int = Field(10, ge=0)  # plus the top h24-volume coins, measured first
+    # Hourly speed: a coin whose best DexScreener pool has less than this share of F2's minimum
+    # is not walked on chain; it is listed as F2 from DexScreener alone.
+    prescreen_liquidity_share: Num = "1/2"
+
+
 class IndexParams(_Strict):
     version: str
     rebalance_hour_utc: int = Field(18, ge=0, le=23)
@@ -182,6 +199,7 @@ class IndexParams(_Strict):
     sample_minutes: int = Field(5, ge=1)
     holder_sample_minutes: int = Field(60, ge=1)
     keywords: Keywords
+    discovery: Discovery = Discovery()
     filters: Filters = Filters()
     score: Score = Score()
     membership: Membership = Membership()

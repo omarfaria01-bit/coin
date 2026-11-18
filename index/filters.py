@@ -65,9 +65,18 @@ def candidate_status(m: Metrics, params: IndexParams, overrides: Overrides) -> s
     if m.mint in {e.mint for e in overrides.deny}:
         return "denied"
     text = " ".join((m.name, m.ticker, m.description))
-    if any(keyword_hit(text, k) for k in params.keywords.strong):
+    if gta_match(text, params):
         return None
     return "no_keyword"
+
+
+def gta_match(text: str, params: IndexParams) -> bool:
+    """D37 vocabulary: a strong word, or an ambiguous word with GTA context (see Keywords)."""
+    kw = params.keywords
+    if any(keyword_hit(text, k) for k in kw.strong):
+        return True
+    hits = {k.lower() for k in kw.needs_context if keyword_hit(text, k)}
+    return len(hits) >= 2
 
 
 # ------------------------------------------------------------------ §3 filters
@@ -95,6 +104,33 @@ _NUMERIC = (
 def _all_finite(m: Metrics) -> bool:
     """NaN or infinity anywhere counts as missing data (fail-safe, never fail-open)."""
     return all(getattr(m, k) is None or math.isfinite(getattr(m, k)) for k in _NUMERIC)
+
+
+def missing_metrics(m: Metrics, params: IndexParams) -> list[str]:
+    """Names of the metrics that make `m` insufficient_data (published in the output, D37)."""
+    skip = set(params.dry_run.skip_filters)
+    out = [k for k in _NUMERIC if getattr(m, k) is not None and not math.isfinite(getattr(m, k))]
+    if m.coverage is None or m.coverage <= 0:
+        out.append("coverage(no samples)")
+    need = {
+        "F1": ("age_hours",),
+        "F2": ("liquidity_usd",),
+        "F3": ("top10_pct",),
+        "F4": ("total_fees_sol",),
+        "F5": ("bundle_pct",),
+        "F7": ("creator_launches_7d",),
+        "F8": ("mint_authority_revoked", "freeze_authority_revoked", "token_program"),
+        "F9": ("independent_traders",),
+        "F10": ("volume_usd",),
+        "F11": ("mc_usd",),
+    }
+    for code, names in need.items():
+        if code in skip:
+            continue
+        out.extend(n for n in names if getattr(m, n) is None and n not in out)
+    if m.token_program == TOKEN_2022 and m.extensions is None and "F8" not in skip:
+        out.append("extensions")
+    return out
 
 
 def first_failed_filter(m: Metrics, params: IndexParams) -> str | None:

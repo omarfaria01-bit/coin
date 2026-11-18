@@ -48,6 +48,7 @@ order as stated below. Files are never edited after the next hour is published.
   "member": ["log_s", "metrics", "mint", "rank", "ticker", "weight_bps"],
   "member_metrics": ["age_hours", "bundle_pct", "coverage", "creator_launches_7d", "description", "dev_pct", "extensions", "freeze_authority_revoked", "independent_traders", "liquidity_usd", "mc_usd", "median_trade_sol", "mint", "mint_authority_revoked", "name", "roundtrip_share", "sources", "ticker", "token_program", "total_fees_sol", "top10_pct", "unique_traders", "volume_usd", "volume_wallets", "window_fees_sol"],
   "excluded": ["mint", "reason", "ticker"],
+  "excluded_conditional": ["mc_usd", "missing"],
   "changes": ["entered", "exited"],
   "change_exited": ["mint", "reason"],
   "emergency": ["at", "mint", "reason"]
@@ -64,7 +65,7 @@ order as stated below. Files are never edited after the next hour is published.
 | `params_hash` | string | sha256 hex | Hash of the canonical params JSON (`index/params.json` model). Changes with any param. |
 | `inputs_hash` | string | sha256 hex | Hash of `{candidates, prev_members, overrides}` (candidates sorted by mint bytes). Same inputs + params ⇒ same file. |
 | `members` | array[object] | — | Current members, rank order, `0..membership.size`. Empty is valid: no coin passed the filters. |
-| `excluded` | array[object] | — | Candidates that are not members, with the first reason. `no_keyword` coins are omitted. |
+| `excluded` | array[object] | — | Candidates that are not members, with the first reason. `no_keyword` coins are omitted. D37: `mc_usd` when known, and for `insufficient_data` a `missing` list naming the missing metric(s) (or `helius ...` error / `skipped: dexscreener liquidity below prescreen`). |
 | `changes` | object | — | Difference against the previous published file. |
 | `emergency` | array[object] | — | Emergency removals applied to this file; `[]` normally. |
 | `exit_notice` | array[string] | mint | **Conditional**, present (possibly `[]`) iff `rebalance_hours` == 1. Mints whose rank exit is deferred one hour. |

@@ -139,7 +139,11 @@ def test_fresh_dry_run_has_exactly_the_documented_top_level_keys(tmp_path: Path)
         assert sorted(member["metrics"]) == sorted(keys["member_metrics"])
     assert payload["excluded"]
     for row in payload["excluded"]:
-        assert sorted(row) == sorted(keys["excluded"])
+        assert (
+            set(keys["excluded"])
+            <= set(row)
+            <= set(keys["excluded"]) | set(keys.get("excluded_conditional", []))
+        )
     assert sorted(payload["changes"]) == sorted(keys["changes"])
     assert payload["emergency"] == []
 

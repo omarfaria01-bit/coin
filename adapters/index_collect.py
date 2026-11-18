@@ -1,7 +1,10 @@
 """Read one mint from Helius and fold it into Metrics. No signing.
 
-Discovery is parsed history of the pump.fun program, because DAS searchAssets
-has no name query. DexScreener is only the batched token endpoint.
+Discovery (D37) is top-down: DexScreener search for the GTA vocabulary, most established coins
+first by market cap, plus the top h24-volume (trending) coins. It never walks new pump.fun
+launches. Big coins have more history than the page cap: their window metrics are exact when the
+fetched pages reach back past the window start, and F4/F9 accept a lower bound that already
+passes the threshold. Anything still unknown is named in the output, never silent.
 """
 
 from __future__ import annotations
@@ -11,7 +14,6 @@ from collections.abc import Iterable, Mapping, Sequence
 
 from adapters.helius_client import HeliusClient
 from adapters.helius_parse import (
-    PUMP_PROGRAM,
     excluded_owners,
     normalize_transaction,
     parse_asset,
@@ -31,8 +33,8 @@ from adapters.market_data import (
     top10_pct,
     trade_quality,
 )
-from index.filters import Metrics
-from index.params import Filters, frac
+from index.filters import Metrics, gta_match, keyword_hit
+from index.params import Filters, IndexParams, frac
 
 
 def _txs(raw: Iterable[Mapping[str, object]]) -> list[Mapping[str, object]]:
@@ -91,9 +93,8 @@ def chain_facts(
         infos = _multiple(client, owners)
         for owner, info in zip(owners, infos, strict=True):
             programs[owner] = info.get("owner") if isinstance(info, dict) else None
-        unknown = [owner for owner, _ in (holders or []) if owner and programs.get(owner) is None]
-        if holders is not None and unknown:
-            holders = [(None, amount) for _, amount in holders]
+        # D37: an owner with no account on chain is a plain (empty) wallet, not a vault; it
+        # counts as a holder (fail-safe: it can only raise top10), so top10 is never blank for it.
     curves: list[str | None] = []
     raw, truncated = fetch_mint_history_incremental(client, mint, as_of=as_of)
     txs = _txs(raw)
@@ -101,7 +102,7 @@ def chain_facts(
         creates = tx.get("creates")
         if isinstance(creates, list):
             curves.extend(row.get("bonding_curve") for row in creates if isinstance(row, Mapping))
-    first_raw, _ = client.history(mint, end=as_of, sort="asc", max_pages=1, limit=1)
+    first_raw, _ = client.history(mint, end=as_of, sort="asc", max_pages=1, limit=100)
     first = _txs(first_raw)
     first_time = first[0].get("block_time") if first else None
     if isinstance(first_time, int) and any(
@@ -110,6 +111,16 @@ def chain_facts(
         oldest = min(tx["block_time"] for tx in txs if isinstance(tx.get("block_time"), int))
         if oldest > first_time:
             truncated = True
+    fetched = [tx["block_time"] for tx in txs if isinstance(tx.get("block_time"), int)]
+    oldest_recent = min(fetched) if fetched else None
+    if truncated:  # D37: the launch block comes from the oldest page (bundle, creator, curve)
+        have = {tx.get("signature") for tx in txs}
+        for tx in first:
+            if tx.get("signature") not in have:
+                txs.append(tx)
+            for row in tx.get("creates") or []:  # type: ignore[union-attr]
+                if isinstance(row, Mapping):
+                    curves.append(row.get("bonding_curve"))
     creator = asset.get("creator") if isinstance(asset.get("creator"), str) else None
     for tx in txs:
         for row in tx.get("creates") or []:  # type: ignore[union-attr]
@@ -119,7 +130,9 @@ def chain_facts(
             if isinstance(creator_name, str):
                 creator = creator_name
     skip = excluded_owners(hubs=hubs, curves=curves, owner_programs=programs, treasury=treasury)
-    fees = fee_totals(txs, mint, window_start=window_start, window_end=as_of, truncated=truncated)
+    # D37: newest-first pages that reach back before the window start hold the whole window.
+    window_whole = not truncated or (oldest_recent is not None and oldest_recent < window_start)
+    fees = fee_totals(txs, mint, window_start=window_start, window_end=as_of, truncated=False)
     supply_i = supply if isinstance(supply, int) else None
     flt = Filters()  # D33: thresholds for the trade-quality facts are the published defaults
     quality = trade_quality(
@@ -127,11 +140,26 @@ def chain_facts(
         mint,
         window_start=window_start,
         window_end=as_of,
-        truncated=truncated,
+        truncated=False,
         creator=creator,
         min_trader_lamports=math.ceil(frac(flt.min_trader_volume_sol) * LAMPORTS_PER_SOL),
         roundtrip_seconds=600,
     )
+    bounds: list[str] = []
+    total_fees = fees.total_fees_sol
+    if truncated:
+        # Lifetime fees of the pages we have are a lower bound: enough when it already passes F4.
+        if total_fees is not None and total_fees >= float(frac(flt.min_total_fees_sol)):
+            bounds.append("total_fees_sol")
+        else:
+            total_fees = None
+    independent = None if quality is None else quality.independent_traders
+    if not window_whole:
+        bounds.extend(["window_fees_sol", "unique_traders"])
+        if independent is not None and independent >= flt.min_unique_traders:
+            bounds.append("independent_traders")
+        else:
+            independent = None
     launches = None
     if isinstance(creator, str):
         craw, ctrunc = client.history(creator, start=as_of - 7 * 86_400, end=as_of)
@@ -161,10 +189,11 @@ def chain_facts(
         "creator_launches_7d": launches,
         "mint_authority_revoked": revoked[0],
         "freeze_authority_revoked": revoked[1],
-        "total_fees_sol": fees.total_fees_sol,
+        "total_fees_sol": total_fees,
         "window_fees_sol": fees.window_fees_sol,
         "unique_traders": None if fees.traders is None else len(fees.traders),
-        "independent_traders": None if quality is None else quality.independent_traders,
+        "independent_traders": independent,
+        "lower_bounds": bounds,
         "roundtrip_share": None if quality is None else quality.roundtrip_share,
         "volume_wallets": None if quality is None else quality.volume_wallets,
         "median_trade_sol": None if quality is None else quality.median_trade_sol,
@@ -182,17 +211,63 @@ def _multiple(client: HeliusClient, addrs: Sequence[str]) -> list[object]:
     return value
 
 
-def discover_mints(client: HeliusClient, pages: int) -> list[dict[str, object]]:
-    """Recent pump.fun creates from parsed history. DAS has no name search."""
-    if pages <= 0:
+def _f(value: object) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        return 0.0
+    return float(value)
+
+
+def discover_mints(client: HeliusClient, params: IndexParams) -> list[dict[str, object]]:
+    """D37 top-down discovery. DexScreener search for each vocabulary term, Solana only.
+
+    Returns rows ordered for collection priority: the `max_trending` coins with the highest
+    h24 volume first, then the `max_by_mc` most established by market cap. A coin whose
+    name/ticker has only ambiguous words is kept here; the final vocabulary check (with the
+    on-chain description) happens in the run. New pump.fun launches are never walked.
+    """
+    if not isinstance(params, IndexParams):
         return []
-    raw, _ = client.history(PUMP_PROGRAM, max_pages=pages)
-    found: list[dict[str, object]] = []
-    for tx in _txs(raw):
-        creates = tx.get("creates")
-        if isinstance(creates, list):
-            found.extend(row for row in creates if isinstance(row, Mapping))
-    return found
+    best: dict[str, dict[str, object]] = {}
+    ctx = params.keywords.needs_context
+    for term in params.discovery.search_terms:
+        for pair in client.search(term):
+            if pair.get("chainId") != "solana":
+                continue
+            base = pair.get("baseToken")
+            if not isinstance(base, Mapping) or not isinstance(base.get("address"), str):
+                continue
+            name, symbol = str(base.get("name") or ""), str(base.get("symbol") or "")
+            text = f"{name} {symbol}"
+            if not gta_match(text, params) and not any(keyword_hit(text, k) for k in ctx):
+                continue
+            mint = str(base["address"])
+            liq = pair.get("liquidity")
+            vol = pair.get("volume")
+            row = {
+                "mint": mint,
+                "name": name,
+                "symbol": symbol,
+                "mc_usd": _f(pair.get("marketCap") or pair.get("fdv")),
+                "liquidity_usd": _f(liq.get("usd") if isinstance(liq, Mapping) else None),
+                "volume_usd": _f(vol.get("h24") if isinstance(vol, Mapping) else None),
+            }
+            old = best.get(mint)
+            if old is None:
+                best[mint] = row
+            else:  # one coin, many pools: keep the biggest market cap, add up the volume
+                old["mc_usd"] = max(_f(old["mc_usd"]), _f(row["mc_usd"]))
+                old["liquidity_usd"] = max(_f(old["liquidity_usd"]), _f(row["liquidity_usd"]))
+                old["volume_usd"] = _f(old["volume_usd"]) + _f(row["volume_usd"])
+    rows = list(best.values())
+    by_mc = sorted(rows, key=lambda r: (-_f(r["mc_usd"]), str(r["mint"])))
+    by_vol = sorted(rows, key=lambda r: (-_f(r["volume_usd"]), str(r["mint"])))
+    out: list[dict[str, object]] = []
+    seen: set[str] = set()
+    for row in by_vol[: params.discovery.max_trending] + by_mc[: params.discovery.max_by_mc]:
+        if row["mint"] not in seen:
+            seen.add(str(row["mint"]))
+            out.append(row)
+    return out
 
 
 def measure_mints(
@@ -207,20 +282,38 @@ def measure_mints(
     fetched_at: str,
     sample_seconds: int,
     holder_seconds: int,
+    prescreen_liquidity_usd: float | None = None,
 ) -> list[Metrics]:
-    """One read-only pass. DexScreener is batched. A Helius error aborts the pass."""
+    """One read-only pass. DexScreener is batched.
+
+    D37: a Helius error on one mint no longer aborts the pass: that mint is published as
+    insufficient_data with `helius_error` named. A mint whose best pool is below
+    `prescreen_liquidity_usd` is not walked on chain (keeps the hourly run fast); it is
+    scored from DexScreener alone and fails F2.
+    """
     found = client.pairs(list(mints)) if mints else []
     out: list[Metrics] = []
     for mint in mints:
-        facts = chain_facts(
-            client,
-            mint,
-            as_of=as_of,
-            window_start=window_start,
-            hubs=hubs,
-            treasury=treasury,
-            pair=pick_pair(found, mint),
-        )
+        pair = pick_pair(found, mint)
+        dex = _dex_facts(pair, as_of)
+        liq = dex.get("liquidity_usd")
+        if prescreen_liquidity_usd is not None and (
+            pair is None or not isinstance(liq, float) or liq < prescreen_liquidity_usd
+        ):
+            facts = dict(dex, prescreen=True)
+        else:
+            try:
+                facts = chain_facts(
+                    client,
+                    mint,
+                    as_of=as_of,
+                    window_start=window_start,
+                    hubs=hubs,
+                    treasury=treasury,
+                    pair=pair,
+                )
+            except Exception as exc:  # noqa: BLE001 - one mint's failure is published, not fatal
+                facts = dict(dex, error=type(exc).__name__)
         start = window_start
         age = facts.get("age_hours")
         if isinstance(age, (int, float)) and not isinstance(age, bool) and age >= 0:
@@ -238,6 +331,33 @@ def measure_mints(
             )
         )
     return out
+
+
+def _dex_facts(pair: Mapping[str, object] | None, as_of: int) -> dict[str, object]:
+    """What DexScreener alone says about a coin (prescreen / error rows)."""
+    if pair is None:
+        return {}
+    base = pair.get("baseToken") if isinstance(pair.get("baseToken"), Mapping) else {}
+    liq = pair.get("liquidity")
+    vol = pair.get("volume")
+    created = pair.get("pairCreatedAt")
+    age = None
+    if isinstance(created, (int, float)) and not isinstance(created, bool) and created > 0:
+        age = max(0.0, (as_of - created / 1000) / 3600)
+    mc = pair.get("marketCap") or pair.get("fdv")
+    return {
+        "name": str(base.get("name") or ""),  # type: ignore[union-attr]
+        "symbol": str(base.get("symbol") or ""),  # type: ignore[union-attr]
+        "mc_usd": float(mc) if isinstance(mc, (int, float)) and not isinstance(mc, bool) else None,
+        "liquidity_usd": float(liq["usd"])
+        if isinstance(liq, Mapping) and isinstance(liq.get("usd"), (int, float))
+        else None,
+        "volume_usd": float(vol["h24"])
+        if isinstance(vol, Mapping) and isinstance(vol.get("h24"), (int, float))
+        else None,
+        "age_hours": age,
+        "price_source": "dexscreener",
+    }
 
 
 def _extensions(mint_acc: Mapping[str, object] | None) -> list[str] | None:

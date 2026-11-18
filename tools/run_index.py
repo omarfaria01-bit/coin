@@ -33,8 +33,13 @@ from adapters.helius_client import HeliusClient  # noqa: E402
 from adapters.hubs import load_hubs  # noqa: E402
 from adapters.index_collect import discover_mints, measure_mints  # noqa: E402
 from adapters.market_data import Sample  # noqa: E402
-from index.filters import Metrics, candidate_status, first_failed_filter  # noqa: E402
-from index.params import IndexParams, Overrides  # noqa: E402
+from index.filters import (  # noqa: E402
+    Metrics,
+    candidate_status,
+    first_failed_filter,
+    keyword_hit,
+)
+from index.params import IndexParams, Overrides, frac  # noqa: E402
 from index.select import canonical_json, run_index  # noqa: E402
 
 
@@ -112,6 +117,10 @@ def _rebalance(args, client, params, overrides, as_of, measure, discover) -> Non
         fetched_at=_iso(as_of),
         sample_seconds=params.sample_minutes * 60,
         holder_seconds=params.holder_sample_minutes * 60,
+        prescreen_liquidity_usd=float(
+            frac(params.filters.min_liquidity_usd)
+            * frac(params.discovery.prescreen_liquidity_share)
+        ),
     )
     if not rows and _latest(Path(args.out)) is not None:
         raise RuntimeError("no measurements")
@@ -138,7 +147,8 @@ def _rebalance(args, client, params, overrides, as_of, measure, discover) -> Non
 
 
 def _mints(args, client, params, overrides, discover) -> list[str]:
-    found = discover(client, args.discover_pages) if args.mode != "emergency" else []
+    # D37: top-down DexScreener search; --discover-pages 0 turns discovery off (seed file only).
+    found = discover(client, params) if args.mode != "emergency" and args.discover_pages else []
     extra = list(_prev_members(Path(args.out)))
     if args.mints_file:
         for line in Path(args.mints_file).read_text().splitlines():
@@ -159,7 +169,9 @@ def _choose(
             continue
         name, symbol = str(row.get("name") or ""), str(row.get("symbol") or "")
         status = candidate_status(Metrics(mint=mint, ticker=symbol, name=name), params, overrides)
-        if status == "no_keyword" or status == "self":
+        text = f"{name} {symbol}"
+        maybe = any(keyword_hit(text, k) for k in params.keywords.needs_context)
+        if status == "self" or (status == "no_keyword" and not maybe):
             continue
         seen.add(mint)
         out.append(mint)

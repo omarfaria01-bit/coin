@@ -10,6 +10,11 @@ A token is a **candidate** if it is a Solana token and its name, ticker or descr
 
 - **One tier (D35).** Any match is a candidate: `GTA`, `GTA6`, `GTA 6`, `GTAVI`, `GTA VI`, `GTA5`, `GTAV`, `Grand Theft`, `Grand Theft Auto`, `Vice City`, `ViceCity`, `Leonida`, `Leonida Keys`, `Port Gellhorn`, `Ambrosia`, `Grassrivers`, `Mount Kalaga`, `Lucia`, `Lucia Caminos`, `Jason Duval`, `Cal Hampton`, `Boobie Ike`, `DreQuan`, `Real Dimez`, `Raul Bautista`, `Brian Heder`, `Rockstar`, `Rockstar Games`, `Take-Two`, `TTWO`, `Wasted`, `Mission Passed`, `Wanted Level`, `Tommy Vercetti`, `Vercetti`. Bare `VI` and bare `Jason` are not keywords (they match unrelated coins).
 - A keyword matches only when no letter touches it on either side (so `GTA` matches `GTA6` and `$GTA`, but not `AGTAB`).
+- **D37 (kiwi 18 Nov):** the list is one big GTA-series vocabulary (`keywords.strong` in params). Ambiguous words
+  (`keywords.needs_context`: Jason, Vice, Trevor, Franklin, ...) count only with GTA context: a strong word, or a second
+  different ambiguous word, in the same name/ticker/description.
+- **Discovery (D37):** top-down, never new launches. DexScreener search for the vocabulary terms (Solana); the top h24-volume
+  (trending) coins are collected first, then the biggest market caps (`discovery` in params). Seed file and last members too.
 
 `index/overrides.json` holds only `deny` entries (scams), each with a mint, a reason and the issue where kiwi approved it. There is no allow list. The index coin itself (`self_mint`) is never a candidate.
 
@@ -38,7 +43,7 @@ A token is a **candidate** if it is a Solana token and its name, ticker or descr
 | F11 | Market cap vs liquidity | average market cap ≤ 100 × average pool liquidity (D29, #167). A thin pool cannot carry a huge market cap |
 | F8c | Token program (part of F8) | legacy SPL Token, or Token-2022 with only allowlisted mint extensions (D32, #171); anything else fails, unknown = insufficient_data |
 
-F1, F4, F5, F6, F10 and coverage follow kiwi's 18 Nov decisions (D35). F3 and F4 are kiwi's parameters. A coin that fails any filter is listed in the output with the first filter it failed. A missing metric counts as a failure (`insufficient_data`).
+F1, F4, F5, F6, F10 and coverage follow kiwi's 18 Nov decisions (D35). F3 and F4 are kiwi's parameters. A coin that fails any filter is listed in the output with the first filter it failed. A missing metric counts as a failure (`insufficient_data`), and the output names it (`missing`, D37). For coins with more history than the page cap, F4 and F9 accept a measured lower bound that already passes (D37).
 
 **Dry runs only:** `dry_run.skip_filters` can skip filters whose data source isn't wired yet (e.g. F4). Any output computed with a skipped filter is marked `"dry_run": true` and is never the official index.
 

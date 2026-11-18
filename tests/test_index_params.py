@@ -31,7 +31,10 @@ def test_shipped_params_and_overrides_load() -> None:
     f = p.filters
     assert (f.min_age_hours, f.max_bundle_pct) == (4, 30)  # D35
     assert "Lucia" in p.keywords.strong and "VI" not in p.keywords.strong
-    assert "Jason" not in p.keywords.strong and len(p.keywords.strong) == 35
+    # D37: one big GTA vocabulary; ambiguous words (Jason, Vice...) only count with GTA context
+    assert "Jason" not in p.keywords.strong and len(p.keywords.strong) >= 35
+    assert "Jason" in p.keywords.needs_context and "Vice" in p.keywords.needs_context
+    assert not set(p.keywords.strong) & set(p.keywords.needs_context)
 
 
 def test_removed_rules_are_rejected() -> None:
