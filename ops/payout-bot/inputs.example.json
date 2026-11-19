@@ -1,0 +1,11 @@
+{
+  "mint": "Hveq15BA7YXh6DxAh2gDpjrH25BVM84wNqT99HKXpump",
+  "system_wallet": "3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd",
+  "excluded": {},
+  "team_wallets": [
+    "E8JgzMnBJU5Mwbsmw88SyivaDiUYJNjkupU53UEG4uXJ",
+    "GscVFwxRLP15bAoT8QwfnHbXULDXZr6fGCsEsXCQJEks"
+  ],
+  "fee_bot_ledger": "/var/lib/coin/fee-bot/ledger.jsonl",
+  "state_dir": "/var/lib/coin/payout-bot"
+}

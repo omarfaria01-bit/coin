@@ -1,0 +1,11 @@
+{
+  "name": "gtasp10-payout-bot",
+  "private": true,
+  "type": "module",
+  "description": "GTASP10 payout sender (D46): pays payout-plan.json from the system wallet, idempotent by memo",
+  "scripts": { "test": "node --test" },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@solana/web3.js": "1.98.4"
+  }
+}

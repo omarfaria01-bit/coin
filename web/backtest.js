@@ -71,7 +71,12 @@
   function fill(data) {
     const hist = data.history || {};
     const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
-    set("bt-window", hist.start && hist.end ? `${hist.start.slice(0, 13)}Z → ${hist.end.slice(0, 13)}Z` : "—");
+    const days = hist.start && hist.end ? Math.round((Date.parse(hist.end) - Date.parse(hist.start)) / 86400000) : null;
+    set("bt-window", days != null ? `${days} days` : "—");
+    if (hist.start) {
+      const d = new Date(hist.start);
+      set("bt-since", d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }));
+    }
     set("bt-hours", hist.hours != null ? String(hist.hours) + " hours" : "—");
     set("bt-rebalances", hist.rebalances != null ? String(hist.rebalances) : "—");
     set("bt-index", num(data.index && data.index.end, 2));
@@ -91,10 +96,6 @@
     const coins = document.getElementById("bt-coins");
     if (coins) {
       coins.innerHTML = (data.coins || []).map((c) => `<span>${esc(c.ticker || "—")} · ${esc(c.hours)}h</span>`).join("");
-    }
-    const list = document.getElementById("bt-caveats");
-    if (list) {
-      list.innerHTML = (data.caveats || []).map((c) => `<li>${esc(c)}</li>`).join("");
     }
     draw(data);
   }

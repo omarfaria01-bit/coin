@@ -188,10 +188,19 @@ def allocate_holder_rewards(
     """
     if isinstance(budget, bool) or not isinstance(budget, int) or budget < 0:
         raise ValueError(f"budget must be an int >= 0, got {budget!r}")
-    scores = loyalty_scores(balances, hold_seconds)
-    if budget == 0 or not any(scores.values()):
-        return {w: 0 for w in scores}
-    return split_cluster_payout(budget, scores)
+    return allocate_by_weights(budget, loyalty_scores(balances, hold_seconds))
+
+
+def allocate_by_weights(budget: int, weights: Mapping[str, int | Fraction]) -> dict[str, int]:
+    """Today's holder budget split pro-rata by precomputed weights (D47 balance-hours).
+
+    Σ == budget when any weight is > 0; otherwise nobody is credited. Largest remainder.
+    """
+    if isinstance(budget, bool) or not isinstance(budget, int) or budget < 0:
+        raise ValueError(f"budget must be an int >= 0, got {budget!r}")
+    if budget == 0 or not any(weights.values()):
+        return {w: 0 for w in weights}
+    return split_cluster_payout(budget, weights)
 
 
 @dataclass(frozen=True, slots=True)

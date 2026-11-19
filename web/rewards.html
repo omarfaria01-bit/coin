@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="logo-400.png">
-<link rel="stylesheet" href="style.css?v=20261118f">
+<link rel="stylesheet" href="style.css?v=20261118g">
 </head>
 <body>
 <header class="nav">
@@ -22,16 +22,45 @@
     <a href="backtest.html">Backtest</a>
     <a href="docs.html">Docs</a>
     <a href="faq.html">FAQ</a>
-    <a href="disclaimer.html">Disclaimer</a>
+    <a href="https://x.com/GTASP10" target="_blank" rel="noopener">X ↗</a>
   </nav>
 </header>
 <div class="page-hero">
   <p class="kicker">Holders</p>
   <h1>Rewards &amp; draw</h1>
-  <p>0% of fees go to the team. 100% go to holders: 70% is distributed as rewards in the basket coins, and 30% goes to the draw pot.</p>
+  <p>Planned split (not running, see the notice): 70% holder rewards, 30% prize pot.</p>
   <p>The team holds about 2% of the supply.</p>
 </div>
 <main>
+<section class="section">
+  <div class="glass card" id="closed-notice">
+    <h3>Project closed (18 Nov 2026)</h3>
+    <p>The creator has sold. The fee bot is stopped and no fees were distributed to holders. The fees forwarded to the system wallet were sent back to the creator wallet (<a class="mono" href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">see the system wallet on Solscan</a>). The rest of this site describes how the project was meant to work; it is no longer running.</p>
+  </div>
+</section>
+<section class="section">
+  <div class="glass card" id="fee-proof">
+    <h3>Where the fees go, and how to check</h3>
+    <ul class="ticks">
+      <li>pump.fun pays this coin's creator fees to the creator wallet (<a class="mono" href="https://solscan.io/account/E8JgzMnBJU5Mwbsmw88SyivaDiUYJNjkupU53UEG4uXJ" target="_blank" rel="noopener">E8Jg…4uXJ</a>). For this coin pump.fun does not allow sending them straight to another wallet.</li>
+      <li>So the creator claims the fees and forwards <strong>100%</strong> to the public <strong>system wallet</strong> <a class="mono" href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">3ann…hJkd</a>, at least once a day. Every claim and every forward is public on Solscan, so anyone can check that the amounts match.</li>
+      <li>From the system wallet, a bot spends the fees by fixed public rules (<a href="docs.html#who-changes-rules">rules file, 72h timelock</a>): 70% holder rewards, 30% prize pot. The system wallet's key was generated on our server and is held only there.</li>
+      <li>The bot's log is public: <a class="mono" href="data/fee-bot.json" target="_blank" rel="noopener">fee-bot.json</a>. <span id="fee-sharing-tx"></span></li>
+      <li>Team wallets earn no rewards and keep 0% of fees.</li>
+      <li>Honest limit: the claim and forward step is done by the creator, and the bots run on our server. Full on-chain enforcement (multisig with time lock) is planned.</li>
+    </ul>
+    <div id="rules-lock"></div>
+  </div>
+</section>
+<section class="section">
+  <div class="glass card dev-card">
+    <h2>The dev does not run the money</h2>
+    <p>Fees and payouts are handled by two automatic bots: fees are claimed and split every hour, rewards are paid every day. No transaction needs the dev's signature, and the dev never chooses who gets paid or how much. The rules are public code and every transaction is on-chain, so anyone can check that what happens matches the rules. The only manual control is an emergency stop that pauses everything for everyone; any use is announced publicly.</p>
+    <p class="sw"><span class="muted small">Public system wallet: receives 100% of creator fees (claimed by the creator and forwarded), buys the basket, pays holders. The dev holds no key to it in any wallet app; the key lives only on the server.</span><br>
+      <a class="mono" href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd</a>
+      <button class="copy-sw" type="button" data-copy="3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd">Copy</button></p>
+  </div>
+</section>
 <section class="section">
   <div class="glass soon-banner">
     <p><strong>COMING SOON</strong></p>
@@ -39,7 +68,10 @@
   </div>
   <div class="glass card">
     <h3>Daily rewards</h3>
-    <p>Rewards accrue with the holding score and are paid once a day in the basket. A position worth less than 0.00151384 SOL (the rent of a token account) stays pending, and no token account is opened for dust.</p>
+    <p>You earn for every full hour you hold, starting after your first hour. Rewards are paid once a day at 00:10 UTC (01:10 Rome) for the day that just ended.</p>
+    <p>Rewards accrue with the holding score and are paid once a day in the basket. If your share of a coin is worth less than 0.00151384 SOL (the cost of opening a token account), it is not sent yet: it stays yours and is added to the next day, until it is worth sending. The cost of opening your token account is paid by the system wallet, from the holders' 67%.</p>
+    <p><strong>Payouts are automatic.</strong> Once a day a bot sends holder rewards from the public system wallet. The dev does not sign, pick or change any payment. Every payout is public on-chain and listed on this page. The only manual control is an emergency stop that pauses payouts for everyone; any use is announced.</p>
+    <p>Team wallets (about 2% of supply) earn no rewards: <a href="https://solscan.io/account/E8JgzMnBJU5Mwbsmw88SyivaDiUYJNjkupU53UEG4uXJ" target="_blank" rel="noopener">creator E8Jg…4uXJ</a> and <a href="https://solscan.io/account/GscVFwxRLP15bAoT8QwfnHbXULDXZr6fGCsEsXCQJEks" target="_blank" rel="noopener">dev share GscV…JEks</a>.</p>
     <p class="muted">You need at least 1/1,000,000 of the supply for rewards to count. The multiplier changes your share of the fees that were actually collected.</p>
   </div>
   <div class="glass card curve-card">
@@ -47,6 +79,13 @@
     <p>Nothing before 1h. The multiplier is 1× from 1h to 1h30, 1.5× at 1h45, 2× at 2h, 3× at 2h30, 4× at 3h and 5× at 4h, then rises with the logarithm of holding time to 10× at 30 days.</p>
     <svg id="curve" viewBox="0 0 640 260" role="img" aria-label="Holding multiplier, 5× at 4 hours then 10× at 30 days"></svg>
   </div>
+</section>
+<section class="section">
+  <div class="sec-head">
+    <h2>Latest payouts</h2>
+    <p class="muted">Sent automatically from the public system wallet. Amounts in token base units.</p>
+  </div>
+  <div class="glass card rw-list" id="payouts"><p class="muted small">No payouts yet. The first ones go out the day after launch.</p></div>
 </section>
 <section class="section">
   <div class="sec-head">
@@ -80,7 +119,7 @@
   <div class="logo small">GTASP<b>10</b></div>
   <nav class="foot-links">
     <a href="index.html">Home</a><a href="index-table.html">Index</a><a href="rewards.html">Rewards</a>
-    <a href="backtest.html">Backtest</a><a href="docs.html">Docs</a><a href="faq.html">FAQ</a><a href="disclaimer.html">Disclaimer</a>
+    <a href="backtest.html">Backtest</a><a href="docs.html">Docs</a><a href="faq.html">FAQ</a><a href="https://x.com/GTASP10" target="_blank" rel="noopener">X @GTASP10</a><a href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">System wallet</a>
   </nav>
   <p>This site is informational. Nothing here is financial advice. GTASP10 is a memecoin index: it is high risk and you can lose everything you put in. No returns are promised. GTASP10 is not affiliated with Rockstar Games or Take-Two Interactive. Grand Theft Auto and GTA are trademarks of their respective owners.</p>
 </footer>
@@ -88,5 +127,8 @@
 <script src="rules.js?v=20261118f"></script>
 <script src="nav.js?v=20261118f"></script>
 <script src="app.js?v=20261118f"></script>
+<script src="payouts.js?v=20261118f"></script>
+<script src="rules-lock.js?v=20261118g"></script>
+<script src="fee-proof.js?v=20261118g"></script>
 </body>
 </html>

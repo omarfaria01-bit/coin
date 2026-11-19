@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Docs — GTASP10</title>
-<meta name="description" content="Public rules of the GTASP10 index: filters, square-root weights, fees, holding multiplier and the draw.">
+<meta name="description" content="Complete reference for the GTASP10 index rules, filters, square-root market cap weights, fee bot, automatic daily payouts, holding multiplier and risks.">
 <meta name="theme-color" content="#1a0b2e">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="logo-400.png">
-<link rel="stylesheet" href="style.css?v=20261118f">
+<link rel="stylesheet" href="style.css?v=20261118g">
 </head>
 <body>
 <header class="nav">
@@ -20,70 +20,244 @@
     <a href="index-table.html">Index</a>
     <a href="rewards.html">Rewards</a>
     <a href="backtest.html">Backtest</a>
-    <a href="docs.html">Docs</a>
+    <a href="docs.html" >Docs</a>
     <a href="faq.html">FAQ</a>
-    <a href="disclaimer.html">Disclaimer</a>
+    <a href="https://x.com/GTASP10" target="_blank" rel="noopener">X ↗</a>
   </nav>
 </header>
+
 <div class="page-hero">
-  <p class="kicker">Public formula</p>
+  <p class="kicker">Public rules</p>
   <h1>Docs</h1>
-  <p>The sentences below are generated from the shipped parameters. The page and the code use the same file, <span class="mono">web/rules.js</span>.</p>
+  <p>The full reference for the GTASP10 index, the two bots and the rewards. Every number below comes from a file in the <a href="https://github.com/omarfaria01-bit/coin" target="_blank" rel="noopener">public repo</a>; the grey note under each section says which one. Parameters live in <span class="mono">index/params.json</span> and the shorter rule sentences on the site are generated from it (<span class="mono">web/rules.js</span>).</p>
 </div>
 <main>
 <section class="section">
-  <div class="rules">
-    <div class="glass card">
-      <h3>Universe</h3>
-      <p>Solana coins whose name, ticker or description matches the public GTA vocabulary. A coin still has to pass every filter. Manual removals are for scams only.</p>
-    </div>
-    <div class="glass card">
-      <h3>Filters, all of them</h3>
-      <div class="chips">
-        <span>Age at least 4 hours</span>
-        <span>Liquidity at least $50,000</span>
-        <span>Pools under $10,000 ignored</span>
-        <span>Top 10 holders at most 30%</span>
-        <span>Fees at least 8 SOL / 24h</span>
-        <span>Bundle at most 30%</span>
-        <span>Authorities revoked</span>
-        <span>At least 50 traders</span>
-        <span>Volume greater than 0</span>
-        <span>Market cap at most 100× liquidity</span>
-      </div>
-      <p class="muted small">Liquidity is summed across pools of at least $10,000. Smaller pools are ignored. There is no minimum on the top-10 holder share, only the 30% ceiling.</p>
-    </div>
-    <div class="glass card">
-      <h3>Rank and weights</h3>
-      <p>Rank uses log S = 40%·ln(market cap) + 30%·ln(liquidity) + 20%·ln(24h fees) + 10%·ln(traders). Buy weights are a separate step.</p>
-      <p>Weights are proportional to the square root of market cap, with an 18% cap and a 5% floor, recomputed every hour.</p>
-      <p class="muted small">Top 10. A coin enters at rank 8 or better and leaves only past rank 12.</p>
-    </div>
-    <div class="glass card">
-      <h3>Fees</h3>
-      <p>0% of fees go to the team. 100% go to holders: 70% is distributed as rewards in the basket coins, and 30% goes to the draw pot.</p>
-      <p>The team holds about 2% of the supply.</p>
-    </div>
-    <div class="glass card">
-      <h3>Rewards</h3>
-      <p>Rewards accrue with the holding score and are paid once a day in the basket. A position worth less than 0.00151384 SOL (the rent of a token account) stays pending, and no token account is opened for dust.</p>
-      <p>Nothing before 1h. The multiplier is 1× from 1h to 1h30, 1.5× at 1h45, 2× at 2h, 3× at 2h30, 4× at 3h and 5× at 4h, then rises with the logarithm of holding time to 10× at 30 days.</p>
-    </div>
-    <div class="glass card">
-      <h3>Draw</h3>
-      <p>COMING SOON. The draw is not live. When it is turned on it pays one SOL prize to one winner and rolls the pot over until it reaches 0.1 SOL. It also rolls over when fewer than 100 eligible holders qualify.</p>
-      <p class="muted small">Odds follow the holding score. No holder counts more than 5% of supply, and no holder can take more than 5% of the odds. A wallet needs at least 0.01% of supply to enter the draw.</p>
-    </div>
+  <div class="glass card dev-card">
+    <h2>The dev does not run the money</h2>
+    <p>Fees and payouts are handled by two automatic bots: fees are claimed and split every hour, rewards are paid every day. No transaction needs the dev's signature, and the dev never chooses who gets paid or how much. The rules are public code and every transaction is on-chain, so anyone can check that what happens matches the rules. The only manual control is an emergency stop that pauses everything for everyone; any use is announced publicly.</p>
+    <p class="sw"><span class="muted small">Public system wallet: receives 100% of creator fees (claimed by the creator and forwarded), buys the basket, pays holders. The dev holds no key to it in any wallet app; the key lives only on the server.</span><br>
+      <a class="mono" href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd</a>
+      <button class="copy-sw" type="button" data-copy="3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd">Copy</button></p>
   </div>
-  <div class="glass card" style="margin-top:1rem">
-    <h3>What the hourly checks cover</h3>
+</section>
+<section class="section">
+  <div class="glass card">
+    <h3>Contents</h3>
+    <ol class="toc">
+      <li><a href="#universe">Universe and discovery</a></li>
+      <li><a href="#filters">The filters</a></li>
+      <li><a href="#rank">Score, rank, entry and exit</a></li>
+      <li><a href="#weights">Weights, with a worked example</a></li>
+      <li><a href="#fee-bot">How the fee bot works</a></li>
+      <li><a href="#payouts">How payouts work</a></li>
+      <li><a href="#verify">Verify it yourself</a></li>
+      <li><a href="#team">Team and disclosure</a></li>
+      <li><a href="#draw">The draw (coming soon)</a></li>
+      <li><a href="#risks">Risks</a></li>
+    </ol>
+  </div>
+</section>
+
+<section id="universe" class="section">
+  <div class="sec-head"><h2>1. Universe and discovery</h2></div>
+  <div class="glass card">
+    <p>The index tracks the top 10 GTA 6 memecoins on Solana, chosen every hour by fixed rules. A coin is a <strong>candidate</strong> if it is a Solana token and its name, ticker or description matches the public GTA vocabulary. The list is one big set of GTA-series words: the game and its titles (GTA, GTA 6, Grand Theft Auto, Vice City), places (Leonida, Port Gellhorn), characters (Jason Duval, Lucia, Tommy Vercetti), the publisher (Rockstar, Take-Two) and meme words. The full list is <span class="mono">keywords.strong</span> in <span class="mono">index/params.json</span>.</p>
     <ul class="ticks">
-      <li>A coin whose market cap is more than 100× its liquidity is blocked on every hourly run.</li>
-      <li>Membership does not flip on a one-hour rank wobble: a coin enters at rank 8 or better and leaves only past rank 12.</li>
-      <li>A holding younger than 1 hour scores 0.</li>
-      <li>Draw odds are capped at 5% per holder group, and a pot below the minimum is not drawn.</li>
-      <li>Round-trip trades are not removed from volume.</li>
+      <li>A keyword counts only when no letter touches it on either side: <span class="mono">GTA</span> matches <span class="mono">GTA6</span> and <span class="mono">$GTA</span>, not <span class="mono">AGTAB</span>. Bare <span class="mono">VI</span> and bare <span class="mono">Jason</span> are not keywords because they match unrelated coins.</li>
+      <li>Ambiguous words (Jason, Vice, Trevor, Franklin) count only with GTA context: a strong word, or a second different ambiguous word, in the same name, ticker or description (D37). Everyday words (Hugh, Johnson, Core, Meme) count only next to a strong word; two of them are never enough (D41).</li>
+      <li>In-game app and Snapmatic meme words are strong (Snapmatic, Lifeinvader, Bleeter, Eyefind, iFruit, Weazel) (D41). The reference coin <span class="mono">buckme</span> / <span class="mono">$B</span> is found through the discovery words <span class="mono">buckme</span> and <span class="mono">GTA 6 bank app</span>; no mint is added by hand (D42).</li>
+      <li><strong>Discovery is top-down</strong> (D37): the system never hunts for brand-new launches. It searches DexScreener for the vocabulary terms on Solana, takes the coins with the highest 24h volume first, then the biggest market caps. A seed list and last hour's members are measured too.</li>
+      <li>DexScreener search returns at most 30 pairs, so a search term crowded by copycats can hide a real coin. That is why <span class="mono">DCTY</span> is a search term and DacityCoin is on the seed list (D44). A seed is not an allow-list: the coin still has to pass every filter.</li>
+      <li><strong>No manual allow-list.</strong> <span class="mono">index/overrides.json</span> holds only <em>deny</em> entries for scams, each with the mint, the reason and the issue where kiwi approved it. The index coin's own mint is never a candidate.</li>
     </ul>
+    <p class="muted small">Sources: INDEX_RULES.md §1; DECISIONS D35, D37, D41, D42, D44; index/params.json.</p>
+  </div>
+</section>
+
+<section id="filters" class="section">
+  <div class="sec-head"><h2>2. The filters</h2></div>
+  <div class="glass card">
+    <p>A candidate must pass <strong>every</strong> filter. Numbers are averages over the 24 hours before the rebalance (or the coin's whole life if younger), sampled every 5 minutes; holder data is sampled every hour. A coin that fails is listed in the public output with the first filter it failed. A missing metric counts as a failure (<span class="mono">insufficient_data</span>), never as a pass.</p>
+    <div class="table-card"><table class="doc-tbl">
+      <thead><tr><th>Filter</th><th>Rule</th><th>Why</th></tr></thead>
+      <tbody>
+      <tr><td>F1 Age</td><td>at least 4 hours since the first pool or curve</td><td>No instant snipes; some history</td></tr>
+      <tr><td>F2 Liquidity</td><td>average at least $50,000, summed across pools of at least $10,000 (smaller pools are ignored)</td><td>A coin you can actually trade</td></tr>
+      <tr><td>F3 Top 10 holders</td><td>median at most 30% of supply. Vaults, burn address, listed hubs and the index treasury are excluded from the count. No minimum.</td><td>Limits whale concentration</td></tr>
+      <tr><td>F4 Trading fees</td><td>at least 8 SOL in 24h, estimated as DexScreener 24h volume over all pools × 0.25%, at the DexScreener SOL price</td><td>Real activity; lifetime fees were unprovable for big coins (D38)</td></tr>
+      <tr><td>F5 Launch bundle</td><td>at most 30% of supply bought in the creation block by more than one wallet</td><td>Blocks coordinated launches</td></tr>
+      <tr><td>F8 Authorities</td><td>mint and freeze authority both revoked; token is a legacy SPL Token, or Token-2022 with only allow-listed extensions (F8c, D32)</td><td>Nobody can print or freeze the coin</td></tr>
+      <tr><td>F9 Real traders</td><td>at least 50 distinct wallets swapping in the window, any size (a lower bound for big coins)</td><td>Needs a crowd, not one wallet</td></tr>
+      <tr><td>F10 Volume</td><td>window volume above 0 (raw Helius volume; no round-trip cleanup)</td><td>Dead coins out (D35)</td></tr>
+      <tr><td>F11 Market cap vs liquidity</td><td>average market cap at most 100× average liquidity</td><td>A thin pool cannot carry a huge valuation (D29)</td></tr>
+      </tbody></table></div>
+    <p>F6 (dev filter) was removed in D35 and F7 (serial-creator filter) in D38. F3, F4 and F9 were recalibrated on reference coins on 18 Nov (D38). Coverage has no minimum: whatever samples exist are used, and a coin with zero samples is <span class="mono">insufficient_data</span>. A current member whose new hour is <span class="mono">insufficient_data</span> keeps its last passing metrics for that hour; a run that errors does not replace the published file.</p>
+    <p class="muted small">Sources: INDEX_RULES.md §2, §3; DECISIONS D29, D32, D35, D38; web/rules.js (filters).</p>
+  </div>
+</section>
+
+<section id="rank" class="section">
+  <div class="sec-head"><h2>3. Score, rank, entry and exit</h2></div>
+  <div class="glass card">
+    <p>Only coins that pass every filter are scored:</p>
+    <pre class="formula">log S = 0.4·ln(MC) + 0.3·ln(Liquidity) + 0.2·ln(Fees) + 0.1·ln(Traders)</pre>
+    <p><span class="mono">MC</span> and <span class="mono">Liquidity</span> are window averages in USD; <span class="mono">Traders</span> is the F9 count. <span class="mono">log S</span> is rounded to 12 decimals, ties go to the lower mint address (byte order), and rank 1 is the highest S. Changing units (USD, SOL, lamports) does not change the ranking.</p>
+    <h3>Entry and exit (buffer rule)</h3>
+    <p>The index has <strong>10</strong> slots. A newcomer must reach <strong>rank 8 or better</strong> to enter. A current member stays while it is still ranked <strong>12 or better</strong> and is replaced only when it falls past 12th or is beaten for its place. The first rebalance simply takes the top 10. A coin that fails a filter is never a member, so the index can hold fewer than 10 coins, or none.</p>
+    <p>On the hourly cadence a rank exit waits one more hour; a filter failure removes the coin immediately.</p>
+    <h3>Emergency removal</h3>
+    <p>Between rebalances a member is removed at once if its pool liquidity falls by 50% or more within 1 hour (two samples 15 minutes apart, D34), if its mint or freeze authority is switched back on, or if the data source flags it as a rug. Weights are recomputed among the remaining members; the empty slot is filled at the next rebalance.</p>
+    <p class="muted small">Sources: INDEX_RULES.md §4, §5; DECISIONS D34, D35; index/params.json (membership).</p>
+  </div>
+</section>
+
+<section id="weights" class="section">
+  <div class="sec-head"><h2>4. Weights, with a worked example</h2></div>
+  <div class="glass card">
+    <p>Weights are a separate step from rank (D40). Each member gets a share proportional to the <strong>square root of its market cap</strong>, with an <strong>18% cap</strong> and a <strong>5% floor</strong>, recomputed every hour:</p>
+    <pre class="formula">w_i = clip(λ · √MC_i, 5%, 18%)</pre>
+    <p>λ is found by bisection so the weights add up to exactly 100%. They are published as integer basis points (bp) that sum to 10,000: each is rounded down, then the leftover points go one by one to the largest remainders, ties to the better rank. If there are fewer than 6 members (6 × 18% is under 100%) or more than 20 (20 × 5% is over 100%) the bounds cannot hold, and every member weighs 1/n. A member with an unknown market cap weighs like the smallest coin.</p>
+    <h3>Worked example (illustrative market caps, not live data)</h3>
+    <p>Ten members with these market caps: $100M, $64M, $36M, $25M, $16M, $9M, $4M, $2.25M, $1M, $0.64M. Their square roots are 10,000, 8,000, 6,000, 5,000, 4,000, 3,000, 2,000, 1,500, 1,000, 800. Solving for λ gives about 0.2444 bp per unit of √MC:</p>
+    <div class="table-card"><table class="doc-tbl">
+      <thead><tr><th>Market cap</th><th>λ·√MC</th><th>Published weight</th></tr></thead>
+      <tbody>
+      <tr><td>$100M</td><td>2,444 bp</td><td>1,800 bp (18%, capped)</td></tr>
+      <tr><td>$64M</td><td>1,956 bp</td><td>1,800 bp (18%, capped)</td></tr>
+      <tr><td>$36M</td><td>1,467 bp</td><td>1,467 bp</td></tr>
+      <tr><td>$25M</td><td>1,222 bp</td><td>1,222 bp</td></tr>
+      <tr><td>$16M</td><td>978 bp</td><td>978 bp</td></tr>
+      <tr><td>$9M</td><td>733 bp</td><td>733 bp</td></tr>
+      <tr><td>$4M, $2.25M, $1M, $0.64M</td><td>489, 367, 244, 196 bp</td><td>500 bp each (5%, floored)</td></tr>
+      </tbody></table></div>
+    <p>Total: 1,800 + 1,800 + 1,467 + 1,222 + 978 + 733 + 4 × 500 = 10,000 bp. A coin with 156× the market cap of the smallest gets 3.6× its weight, not 156×.</p>
+    <p class="muted small">Sources: INDEX_RULES.md §6; DECISIONS D40; <span class="mono">sqrt_mc_weights</span> in index/select.py (the table above was produced by it).</p>
+  </div>
+</section>
+
+<section id="fee-bot" class="section">
+  <div class="sec-head"><h2>5. How the fee bot works</h2></div>
+  <div class="glass card">
+    <p>A bot on the server (D45) handles the coin's creator fees with no per-transaction approval. Every hour, at minute 20 UTC:</p>
+    <ol class="steps">
+      <li><strong>Claim and forward.</strong> pump.fun pays this coin's creator fees to the creator wallet and does not allow sharing them for this coin, so the creator claims them and forwards 100% to the public system wallet at least once a day. Both transactions are public on Solscan.</li>
+      <li><strong>Split 70 / 30.</strong> 30% is kept as the SOL prize pot (the draw is off, so it only accumulates); 70% becomes the basket budget (D50).</li>
+      <li><strong>Buy the basket.</strong> The 70% buys the current index members through the Jupiter aggregator, split by each member's published <span class="mono">weight_bps</span>. The bought coins stay in the system wallet until the daily payout.</li>
+    </ol>
+    <h3>Limits built into the bot</h3>
+    <ul class="ticks">
+      <li>Caps per swap, per run and per day; slippage at most 3%; a price-impact check.</li>
+      <li>It buys only from a fresh, non-dry-run index whose weights sum to 10,000, and never its own coin.</li>
+      <li>A slice smaller than 0.01 SOL is not bought; it waits for the next hour. A slice that cannot be bought within the slippage cap is paid in SOL.</li>
+      <li>The wallet must hold the pot, the basket and a reserve for fees and token-account rent, or the bot stops.</li>
+      <li>One run at a time. A dry mode does everything except sign and send.</li>
+      <li><strong>Emergency stop.</strong> A switch pauses the bot for everyone. It is the only manual control, and any use is announced publicly.</li>
+    </ul>
+    <p><strong>Public system wallet:</strong> <a class="mono" href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd</a>. It receives 100% of the creator fees, forwarded by the creator after each claim. Its key was generated on the server and lives only there (file mode 600, never printed or committed). The dev holds no key to it in any wallet app. Every claim, buy and payout is a public transaction on Solscan.</p>
+    <p class="muted small">Sources: ops/fee-bot/README.md; DECISIONS D45; INDEX_RULES.md §7 (70/30, 0.01 SOL, 3%).</p>
+  </div>
+</section>
+
+<section id="payouts" class="section">
+  <div class="sec-head"><h2>6. How payouts work</h2></div>
+  <div class="glass card">
+    <p>Holder rewards are paid <strong>automatically, once a day</strong>, in the basket coins the fee bot bought (D46). Nobody signs, picks or changes a payment by hand: the dev never chooses who gets paid or how much.</p>
+    <h3>The daily flow (all times UTC)</h3>
+    <ul class="ticks">
+      <li><strong>Hourly at :40</strong> a snapshot records every holder of the coin, minus excluded wallets. Selling to 0 restarts the holding clock. For each hour between two snapshots you earn on the <strong>lower</strong> of the two balances (D47 balance-hours), so you earn from your first full hour and buying just before a snapshot earns nothing.</li>
+      <li><strong>Daily at 00:10</strong> the payout job sends what the last plan still owes, exports the finished day, makes one plan for it (carry-over from the previous plan included), and sends the transfers.</li>
+      <li>A missed snapshot means that hour earns nothing for anyone. A day with fewer than 2 snapshots gets no plan; its budget waits and is split the next day.</li>
+    </ul>
+    <h3>Your share</h3>
+    <p>Your share of the day's budget is proportional to the sum, over the day's hours, of <strong>balance × loyalty multiplier</strong>. Holding longer multiplies the weight of your balance:</p>
+    <div class="table-card"><table class="doc-tbl">
+      <thead><tr><th>Holding time</th><th>Multiplier</th></tr></thead>
+      <tbody>
+      <tr><td>under 1 hour</td><td>0 (nothing earned)</td></tr>
+      <tr><td>1h to 1h30</td><td>1×</td></tr>
+      <tr><td>1h45</td><td>1.5×</td></tr>
+      <tr><td>2h</td><td>2×</td></tr>
+      <tr><td>2h30</td><td>3×</td></tr>
+      <tr><td>3h</td><td>4×</td></tr>
+      <tr><td>4h</td><td>5×</td></tr>
+      <tr><td>4h to 30 days</td><td>5 + 5·ln(t / 4h) / ln(30d / 4h), rising to 10×</td></tr>
+      <tr><td>30 days or more</td><td>10× (the cap)</td></tr>
+      </tbody></table></div>
+    <h3>Dust, carry and exclusions</h3>
+    <ul class="ticks">
+      <li><strong>Dust floor.</strong> A position worth less than a token account's rent (1,513,840 lamports, 0.00151384 SOL) is not paid and no token account is opened for it. The amount carries to the next day.</li>
+      <li><strong>Excluded wallets</strong> follow a published rule: team wallets, the system wallet, program-owned pool and curve accounts, and burn or exchange addresses. The exclusions are published in each payout plan. Changing the rule needs kiwi and a new decision entry.</li>
+    </ul>
+    <h3>Never twice, never more than held</h3>
+    <p>A plan is made once per day, and a new one is refused while the previous plan still has unsent transfers. The sender never sends the same memo twice (checked in its ledger and on-chain), never sends more of a token than the wallet holds, keeps the fee bot's SOL, and has a per-day cap.</p>
+    <h3>Public ledger and the emergency stop</h3>
+    <p>Every payout is a transaction with a memo, and the list is published as "Latest payouts" on the <a href="rewards.html">Rewards</a> page, with signatures. The only manual control is an emergency stop that pauses payouts for everyone at once; it cannot target a person or change an amount, and any use is announced publicly.</p>
+    <p class="muted small">Sources: ops/payout-bot/README.md; DECISIONS D43, D46; engine/loyalty.py; web/rules.js (hold, rewards).</p>
+  </div>
+</section>
+
+<section id="verify" class="section">
+  <div class="sec-head"><h2>7. Verify it yourself</h2></div>
+  <div class="glass card">
+    <p>You do not have to trust the team. The code is public at <a class="mono" href="https://github.com/omarfaria01-bit/coin" target="_blank" rel="noopener">github.com/omarfaria01-bit/coin</a>.</p>
+    <ul class="ticks">
+      <li><strong>Every hour is published.</strong> The hourly job commits <span class="mono">index/out/&lt;YYYY-MM-DDTHH&gt;.json</span> to the <span class="mono">index-data</span> branch. Each file has the members with rank, <span class="mono">log_s</span>, <span class="mono">weight_bps</span> and every metric with its source and fetch time, the excluded coins with the first failed filter, the changes, and any emergency removals.</li>
+      <li><strong>Hashes.</strong> <span class="mono">params_hash</span> pins the rules, <span class="mono">code_commit</span> pins the code, and <span class="mono">inputs_hash</span> is the hash of the candidates, the previous members and the overrides. Same inputs and same params give the same file.</li>
+      <li><strong>Recompute.</strong> The selection is plain deterministic code (<span class="mono">tools/run_index.py</span>, <span class="mono">index/select.py</span>, <span class="mono">index/filters.py</span>): check out <span class="mono">code_commit</span>, run it on the same inputs, and compare the output and the hashes.</li>
+      <li><strong>The money.</strong> Fee-bot and payout-bot code is in <span class="mono">ops/</span>. Check any transaction of the <a href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">system wallet</a> against the rules above and the ledger on <a href="rewards.html">Rewards</a>.</li>
+      <li><strong>Known limits.</strong> Every number comes from third-party data, so if a source is wrong the index is wrong until the next run. Someone could pay to qualify by buying real liquidity, fees and traders; the 24h averages make a last-minute pump useless, but it is not impossible.</li>
+    </ul>
+    <p class="muted small">Sources: docs/design/INDEX_OUTPUT_SCHEMA.md §1–§2; INDEX_RULES.md §8, §9.</p>
+  </div>
+  <div class="glass card" id="who-changes-rules">
+    <h3>Who can change the rules</h3>
+    <p>Fees and rewards follow a public rules file. Any change is visible on GitHub and only takes effect 72 hours later, so holders always see it coming. The dev cannot change payouts on the spot.</p>
+    <p>The file is <a class="mono" href="https://github.com/omarfaria01-bit/coin/blob/main/econ/params.json" target="_blank" rel="noopener">econ/params.json</a>. The bots publish the sha256 of the rules they run on, so you can check it against GitHub.</p>
+    <div id="rules-lock"><p class="muted small">The rules hash appears here once the fee bot runs.</p></div>
+    <p>The bots run on our server; full on-chain enforcement (multisig with time lock) is planned.</p>
+    <p class="muted small">Sources: econ/README.md; DECISIONS D50.</p>
+  </div>
+</section>
+
+<section id="team" class="section">
+  <div class="sec-head"><h2>8. Team and disclosure</h2></div>
+  <div class="glass card">
+    <ul class="ticks">
+      <li><strong>0% of fees go to the team.</strong> 100% go to holders: 70% as rewards in the basket coins, 30% to the prize pot (D50).</li>
+      <li>The team holds about <strong>2%</strong> of the supply.</li>
+      <li>Team wallets are excluded from rewards, and the exclusion list is published with every payout plan. The two team wallets are <a href="https://solscan.io/account/E8JgzMnBJU5Mwbsmw88SyivaDiUYJNjkupU53UEG4uXJ" target="_blank" rel="noopener">creator E8Jg…4uXJ</a> and <a href="https://solscan.io/account/GscVFwxRLP15bAoT8QwfnHbXULDXZr6fGCsEsXCQJEks" target="_blank" rel="noopener">dev share GscV…JEks</a> (also listed on <a href="rewards.html">Rewards</a>).</li>
+      <li>The creator fees are claimed by the creator wallet (pump.fun does not allow sharing them for this coin) and forwarded 100% to the public system wallet above, at least once a day; every claim and forward is public.</li>
+    </ul>
+    <p class="muted small">Sources: web/rules.js (fee_line, team_line); DECISIONS D43, D45, D46.</p>
+  </div>
+</section>
+
+<section id="draw" class="section">
+  <div class="sec-head"><h2>9. The draw (coming soon)</h2></div>
+  <div class="glass card">
+    <p><strong>Status: COMING SOON.</strong> The draw is not live and nothing is promised. It stays off until a legal review is done (legal #8). The 30% share only builds a SOL pot meanwhile.</p>
+    <ul class="ticks">
+      <li>One SOL prize, one winner. A pot below 0.1 SOL rolls over to the next draw.</li>
+      <li>Odds follow the same holding score as rewards, linear and exact. Holdings are counted up to 5% of supply, and no holder group can take more than 5% of the odds (D39).</li>
+      <li>A wallet needs at least 0.01% of supply to enter. With fewer than 100 eligible holder groups there is no draw and the pot rolls over.</li>
+      <li>Every draw is committed to a hash of all its inputs before the random seed is requested, so the result can be verified afterwards (D39).</li>
+    </ul>
+    <p class="muted small">Sources: INDEX_RULES.md §7; DECISIONS D39, D43; web/rules.js (draw).</p>
+  </div>
+</section>
+
+<section id="risks" class="section">
+  <div class="sec-head"><h2>10. Risks</h2></div>
+  <div class="glass card">
+    <ul class="ticks">
+      <li><strong>You can lose everything.</strong> Memecoins can go to zero, and GTASP10 holds a basket of them. No return is promised.</li>
+      <li><strong>The filters can be wrong.</strong> Every number comes from third-party data. A bad data point can put a bad coin in the index or drop a good one, and membership is not an endorsement.</li>
+      <li><strong>Smart-contract and launchpad risk.</strong> Solana programs, pools, bonding curves and swap routes can fail or be exploited, and rewards depend on the swaps succeeding.</li>
+      <li><strong>Automation can fail.</strong> A bot can pause, a day can be skipped, and the emergency stop can pause everything for everyone. Unpaid amounts are carried, not lost.</li>
+      <li><strong>No advice.</strong> Nothing here is financial, legal or investment advice. GTASP10 is not affiliated with Rockstar Games or Take-Two Interactive.</li>
+    </ul>
+    <p class="muted small">Sources: INDEX_RULES.md §9; DECISIONS D45, D46.</p>
   </div>
 </section>
 </main>
@@ -91,10 +265,11 @@
   <div class="logo small">GTASP<b>10</b></div>
   <nav class="foot-links">
     <a href="index.html">Home</a><a href="index-table.html">Index</a><a href="rewards.html">Rewards</a>
-    <a href="backtest.html">Backtest</a><a href="docs.html">Docs</a><a href="faq.html">FAQ</a><a href="disclaimer.html">Disclaimer</a>
+    <a href="backtest.html">Backtest</a><a href="docs.html">Docs</a><a href="faq.html">FAQ</a><a href="https://x.com/GTASP10" target="_blank" rel="noopener">X @GTASP10</a><a href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">System wallet</a>
   </nav>
   <p>This site is informational. Nothing here is financial advice. GTASP10 is a memecoin index: it is high risk and you can lose everything you put in. No returns are promised. GTASP10 is not affiliated with Rockstar Games or Take-Two Interactive. Grand Theft Auto and GTA are trademarks of their respective owners.</p>
 </footer>
 <script src="nav.js?v=20261118f"></script>
+<script src="rules-lock.js?v=20261118g"></script>
 </body>
 </html>

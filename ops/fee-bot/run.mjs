@@ -28,11 +28,14 @@ import {
   basketFromIndex,
   conserved,
   emptyState,
+  owedLamports,
   planBuys,
   quoteAcceptable,
+  rentTopUp,
   stateFromJson,
   stateToJson,
 } from "./plan.mjs";
+import { FEE_BOT_KEYS, loadEcon, mergeLocal } from "../../econ/params.mjs";
 
 // The SDK's ESM build fails to import under Node (anchor is CommonJS); its CJS build works.
 const { OnlinePumpSdk } = createRequire(import.meta.url)("@pump-fun/pump-sdk");
@@ -42,16 +45,8 @@ const JUP = "https://api.jup.ag/swap/v2";
 const CONFIG_KEYS = {
   enabled: "boolean",
   mode: "string", // "dry" | "live"
-  fee_mode: "string", // "sharing" (fee sharing config pays this wallet) | "creator" (this wallet is the creator)
+  fee_mode: "string", // "sharing" | "creator" | "forwarded" (the creator claims and sends SOL from forward_from)
   mint: "string",
-  pot_bps: "number",
-  slippage_bps: "number",
-  max_price_impact_pct: "number",
-  min_swap_lamports: "string",
-  max_per_swap_lamports: "string",
-  max_per_run_lamports: "string",
-  max_per_day_lamports: "string",
-  min_reserve_lamports: "string",
   index_max_age_hours: "number",
   index_out_dir: "string",
   state_dir: "string",
@@ -61,18 +56,36 @@ const CONFIG_KEYS = {
 const log = (event, data = {}) => console.log(JSON.stringify({ t: new Date().toISOString(), event, ...data }));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export function loadConfig(file) {
-  const cfg = JSON.parse(fs.readFileSync(file, "utf8"));
-  for (const k of Object.keys(cfg)) if (!(k in CONFIG_KEYS)) throw new Error(`unknown config key ${k}`);
-  for (const [k, t] of Object.entries(CONFIG_KEYS)) {
-    if (typeof cfg[k] !== t) throw new Error(`config ${k} must be ${t}`);
+// Caps a local config may lower (smoke test), never raise. Every other rule is public only.
+const LOWERABLE = ["max_per_swap_lamports", "max_per_run_lamports", "max_per_day_lamports"];
+
+/**
+ * Local config (paths, mode, mint) + the public rules in force (#345): split, caps and slippage
+ * come from econ/params.json with its 72h timelock. Returns the merged config and `econ` info.
+ */
+export function loadConfig(file, { econFile, seenFile, nowMs } = {}) {
+  const local = JSON.parse(fs.readFileSync(file, "utf8"));
+  const own = {};
+  for (const [k, v] of Object.entries(local)) {
+    if (k in FEE_BOT_KEYS) continue; // checked by mergeLocal below
+    if (k === "pot_bps" || k === "burn_bps") throw new Error(`${k} is a public rule (econ/params.json, 72h timelock)`);
+    if (k === "forward_from") continue; // checked below
+    if (!(k in CONFIG_KEYS)) throw new Error(`unknown config key ${k}`);
+    own[k] = v;
   }
-  if (!["dry", "live"].includes(cfg.mode)) throw new Error("mode must be dry or live");
-  if (!["sharing", "creator"].includes(cfg.fee_mode)) throw new Error("fee_mode must be sharing or creator");
-  if (cfg.slippage_bps > 300) throw new Error("slippage_bps above 300 (3%) is not allowed");
-  if (cfg.pot_bps !== 3000) throw new Error("pot_bps must be 3000 (D43: 70/30)");
-  new PublicKey(cfg.mint); // throws on a bad mint
-  return cfg;
+  for (const [k, t] of Object.entries(CONFIG_KEYS)) {
+    if (typeof own[k] !== t) throw new Error(`config ${k} must be ${t}`);
+  }
+  if (!["dry", "live"].includes(own.mode)) throw new Error("mode must be dry or live");
+  if (!["sharing", "creator", "forwarded"].includes(own.fee_mode)) throw new Error("fee_mode must be sharing, creator or forwarded");
+  if ((own.fee_mode === "forwarded") !== ("forward_from" in local)) throw new Error("forward_from is required with fee_mode forwarded, and only then");
+  if (own.fee_mode === "forwarded") own.forward_from = new PublicKey(local.forward_from).toBase58();
+  new PublicKey(own.mint); // throws on a bad mint
+  const econ = loadEcon({ file: econFile, seenFile: seenFile ?? path.join(own.state_dir, "econ_seen.json"), nowMs });
+  const local_rules = Object.fromEntries(Object.entries(local).filter(([k]) => k in FEE_BOT_KEYS));
+  const { rules, tightened } = mergeLocal(local_rules, econ.active.fee_bot, LOWERABLE);
+  const split = econ.active.fee_split_bps;
+  return { ...own, ...rules, pot_bps: split.pot, burn_bps: split.burn, econ: { ...econ.public, local_lower_caps: tightened } };
 }
 
 /** Read the keypair only from a private file owned by this user. Never logs it. */
@@ -84,7 +97,8 @@ export function loadKeypair(file) {
   }
   const raw = Uint8Array.from(JSON.parse(fs.readFileSync(file, "utf8")));
   if (raw.length !== 64) throw new Error("keypair file is not a 64-byte secret key");
-  const kp = Keypair.fromSecretKey(raw);
+  // fromSecretKey keeps a reference to the array it gets, so pass a copy before zeroing ours.
+  const kp = Keypair.fromSecretKey(Uint8Array.from(raw));
   raw.fill(0);
   return kp;
 }
@@ -135,7 +149,44 @@ async function sendIxs(connection, wallet, ixs) {
 }
 
 /** Step 1: move the coin's creator fees into the system wallet. Returns lamports received. */
-async function collect(cfg, connection, sdk, wallet) {
+/**
+ * fee_mode "forwarded" (pump.fun legacy rewards can't be shared): the creator claims and sends SOL from
+ * `forward_from`. Counts plain system transfers forward_from -> this wallet since the cursor. The first
+ * run only sets the cursor (earlier deposits, e.g. the reserve, are not fees). Dry mode never moves it.
+ */
+export function forwardedLamports(txs, from, to) {
+  let total = 0n;
+  const sigs = [];
+  for (const { sig, tx } of txs) {
+    if (!tx || tx.meta?.err) continue;
+    for (const ix of tx.transaction?.message?.instructions ?? []) {
+      const info = ix.parsed?.info;
+      if (ix.program === "system" && ix.parsed?.type === "transfer" && info?.source === from && info?.destination === to) {
+        total += BigInt(info.lamports);
+        sigs.push(sig);
+      }
+    }
+  }
+  return { total, sigs };
+}
+
+async function collectForwarded(cfg, connection, wallet, cursor) {
+  const me = wallet.publicKey.toBase58();
+  const list = await connection.getSignaturesForAddress(wallet.publicKey, { until: cursor && cursor !== "START" ? cursor : undefined, limit: 1000 }, "confirmed");
+  const txs = [];
+  for (const s of [...list].reverse()) {
+    if (s.err) continue;
+    txs.push({ sig: s.signature, tx: await connection.getParsedTransaction(s.signature, { commitment: "confirmed", maxSupportedTransactionVersion: 0 }) });
+  }
+  const { total, sigs } = forwardedLamports(txs, cfg.forward_from, me);
+  log("forwarded", { lamports: String(total), sigs });
+  if (cfg.mode === "dry") return { received: 0n };
+  // First run (no cursor) counts the whole history: forwards sent before the bot started are owed too.
+  return { received: total, sig: sigs.join(","), cursor: list[0]?.signature ?? cursor ?? "START" };
+}
+
+async function collect(cfg, connection, sdk, wallet, cursor) {
+  if (cfg.fee_mode === "forwarded") return collectForwarded(cfg, connection, wallet, cursor);
   const mint = new PublicKey(cfg.mint);
   let ixs;
   if (cfg.fee_mode === "sharing") {
@@ -217,7 +268,7 @@ export async function main(argv = process.argv.slice(2)) {
   }
   try {
     const wallet = loadKeypair(keyFile);
-    log("start", { mode: cfg.mode, fee_mode: cfg.fee_mode, wallet: wallet.publicKey.toBase58(), mint: cfg.mint });
+    log("start", { mode: cfg.mode, fee_mode: cfg.fee_mode, forward_from: cfg.forward_from ?? null, wallet: wallet.publicKey.toBase58(), mint: cfg.mint, econ: cfg.econ });
     const connection = new Connection(`https://mainnet.helius-rpc.com/?api-key=${key}`, "confirmed");
     const sdk = new OnlinePumpSdk(connection);
     let state = loadState(cfg.state_dir);
@@ -225,18 +276,37 @@ export async function main(argv = process.argv.slice(2)) {
 
     // Reserve check: the wallet must hold pot + basket + a reserve for tx fees and rent.
     const balance = BigInt(await connection.getBalance(wallet.publicKey, "confirmed"));
-    const owed = state.potLamports + state.basketLamports;
+    const owed = owedLamports(state);
     if (balance < owed + BigInt(cfg.min_reserve_lamports)) {
       log("low_reserve", { balance: String(balance), owed: String(owed), reserve: cfg.min_reserve_lamports });
       ledger(cfg.state_dir, { t: Date.now(), event: "low_reserve" });
       return 2;
     }
 
-    const got = await collect(cfg, connection, sdk, wallet);
+    const got = await collect(cfg, connection, sdk, wallet, state.forwardCursor);
+    if (got.cursor !== undefined && got.cursor !== state.forwardCursor && got.received === 0n) {
+      state = { ...state, forwardCursor: got.cursor };
+      saveState(cfg.state_dir, state);
+    }
     if (got.received > 0n) {
-      state = applyIncoming(state, got.received, BigInt(cfg.pot_bps));
+      if (got.cursor !== undefined) state = { ...state, forwardCursor: got.cursor };
+      // D49: the burn share is held (burnLamports) until buyback & burn ships (#344); never spent otherwise.
+      state = applyIncoming(state, got.received, BigInt(cfg.pot_bps), BigInt(cfg.burn_bps));
       saveState(cfg.state_dir, state);
       ledger(cfg.state_dir, { t: Date.now(), event: "collected", sig: got.sig, lamports: String(got.received) });
+    }
+
+    // D46: holders' new token accounts are paid from the basket budget, before buying, within
+    // the day cap; the payout sender only spends SOL above pot + basket + reserve.
+    const free = balance - owed - BigInt(cfg.min_reserve_lamports);
+    const spentToday = state.dayKey === day ? state.spentTodayLamports : 0n;
+    const maxDay = BigInt(cfg.max_per_day_lamports);
+    const topUp = rentTopUp(state.basketLamports, free, BigInt(cfg.payout_rent_target_lamports), maxDay > spentToday ? maxDay - spentToday : 0n);
+    if (topUp > 0n && cfg.mode === "live") {
+      state = applySpent(state, topUp, day);
+      saveState(cfg.state_dir, state);
+      ledger(cfg.state_dir, { t: Date.now(), event: "payout_rent", lamports: String(topUp) });
+      log("payout_rent", { lamports: String(topUp), free_before: String(free) });
     }
 
     const basket = basketFromIndex(
@@ -268,7 +338,7 @@ export async function main(argv = process.argv.slice(2)) {
       }
     }
 
-    const pub = { as_of: new Date().toISOString(), wallet: wallet.publicKey.toBase58(), mode: cfg.mode, ...stateToJson(state) };
+    const pub = { as_of: new Date().toISOString(), wallet: wallet.publicKey.toBase58(), mode: cfg.mode, fee_mode: cfg.fee_mode, forward_from: cfg.forward_from ?? null, econ: cfg.econ, ...stateToJson(state) };
     if (cfg.public_log_path) writeAtomic(cfg.public_log_path, JSON.stringify(pub));
     log("done", pub);
     return 0;

@@ -156,8 +156,9 @@ def test_rules_match_params_and_hold_curve() -> None:
     assert rules["weights"]["floor_pct"] == 5
     assert rules["weights"]["mode"] == "sqrt_mc_capped"
     assert rules["fees"]["team_pct"] == 0
-    assert rules["fees"]["holder_pct"] == 70
+    assert rules["fees"]["holder_pct"] == 70  # D50 (D49 reverted)
     assert rules["fees"]["draw_pct"] == 30
+    assert rules["fees"]["burn_pct"] == 0
     assert rules["hold"]["max_multiplier"] == 10
     assert rules["hold"]["chart_max"] == 5
     assert rules["hold"]["log_cap_hours"] == 720

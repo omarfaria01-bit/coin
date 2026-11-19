@@ -355,15 +355,7 @@ def run_index(
         "skipped_filters": sorted(params.dry_run.skip_filters, key=lambda c: int(c[1:])),
         "params_hash": sha256_hex(canonical_json(params.model_dump(mode="json"))),
         "inputs_hash": sha256_hex(
-            canonical_json(
-                {
-                    "candidates": [
-                        _metrics_json(by_mint[k]) for k in sorted(by_mint, key=mint_key)
-                    ],
-                    "prev_members": sorted(prev_members, key=mint_key),
-                    "overrides": overrides.model_dump(mode="json"),
-                }
-            )
+            canonical_json(inputs_doc(list(by_mint.values()), prev_members, overrides))
         ),
         "members": [
             {
@@ -406,3 +398,24 @@ def _metrics_json(m: Metrics) -> dict:
     d = asdict(m)
     d["sources"] = dict(m.sources)
     return d
+
+
+def inputs_doc(
+    candidates: Sequence[Metrics], prev_members: Sequence[str], overrides: Overrides
+) -> dict:
+    """The exact preimage of `inputs_hash` (#251: also saved locally so it can be re-run)."""
+    by_mint = {m.mint: m for m in candidates}
+    return {
+        "candidates": [_metrics_json(by_mint[k]) for k in sorted(by_mint, key=mint_key)],
+        "prev_members": sorted(prev_members, key=mint_key),
+        "overrides": overrides.model_dump(mode="json"),
+    }
+
+
+def metrics_from_json(d: Mapping) -> Metrics:
+    """Inverse of _metrics_json (lists back to tuples)."""
+    row = dict(d)
+    if isinstance(row.get("extensions"), list):
+        row["extensions"] = tuple(row["extensions"])
+    row["sources"] = dict(row.get("sources") or {})
+    return Metrics(**row)

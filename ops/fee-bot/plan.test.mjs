@@ -7,8 +7,10 @@ import {
   basketFromIndex,
   conserved,
   emptyState,
+  owedLamports,
   planBuys,
   quoteAcceptable,
+  rentTopUp,
   splitIncoming,
   stateFromJson,
   stateToJson,
@@ -36,7 +38,10 @@ const caps = (over = {}) => ({
 });
 
 test("70/30 split floors the pot and keeps the remainder", () => {
-  assert.deepEqual(splitIncoming(1_000_000_001n, 3000n), { pot: 300_000_000n, basket: 700_000_001n });
+  assert.deepEqual(splitIncoming(1_000_000_001n, 3000n), { pot: 300_000_000n, burn: 0n, basket: 700_000_001n });
+  // D49 67/28/5: floors on pot and burn, remainder to the basket
+  assert.deepEqual(splitIncoming(1_000_000_001n, 2800n, 500n), { pot: 280_000_000n, burn: 50_000_000n, basket: 670_000_001n });
+  assert.throws(() => splitIncoming(1n, 9600n, 500n));
   assert.throws(() => splitIncoming(-1n, 3000n));
   assert.throws(() => splitIncoming(1n, 10_001n));
 });
@@ -118,4 +123,28 @@ test("quote gate", () => {
   assert.equal(quoteAcceptable({ ...ok, priceImpact: -3.5 }, 300, 3), false);
   assert.equal(quoteAcceptable({ ...ok, transaction: "" }, 300, 3), false);
   assert.equal(quoteAcceptable(null, 300, 3), false);
+});
+
+test("payout rent top-up: up to target, never more than basket or the day's cap", () => {
+  assert.equal(rentTopUp(10n ** 9n, 0n, 500_000_000n, 10n ** 10n), 500_000_000n);
+  assert.equal(rentTopUp(10n ** 9n, 400_000_000n, 500_000_000n, 10n ** 10n), 100_000_000n);
+  assert.equal(rentTopUp(10n ** 9n, 600_000_000n, 500_000_000n, 10n ** 10n), 0n); // already enough
+  assert.equal(rentTopUp(30n, 0n, 500_000_000n, 10n ** 10n), 30n); // basket is the limit
+  assert.equal(rentTopUp(10n ** 9n, 0n, 500_000_000n, 7n), 7n); // day cap is the limit
+  let s = applyIncoming(emptyState(), 10n ** 9n, 3000n);
+  s = applySpent(s, rentTopUp(s.basketLamports, 0n, 500_000_000n, 10n ** 10n), "d");
+  assert.ok(conserved(s));
+  assert.equal(s.basketLamports, 200_000_000n);
+});
+
+test("D49: burn share is held, counted as owed, conserved, and old state loads", () => {
+  let s = emptyState();
+  for (const x of [1n, 7n, 999_999_999n, 123_456_789n]) s = applyIncoming(s, x, 2800n, 500n);
+  assert.ok(conserved(s));
+  assert.equal(owedLamports(s), s.potLamports + s.burnLamports + s.basketLamports);
+  assert.ok(s.burnLamports > 0n);
+  const old = stateToJson(s);
+  delete old.burnLamports;
+  old.basketLamports = String(s.basketLamports + s.burnLamports);
+  assert.equal(stateFromJson(old).burnLamports, 0n);
 });

@@ -11,6 +11,7 @@ from hypothesis import strategies as st
 from adapters.index_history_cache import (
     fetch_mint_history_incremental,
     load_cache,
+    save_cache,
 )
 
 TEST_MINT = "CacheMint11111111111111111111111111111111111"
@@ -158,3 +159,40 @@ def test_hypothesis_incremental_equals_full(
         )
 
         assert {t["signature"] for t in res2} == {t["signature"] for t in full_res}
+
+
+def test_failed_write_leaves_no_tmp(tmp_path: Path, monkeypatch) -> None:
+    """#311: ENOSPC mid-write used to leave ~200 MB .tmp files behind on every retry."""
+    import errno
+
+    real_write = Path.write_text
+
+    def boom(self, *args, **kwargs):
+        real_write(self, "partial", encoding="utf-8")  # a partial file exists, then the disk fills
+        raise OSError(errno.ENOSPC, "No space left on device")
+
+    monkeypatch.setattr(Path, "write_text", boom)
+    rows = [{"signature": "a", "block_time": AS_OF}]
+    save_cache(TEST_MINT, rows, False, AS_OF, cache_dir=tmp_path)
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_low_disk_skips_write(tmp_path: Path, monkeypatch) -> None:
+    from adapters import index_history_cache as cache_mod
+
+    monkeypatch.setattr(cache_mod, "MIN_FREE_BYTES", 10**18)  # more than any disk has free
+    rows = [{"signature": "a", "block_time": AS_OF}]
+    save_cache(TEST_MINT, rows, False, AS_OF, cache_dir=tmp_path)
+    assert load_cache(TEST_MINT, tmp_path) is None
+
+
+def test_cache_stores_slim_rows_and_default_cap(tmp_path: Path) -> None:
+    from adapters.index_history_cache import DEFAULT_MAX_TOTAL_BYTES
+    from tests.test_helius_slim import _fat_item
+
+    rows = [_fat_item(i) for i in range(3)]
+    save_cache(TEST_MINT, rows, False, AS_OF, cache_dir=tmp_path)
+    loaded = load_cache(TEST_MINT, tmp_path)
+    assert loaded is not None
+    assert all("accountData" not in r["parsed"] for r in loaded[0])
+    assert DEFAULT_MAX_TOTAL_BYTES == 1_000_000_000

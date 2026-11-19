@@ -481,3 +481,64 @@ out of the standing approval.
 5. Public docs (site Rewards + FAQ, README) say payouts are automatic and the dev does not sign or touch them, and
    name the kill switch. They must not claim more than is true (for example, that the dev has no access to the server).
 6. Still needs kiwi: raising caps, transfers out of the system wallet other than payouts, changing the exclusion rule.
+7. Token-account rent for new holders (manager design check, 20:12): paid from the 70% basket budget before buying.
+   The fee bot tops free SOL (wallet minus pot, basket and reserve) up to `payout_rent_target_lamports` (default
+   0.5 SOL), within its `max_per_day_lamports`; the sender only spends SOL above pot + basket + reserve. The D43 floor
+   still skips shares worth less than the rent (carried). Team wallets excluded and disclosed on the site:
+   creator `E8Jg…4uXJ`, fomo dev share `GscV…JEks`. System wallet `3ann…hJkd`.
+
+## D47 · 2026-11-18 · Payouts count the hours actually held, from the first hour (kiwi, chat 21:06–21:10 Rome)
+kiwi: the first payout must follow the rules we set (earn after 1h of holding), not wait a full day. With D46's
+`day_min` (smallest balance over all of the day's snapshots, 0 if first seen after the day's first snapshot),
+nobody would earn anything on launch day.
+1. Replace the daily `day_min` weight with **balance-hours**: for each pair of consecutive hourly snapshots in the
+   UTC day, a wallet earns `min(balance_prev, balance_now)` for that hour. Absent or 0 in either snapshot = 0 for
+   that hour. The day's weight is the sum over its hours, times the loyalty multiplier (D43) at that hour.
+2. So a wallet earns from its second snapshot on (≥ 1 hour held, matching D43's "0 before 1h"); selling part of the
+   position lowers the next hours only; buying just before a snapshot and selling after still earns nothing.
+3. Payout cadence is unchanged: one settlement per UTC day at 00:10 UTC (01:10 Rome), for the day that just ended,
+   pro-rata on these weights; conservation (`paid + carried == accrued`) and the D43 dust floor unchanged.
+4. Site text (Rewards/FAQ/Docs): "You earn for every full hour you hold, starting after your first hour. Rewards are
+   paid once a day at 00:10 UTC for the day that just ended."
+## D48 · 2026-11-18 · Index: market cap and liquidity capped by the latest reading (kiwi, chat 21:10–21:12 Rome)
+kiwi flagged two members that had crashed: DacityCoin `4rYsDH…` (liquidity $76k in the 20:00Z file, $21.8k live) and
+AudaCity/DacityCoin `DKYc…` (rank 3, 13.7%, with a $4.4M window-average MC while live MC was $0.69M, −90% in 6h).
+Cause: `adapters/market_data.aggregate_samples` used the window **mean** of MC and liquidity, so a crash kept the
+old average for hours.
+1. MC and liquidity are now `min(window mean, latest reading)`: a crash counts at the next run, a sudden pump only
+   counts gradually (anti-manipulation unchanged). F2 (liquidity floor), ranking and weights all use these values.
+2. No threshold changed; no sim re-run needed beyond the test suite. Tests: `tests/test_d48_latest_cap.py`.
+
+## D49 · 2026-11-18 · 5% of creator fees to buyback & burn of GTASP10 (kiwi, chat 22:15 Rome)
+kiwi: "il 5% va nei buybacks e burns dei nostri tokens: togli 3% dai rewards e 2% dal pot".
+1. New fee split (fee bot, D45): **67% basket rewards / 28% SOL prize pot / 5% buyback & burn / 0% team**
+   (was 70/30, D28/D43/D45).
+2. The burn slice buys GTASP10 via Jupiter with the same safety gates as basket buys (slippage ≤ 3%, price impact
+   gate, caps), then burns the bought tokens with an SPL `burn` in the same run. This is the only exception to
+   D45's "never buys its own mint", and only for immediate burning: bought tokens are never held, sold or paid out.
+3. Fully automatic, rule-based and public: every buyback and burn tx in the fee-bot ledger and on the site
+   (amount bought, tokens burned, signature). No discretionary timing; it runs in the hourly fee-bot run like the
+   basket buys.
+4. Public wording: "100% of fees go back to the community: 67% holder rewards, 28% prize pot, 5% buyback & burn.
+   0% to the team." (the hero line "100% of fees go to holders" changes to stay literally true).
+5. Manipulation check (CLAUDE.md rule 6): a disclosed, fixed-share, automatic buyback-and-burn is not wash trading;
+   no discretionary buys, no selling, no hidden wallet.
+
+## D50 · 2026-11-18 · Economic rules are public and timelocked (kiwi 22:16 Rome, #345)
+kiwi: the dev must not be able to change fees or rewards on his own.
+1. The fee split (D49), the fee-bot caps, slippage and reserves, and the payout-bot caps live only in
+   `econ/params.json` on `main`. The bots refuse these keys in their local config; a local config may only
+   **lower** a cap (smoke test), and that is published (`local_lower_caps`).
+2. **72h timelock.** A version applies only when its `effective_from` has passed **and** the server first saw it
+   at least 72 hours earlier (`econ_seen.json` in the bot's state dir). Until then the bots keep the previous
+   version. Editing a version counts as a new one. Versions are appended, never edited.
+3. The sha256 of the version in force (canonical JSON) and the upcoming versions are in the public `fee-bot.json`
+   and `payouts.json`, so anyone can check them against GitHub.
+4. Honest limit: the bots run on our server; a server admin could still change the code. Full on-chain enforcement
+   (multisig with time lock) is #342 B.
+
+
+## D50 · 2026-11-19 · Revert D49: fees back to 70% holders / 30% pot, no buyback & burn (kiwi, chat 14:06 Rome)
+kiwi: back to the split as first described (D28/D45): 70% holder rewards in the basket, 30% SOL prize pot, 0% team.
+The D49 buyback & burn is dropped (`burn` = 0 in `econ/params.json`; the burn code path never runs with 0). This is a
+public rule change under the 72h timelock (#345); there is no live coin, so nothing is affected.

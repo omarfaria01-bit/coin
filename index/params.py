@@ -188,7 +188,7 @@ class DryRun(_Strict):
 class Payout(_Strict):
     """This coin only. Engine `config/coin.json` is unchanged (D26)."""
 
-    holder_rewards: Num = "7/10"
+    holder_rewards: Num = "7/10"  # D50: 70 / 30 / 0 / 0 (D49 reverted)
     draw_pot: Num = "3/10"
     team: Num = 0
     buyback_burn: Num = 0

@@ -1,209 +1,217 @@
-"""Payout planner (D46, #315): conservation, dust carry, exclusions, determinism, carry-in."""
+"""D46 holder payouts: snapshot state and the daily plan (#314)."""
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
+from fractions import Fraction
 
 import pytest
-from hypothesis import given, settings
+from hypothesis import given
 from hypothesis import strategies as st
 
-from engine.rewards import TOKEN_ACCOUNT_RENT_LAMPORTS as RENT
-from tools.payout_plan import build_plan, dumps, main, memo_key
+from engine.holder_state import HolderState, apply_snapshot, day_inputs
+from engine.loyalty import loyalty_multiplier
+from engine.payout_plan import MintBook, payout_key, plan_mint
+from engine.rewards import TOKEN_ACCOUNT_RENT_LAMPORTS
 
-SYS = "SyS1111111111111111111111111111111111111111"
-M1, M2 = (
-    "MintA111111111111111111111111111111111111111",
-    "MintB11111111111111111111111111111111111111",
-)
-DAY = "2026-11-19"
-H4 = 4 * 3600
+H = 3600
+D0 = 1_763_424_000  # 2025-11-18T00:00:00Z, any midnight works
+PRICE = Fraction(1, 1)  # 1 lamport per base unit
 
 
-def bal(amounts: dict[str, int], price: str = str(RENT)) -> dict:
-    return {
-        "system_wallet": SYS,
-        "mints": {m: {"amount": str(a), "price_lamports": price} for m, a in amounts.items()},
+def snaps(seq, day="2026-11-18"):
+    s = HolderState()
+    for i, bal in enumerate(seq):
+        s = apply_snapshot(s, bal, at=D0 + i * H, day=day)
+    return s
+
+
+M = loyalty_multiplier
+
+
+def test_balance_hours_and_held_since():
+    s = snaps([{"a": 100, "b": 50}, {"a": 80, "b": 50, "c": 999}, {"a": 120, "b": 50, "c": 999}])
+    w = day_inputs(s)
+    assert w["a"] == 80 * M(H) + 80 * M(2 * H)  # min of each pair: 100->80, 80->120
+    assert w["b"] == 50 * M(H) + 50 * M(2 * H)
+    assert w["c"] == 999 * M(H)  # earns from its second snapshot (first full hour)
+    assert s.wallets["a"].held_since == D0 and s.wallets["c"].held_since == D0 + H
+
+
+def test_launch_day_buyer_at_2130_rome_is_paid_for_three_hours():
+    # D47: buy 20:30 UTC; snapshots at :40 -> 20:40, 21:40, 22:40, 23:40; export at 00:10 UTC.
+    s = HolderState()
+    for k in range(4):
+        s = apply_snapshot(s, {"a": 1_000}, at=D0 + 20 * H + 40 * 60 + k * H, day="2026-11-18")
+    assert day_inputs(s) == {"a": 1_000 * (M(H) + M(2 * H) + M(3 * H))}
+    p = plan_mint(
+        "M",
+        MintBook(),
+        wallet_balance=10**9,
+        weights=day_inputs(s),
+        lamports_per_unit=PRICE,
+        day_index=1,
+    )
+    assert [(t.wallet, t.amount) for t in p.transfers] == [("a", 10**9)]
+
+
+def test_buy_before_and_sell_after_one_snapshot_earns_nothing():
+    s = snaps([{"x": 1}, {"x": 1, "flip": 10**9}, {"x": 1}])
+    assert "flip" not in day_inputs(s)
+
+
+def test_partial_sell_lowers_only_later_hours():
+    full = day_inputs(snaps([{"a": 100}] * 4))["a"]
+    part = day_inputs(snaps([{"a": 100}, {"a": 100}, {"a": 40}, {"a": 40}]))["a"]
+    assert part == 100 * M(H) + 40 * M(2 * H) + 40 * M(3 * H) and full - part == 60 * (
+        M(2 * H) + M(3 * H)
+    )
+
+
+def test_selling_to_zero_restarts_the_clock_and_new_day_resets_weight():
+    s = snaps([{"a": 100}, {}, {"a": 100}])
+    assert s.wallets["a"].held_since == D0 + 2 * H and s.wallets["a"].weight_today == 0
+    s = apply_snapshot(s, {"a": 100}, at=D0 + 3 * H, day="2026-11-19")
+    assert s.wallets["a"].weight_today == 100 * M(H) and s.snapshots_today == 1
+    with pytest.raises(ValueError, match="after the previous"):
+        apply_snapshot(s, {"a": 100}, at=D0 + 3 * H + 60, day="2026-11-19")
+
+
+def test_state_json_round_trip_strict_keys_and_d46_migration():
+    s = snaps([{"a": 1, "b": 2}, {"a": 3, "b": 2}])
+    assert HolderState.from_json(s.to_json()) == s
+    with pytest.raises(ValueError):
+        HolderState.from_json({**s.to_json(), "x": 1})
+    with pytest.raises(ValueError):
+        apply_snapshot(s, {"a": -1}, at=D0 + 9 * H, day="2026-11-18")
+    old = {
+        "day": "d",
+        "snapshots_today": 5,
+        "wallets": {"a": {"held_since": 1, "day_min": 7, "last": 9}},
     }
+    m = HolderState.from_json(old)
+    assert m.last_at == 0 and m.wallets["a"].weight_today == 0 and m.wallets["a"].last == 9
+    with pytest.raises(ValueError):
+        HolderState.from_json({**old, "last_at": 0})  # new top level with old wallet keys
 
 
-def snap(*rows: tuple[str, int, int]) -> dict:
-    return {"wallets": [{"address": a, "balance": b, "holding_seconds": h} for a, b, h in rows]}
-
-
-def check_conservation(plan: dict) -> None:
-    for mint, t in plan["totals"].items():
-        paid = sum(int(x["amount"]) for x in plan["transfers"] if x["mint"] == mint)
-        car = sum(int(x["amount"]) for x in plan["carried"] if x["mint"] == mint)
-        assert paid == int(t["paid"]) and car == int(t["carried"])
-        assert paid + car == int(t["accrued"])
-
-
-def test_pro_rata_by_loyalty_weight_and_memo() -> None:
-    plan = build_plan(
-        day=DAY, snapshot=snap(("a", 100, H4), ("b", 100, 3600)), balances=bal({M1: 600})
-    )
-    got = {t["wallet"]: int(t["amount"]) for t in plan["transfers"]}
-    assert got == {"a": 500, "b": 100}  # 5x vs 1x
-    assert plan["transfers"][0]["memo"] == memo_key(DAY, "a", M1) == f"GTASP10:pay:{DAY}:a:{M1}"
-    assert plan["carried"] == [] and plan["schema"] == 1 and plan["system_wallet"] == SYS
-    check_conservation(plan)
-
-
-def test_dust_is_carried_not_paid() -> None:
-    # price 1 lamport/unit: 'a' gets 2M (worth >= rent, paid), 'b' gets 400k (< rent, carried)
-    plan = build_plan(
-        day=DAY,
-        snapshot=snap(("a", 5, H4), ("b", 1, H4)),
-        balances=bal({M1: 2_400_000}, price="1"),
-    )
-    assert [(t["wallet"], t["amount"]) for t in plan["transfers"]] == [("a", "2000000")]
-    assert plan["carried"] == [{"wallet": "b", "mint": M1, "amount": "400000"}]
-    check_conservation(plan)
-
-
-def test_carry_in_is_added_and_paid_once_over_floor() -> None:
-    carry = [{"wallet": "b", "mint": M1, "amount": "1200000"}]
-    plan = build_plan(
-        day=DAY,
-        snapshot=snap(("a", 5, H4), ("b", 1, H4)),
-        balances=bal({M1: 1_200_000 + 2_400_000}, price="1"),
-        carry_in=carry,
-    )
-    got = {t["wallet"]: int(t["amount"]) for t in plan["transfers"]}
-    assert got == {"a": 2_000_000, "b": 1_600_000}  # 1.2M old carry + 400k new credit
-    assert plan["carried"] == []
-    check_conservation(plan)
-
-
-def test_carry_in_from_previous_plan_and_absent_wallet_keeps_carry() -> None:
-    prev = {"carried": [{"wallet": "gone", "mint": M1, "amount": "7"}]}
-    plan = build_plan(
-        day=DAY, snapshot=snap(("a", 1, H4)), balances=bal({M1: 107}, price="1"), carry_in=prev
-    )
-    assert {"wallet": "gone", "mint": M1, "amount": "7"} in plan["carried"]
-    assert {"wallet": "a", "mint": M1, "amount": "100"} in plan["carried"]  # dust at 1 lamport
-    check_conservation(plan)
-
-
-def test_exclusions_earn_nothing_and_their_carry_is_resplit() -> None:
-    dev_snap = snap(("a", 1, H4), ("pool", 10**9, H4), ("dev", 10**9, H4))
-    dev_snap["wallets"][2]["excluded_reason"] = "team"
-    plan = build_plan(
-        day=DAY,
-        snapshot=dev_snap,
-        balances=bal({M1: 1000}),
-        exclude={"pool": "pool", "burn1": "burn"},
-        carry_in=[{"wallet": "dev", "mint": M1, "amount": "300"}],
-    )
-    assert plan["transfers"] == [
-        {"wallet": "a", "mint": M1, "amount": "1000", "memo": memo_key(DAY, "a", M1)}
-    ]
-    assert plan["excluded"] == [
-        {"wallet": SYS, "reason": "system"},
-        {"wallet": "burn1", "reason": "burn"},
-        {"wallet": "dev", "reason": "team"},
-        {"wallet": "pool", "reason": "pool"},
-    ]
-    check_conservation(plan)
-
-
-def test_nobody_eligible_carries_on_system_wallet() -> None:
-    plan = build_plan(day=DAY, snapshot=snap(("a", 100, 60)), balances=bal({M1: 50}))
-    assert plan["transfers"] == []
-    assert plan["carried"] == [{"wallet": SYS, "mint": M1, "amount": "50"}]
-    check_conservation(plan)
-
-
-@pytest.mark.parametrize(
-    ("kwargs", "msg"),
-    [
-        ({"exclude": {"x": "friend"}}, "reason"),
-        ({"carry_in": [{"wallet": "a", "mint": M1, "amount": "999"}]}, "carry-in"),
-        ({"carry_in": [{"wallet": "a", "mint": M2, "amount": "1"}]}, "no balance"),
-        ({"balances": bal({M1: "1.5"})}, "amount"),
-        ({"balances": bal({M1: 5}, 0.5)}, "price"),
-        ({"snapshot": snap(("a", 1, H4), ("a", 2, H4))}, "duplicate"),
-    ],
-)
-def test_bad_inputs_are_rejected(kwargs: dict, msg: str) -> None:
-    args = {"day": DAY, "snapshot": snap(("a", 1, H4)), "balances": bal({M1: 10})} | kwargs
-    with pytest.raises(ValueError, match=msg):
-        build_plan(**args)
-
-
-holders = st.dictionaries(
-    st.text("abcdefgh", min_size=1, max_size=3),
-    st.tuples(st.integers(0, 10**12), st.integers(0, 40 * 86_400)),
-    max_size=12,
-)
-
-
-@settings(max_examples=150, deadline=None)
 @given(
-    rows=holders,
-    amounts=st.dictionaries(st.sampled_from([M1, M2]), st.integers(0, 10**15), min_size=1),
-    carry=st.lists(
-        st.tuples(st.text("abcz", min_size=1, max_size=2), st.integers(0, 10**6)), max_size=6
+    st.lists(
+        st.dictionaries(st.sampled_from("abcde"), st.integers(0, 10**12)), min_size=1, max_size=30
     ),
-    price=st.sampled_from(["0", "1", "1/1000", str(RENT)]),
+    st.integers(0, 10**13),
 )
-def test_conservation_and_determinism(rows, amounts, carry, price) -> None:
-    mint = sorted(amounts)[0]
-    carry_rows = [{"wallet": w, "mint": mint, "amount": str(a)} for w, a in carry]
-    amounts[mint] += sum(a for _, a in carry)  # carry-in always sits in the balance
-    kw = {
-        "day": DAY,
-        "snapshot": snap(*((w, b, h) for w, (b, h) in rows.items())),
-        "balances": bal(amounts, price),
-        "exclude": {"z": "cex"},
-        "carry_in": carry_rows,
-    }
-    plan = build_plan(**kw)
-    check_conservation(plan)
-    for mint_, t in plan["totals"].items():
-        assert int(t["accrued"]) == amounts[mint_]
-    assert all(t["wallet"] not in ("z", SYS) for t in plan["transfers"])
-    assert dumps(build_plan(**kw)) == dumps(plan)
-    keys = [t["memo"] for t in plan["transfers"]]
-    assert len(keys) == len(set(keys))
+def test_balance_hours_conservation_property(seq, wallet_balance):
+    s = snaps(seq)
+    assert HolderState.from_json(s.to_json()) == s
+    w = day_inputs(s)
+    assert all(v > 0 for v in w.values())
+    p = plan_mint(
+        "M",
+        MintBook(),
+        wallet_balance=wallet_balance,
+        weights=w,
+        lamports_per_unit=PRICE,
+        day_index=2,
+    )
+    assert p.credited == (wallet_balance if w else 0)
+    assert p.credited == sum(t.amount for t in p.transfers) + p.book.owed
 
 
-def test_cli_writes_identical_bytes(tmp_path: Path) -> None:
-    files = {
-        "snap": snap(("a", 3, H4), ("b", 1, 2 * 3600)),
-        "bal": bal({M1: 9_000_000, M2: 5}),
-        "excl": [{"wallet": "c", "reason": "cex"}],
-        "carry": {"carried": []},
-    }
-    for name, data in files.items():
-        (tmp_path / f"{name}.json").write_text(json.dumps(data))
-    outs = []
-    for i in range(2):
-        out = tmp_path / f"plan{i}.json"
-        args = [
-            "--snapshot",
-            "snap",
-            "--balances",
-            "bal",
-            "--exclude",
-            "excl",
-            "--carry-in",
-            "carry",
-        ]
-        argv = [x if x.startswith("--") else str(tmp_path / f"{x}.json") for x in args]
-        assert main([*argv, "--day", DAY, "--out", str(out)]) == 0
-        outs.append(out.read_bytes())
-    assert outs[0] == outs[1]
-    plan = json.loads(outs[0])
-    check_conservation(plan)
-    assert list(plan) == [
-        "schema",
-        "day",
-        "system_wallet",
-        "transfers",
-        "carried",
-        "excluded",
-        "totals",
-    ]
+def test_key_is_per_day_mint_wallet():
+    assert payout_key(3, "MintAbcdefghXYZ", "W") == "GTASP10:p3:MintAbcd:W"
+    assert payout_key(3, "M1", "W") != payout_key(4, "M1", "W")
+
+
+def test_plan_pays_above_rent_carries_dust_and_conserves():
+    rent = TOKEN_ACCOUNT_RENT_LAMPORTS
+    bal = {"big": 9_000, "small": 1_000}
+    hold = {"big": 2 * H, "small": 2 * H}  # 2x multiplier for both
+    budget = 10 * rent - 10  # small's 10% share is worth 1 lamport less than the rent
+    p = plan_mint(
+        "M",
+        MintBook(),
+        wallet_balance=budget,
+        balances=bal,
+        hold_seconds=hold,
+        lamports_per_unit=PRICE,
+        day_index=5,
+    )
+    paid = {t.wallet: t.amount for t in p.transfers}
+    assert paid == {"big": 9 * rent - 9}
+    assert p.book.carry == {"small": rent - 1}  # dust: carried, no account opened
+    assert sum(paid.values()) + p.book.owed == p.credited == budget
+
+
+def test_rerun_same_day_pays_nothing_twice():
+    bal, hold = {"a": 1}, {"a": 2 * H}
+    budget = 5 * TOKEN_ACCOUNT_RENT_LAMPORTS
+    p1 = plan_mint(
+        "M",
+        MintBook(),
+        wallet_balance=budget,
+        balances=bal,
+        hold_seconds=hold,
+        lamports_per_unit=PRICE,
+        day_index=7,
+    )
+    assert [t.amount for t in p1.transfers] == [budget]
+    # same day, wallet already paid (tokens not yet sent: still in the wallet) -> no new transfer
+    p2 = plan_mint(
+        "M",
+        p1.book,
+        wallet_balance=budget,
+        balances=bal,
+        hold_seconds=hold,
+        lamports_per_unit=PRICE,
+        day_index=7,
+    )
+    assert p2.transfers == ()
+
+
+def test_nobody_held_an_hour_leaves_budget_unassigned():
+    p = plan_mint(
+        "M",
+        MintBook(),
+        wallet_balance=10**9,
+        balances={"a": 5},
+        hold_seconds={"a": 59 * 60},
+        lamports_per_unit=PRICE,
+        day_index=1,
+    )
+    assert p.credited == 0 and p.transfers == () and p.book.owed == 0
+
+
+def test_carry_is_not_spent_twice():
+    book = MintBook(carry={"a": 100})
+    p = plan_mint(
+        "M",
+        book,
+        wallet_balance=100,
+        balances={"b": 1},
+        hold_seconds={"b": 2 * H},
+        lamports_per_unit=PRICE,
+        day_index=1,
+    )
+    assert p.budget == 0 and p.credited == 0  # the wallet only holds what is already owed to a
+
+
+@given(
+    st.dictionaries(st.sampled_from("abcdefgh"), st.integers(1, 10**12), min_size=1),
+    st.integers(0, 10**13),
+    st.integers(0, 40 * 24 * H),
+    st.fractions(min_value=0, max_value=10, max_denominator=10**6),
+)
+def test_conservation_property(bal, wallet_balance, hold_s, price):
+    hold = {w: hold_s for w in bal}
+    p = plan_mint(
+        "M",
+        MintBook(carry={"z": 7}),
+        wallet_balance=wallet_balance,
+        balances=bal,
+        hold_seconds=hold,
+        lamports_per_unit=price,
+        day_index=3,
+    )
+    assert 7 + p.credited == sum(t.amount for t in p.transfers) + p.book.owed
+    assert p.credited <= max(0, wallet_balance - 7)
+    assert all(t.amount > 0 for t in p.transfers)

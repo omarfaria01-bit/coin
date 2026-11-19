@@ -11,7 +11,11 @@ import sys
 import time
 from pathlib import Path
 
-from adapters.index_history_cache import (
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:  # run as `python tools/prune_index_cache.py` from cron/systemd
+    sys.path.insert(0, str(ROOT))
+
+from adapters.index_history_cache import (  # noqa: E402
     DEFAULT_CACHE_DIR,
     DEFAULT_MAX_AGE_SECONDS,
     DEFAULT_MAX_TOTAL_BYTES,

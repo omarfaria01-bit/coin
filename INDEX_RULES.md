@@ -2,7 +2,7 @@
 
 The index tracks the **top 10 GTA 6 memecoins on Solana**, chosen every hour by the published rules below. Anyone can recompute it from the published inputs. Parameters live in `index/params.json` (validated by `index/params.py`, unknown keys rejected); changing one needs a DECISIONS.md entry. The temporary coin name and ticker are **GTASP10** (D26).
 
-Holder rewards (70%) are paid in the index basket. The draw (30%) is one SOL prize and stays off (`coming_soon`) until the legal gate (section 7). Out of scope for this coin (D24): supply vesting, dev-token locks, early-buy vesting, taint/forfeit, underwater boost, treasury bot.
+Holder rewards (70%) are paid in the index basket. The draw pot (30%) is one SOL prize (D50: D49 buyback & burn reverted). The draw stays off (`coming_soon`) until the legal gate (section 7). Out of scope for this coin (D24): supply vesting, dev-token locks, early-buy vesting, taint/forfeit, underwater boost, treasury bot.
 
 ## 1. Universe
 
@@ -19,6 +19,9 @@ A token is a **candidate** if it is a Solana token and its name, ticker or descr
 - **D42 (#300):** `buckme`, `$B`, `GTA 6 bank app`, `gta6 bank`, `bank app` are strong discovery words
   (reference coin `buckme` / `$B`, CA `Cr8kuNqKwiVVuzqLYKcJhmpSHy767837BwLFr9GDYXUf`, X `@buckme_sol`).
   No mint is included by hand. Bare `b` is not a keyword.
+- **#326 (kiwi 18 Nov 20:20):** `Founder` is an ambiguous word (`keywords.needs_context`): an everyday English word, so it
+  counts only with GTA context, like Jason or Vice. The Founder coin (CA `8HXsCMy8ma8QP2yVZXG5SZYyaTZw5AUrUDha1G4upump`) is seeded.
+- **kiwi 18 Nov 20:41:** `Apocrycoin` is a strong keyword (a unique coined word, no false matches); its CA `79rE2ac8JhN3U12QLhymgDmCTiwBN1d4maTcK1fhpump` is seeded. Seeds are measured every hour; all filters still apply.
 - **Discovery (D37):** top-down, never new launches. DexScreener search for the vocabulary terms (Solana); the top h24-volume
   (trending) coins are collected first, then the biggest market caps (`discovery` in params). Seed file and last members too.
 
@@ -92,7 +95,7 @@ Weights are published as integer basis points summing to 10,000: floor each, the
 
 ## 7. How the coin uses the index: basket rewards and one SOL draw
 
-- Creator fees for this coin: 70% holder rewards, 30% draw pot (`payout` in params). No team share and no buyback.
+- Creator fees for this coin: 70% holder rewards, 30% draw pot (`payout` in params, D50; the D49 buyback & burn is reverted). No team share.
 - Holder rewards accrue per holder, weighted by balance × the loyalty multiplier (`engine/loyalty.py`), and are paid once a day in the index basket. A position worth less than a token-account's rent (`min_reward_lamports`, 1,513,840 lamports) is not paid and no account is opened; it carries to the next day.
 - The draw is a single SOL prize (one winner). If the pot is below 0.1 SOL (`draw_min_pot_lamports`) it rolls over to the next draw. The draw is off (`draw_enabled` false, `draw_status` `coming_soon`) until the legal gate. Odds use the same loyalty multiplier.
 - A basket buy of holder rewards is sliced by member weight, with a 3% slippage cap (`prize_slippage_bps`). A part below `min_prize_lamports` (0.01 SOL) is not bought; it stays for the next buy. A part that can't be bought within the cap is paid in SOL.

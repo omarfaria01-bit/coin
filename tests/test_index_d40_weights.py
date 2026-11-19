@@ -86,7 +86,7 @@ def test_d40_golden() -> None:
     assert cj == canonical_json(run_index(candidates, [], P, OVERRIDES, as_of, code_commit))
     raw = cj if isinstance(cj, bytes) else cj.encode()
     assert hashlib.sha256(raw).hexdigest() == (
-        "e350a20094688d2bd33e5ffe6b41f3ef1c395640795efae1dddd002d34c297e3"
+        "250c090e9b228303bc7bc0338fb6cef1c23f1e05a698e50a155be0cec59fc824"
     )
 
 

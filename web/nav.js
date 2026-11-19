@@ -22,4 +22,12 @@
     if (href === file) link.classList.add("active");
     if (link.classList.contains("active")) link.setAttribute("aria-current", "page");
   });
+  document.querySelectorAll("[data-copy]").forEach((b) => {
+    b.addEventListener("click", () => {
+      const t = b.getAttribute("data-copy") || "";
+      try {
+        navigator.clipboard.writeText(t).then(() => { b.textContent = "Copied"; setTimeout(() => { b.textContent = "Copy"; }, 1500); });
+      } catch (e) { /* clipboard unavailable */ }
+    });
+  });
 })();

@@ -11,7 +11,8 @@ paid + carried == accrued == balance per mint. Same inputs give the same bytes.
         --exclude exclude.json --carry-in carry.json --day 2026-11-19 --out plan.json
 
 Input formats (amounts are base-unit integers, as strings or ints):
-- snapshot: {"wallets": [{"address", "balance", "holding_seconds", "excluded_reason"?}]} or list
+- snapshot: {"wallets": [{"address", "balance", "holding_seconds" | "weight" ("n/d", D47),
+  "excluded_reason"?}]} or list
 - balances: {"system_wallet": pk, "mints": {mint: {"amount": "1000",
   "price_lamports": "num/den"}}}; price = lamports per base unit, used for the dust floor
 - exclude: {wallet: reason} or [{"wallet", "reason"}]
@@ -34,6 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from engine.rewards import (  # noqa: E402
     TOKEN_ACCOUNT_RENT_LAMPORTS,
+    allocate_by_weights,
     allocate_holder_rewards,
     settle_daily_rewards,
 )
@@ -85,15 +87,22 @@ def build_plan(
             excluded.setdefault(wallet, reason)
     held: dict[str, int] = {}
     hold_s: dict[str, int] = {}
+    weight: dict[str, Fraction] = {}
     for rec in wallets:
         addr = rec["address"]
         if addr in held:
             raise ValueError(f"snapshot: duplicate wallet {addr}")
         held[addr] = _amount(rec["balance"], addr)
-        hold_s[addr] = _amount(rec["holding_seconds"], addr)
+        if "weight" in rec:  # D47 balance-hours x loyalty, computed by payout_inputs export
+            weight[addr] = Fraction(str(rec["weight"]))
+            if weight[addr] < 0:
+                raise ValueError(f"{addr}: weight must be >= 0")
+        else:
+            hold_s[addr] = _amount(rec["holding_seconds"], addr)
     for addr in excluded:
         held.pop(addr, None)
         hold_s.pop(addr, None)
+        weight.pop(addr, None)
 
     if isinstance(carry_in, Mapping):
         carry_in = carry_in.get("carried", [])
@@ -117,7 +126,11 @@ def build_plan(
         budget = accrued - sum(keep.values())
         if budget < 0:
             raise ValueError(f"{mint}: carry-in {sum(keep.values())} > balance {accrued}")
-        credit = allocate_holder_rewards(budget, held, hold_s)
+        credit = (
+            allocate_by_weights(budget, weight)
+            if weight
+            else allocate_holder_rewards(budget, held, hold_s)
+        )
         unallocated = budget - sum(credit.values())
         worth = {
             w: math.floor(price * (keep.get(w, 0) + credit.get(w, 0)))

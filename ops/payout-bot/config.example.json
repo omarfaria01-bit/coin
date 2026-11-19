@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "mode": "dry",
+  "fee_bot_state_path": "/var/lib/coin/fee-bot/state.json",
+  "state_dir": "/var/lib/coin/payout-bot",
+  "public_path": "/var/www/gtasp10/data/payouts.json"
+}

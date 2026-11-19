@@ -1,0 +1,8 @@
+[Unit]
+Description=Holder snapshot at minute 40 of every UTC hour (24 per day)
+[Timer]
+OnCalendar=*-*-* *:40:00
+TimeZone=UTC
+Persistent=true
+[Install]
+WantedBy=timers.target
