@@ -115,7 +115,7 @@ def test_fee_split_stays_70_30_zero_team() -> None:
         "buyback_burn": 0,
     }
     p = IndexParams.model_validate(json.loads((ROOT / "index/params.json").read_text()))
-    assert (p.payout.holder_rewards, p.payout.draw_pot, p.payout.team) == ("67/100", "7/25", 0)
+    assert (p.payout.holder_rewards, p.payout.draw_pot, p.payout.team) == ("7/10", "3/10", 0)
     assert p.payout.pay_in == "basket" and p.payout.holder_reward_hours == 24
     assert p.payout.min_reward_lamports == TOKEN_ACCOUNT_RENT_LAMPORTS
     assert p.payout.draw_enabled is False and p.payout.draw_status == "coming_soon"

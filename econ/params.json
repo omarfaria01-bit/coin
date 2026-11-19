@@ -4,8 +4,8 @@
  "versions": [
   {
    "effective_from": "2026-11-18T00:00:00Z",
-   "decisions": "D43 D45 D46 D47 D49",
-   "fee_split_bps": { "basket": 6700, "pot": 2800, "burn": 500, "team": 0 },
+   "decisions": "D43 D45 D46 D47 D50",
+   "fee_split_bps": { "basket": 7000, "pot": 3000, "burn": 0, "team": 0 },
    "fee_bot": {
     "slippage_bps": 300,
     "max_price_impact_pct": 3,

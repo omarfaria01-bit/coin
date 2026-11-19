@@ -24,8 +24,8 @@ def test_shipped_params_and_overrides_load() -> None:
     assert p.filters.min_total_fees_sol == 8  # kiwi, D35
     assert (p.membership.size, p.membership.enter_rank, p.membership.exit_rank) == (10, 8, 12)
     assert p.rebalance_hours == 1
-    assert p.payout.holder_rewards == "67/100"
-    assert p.payout.draw_pot == "7/25" and p.payout.pay_in == "basket"
+    assert p.payout.holder_rewards == "7/10"
+    assert p.payout.draw_pot == "3/10" and p.payout.pay_in == "basket"
     assert p.dry_run.skip_filters == ()
     assert [e.mint for e in o.deny] == ["6wiaCq8oQiupFfeDU4ouAuYnCKXCch581HAmpvrxpump"]  # D38 scam
     f = p.filters

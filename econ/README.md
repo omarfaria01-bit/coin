@@ -1,6 +1,6 @@
 # Public economic rules (D50, #345)
 
-`params.json` is the only source of the fee split (67% basket / 28% pot / 5% burn / 0% team, D49), the fee-bot
+`params.json` is the only source of the fee split (70% basket / 30% pot / 0% burn / 0% team, D50; D49 reverted), the fee-bot
 caps, slippage and reserves, and the payout-bot caps. The bots load it from the repo checkout.
 
 - **Append, never edit.** A change is a new entry in `versions` with a later `effective_from`.

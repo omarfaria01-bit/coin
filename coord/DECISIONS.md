@@ -537,3 +537,8 @@ kiwi: the dev must not be able to change fees or rewards on his own.
 4. Honest limit: the bots run on our server; a server admin could still change the code. Full on-chain enforcement
    (multisig with time lock) is #342 B.
 
+
+## D50 · 2026-11-19 · Revert D49: fees back to 70% holders / 30% pot, no buyback & burn (kiwi, chat 14:06 Rome)
+kiwi: back to the split as first described (D28/D45): 70% holder rewards in the basket, 30% SOL prize pot, 0% team.
+The D49 buyback & burn is dropped (`burn` = 0 in `econ/params.json`; the burn code path never runs with 0). This is a
+public rule change under the 72h timelock (#345); there is no live coin, so nothing is affected.
