@@ -69,7 +69,7 @@ export function loadConfig(file, { econFile, seenFile, nowMs } = {}) {
   for (const [k, v] of Object.entries(local)) {
     if (k in FEE_BOT_KEYS) continue; // checked by mergeLocal below
     if (k === "pot_bps" || k === "burn_bps") throw new Error(`${k} is a public rule (econ/params.json, 72h timelock)`);
-    if (k === "forward_from") continue; // checked below
+    if (k === "forward_from" || k === "forward_after") continue; // checked below
     if (!(k in CONFIG_KEYS)) throw new Error(`unknown config key ${k}`);
     own[k] = v;
   }
@@ -80,6 +80,14 @@ export function loadConfig(file, { econFile, seenFile, nowMs } = {}) {
   if (!["sharing", "creator", "forwarded"].includes(own.fee_mode)) throw new Error("fee_mode must be sharing, creator or forwarded");
   if ((own.fee_mode === "forwarded") !== ("forward_from" in local)) throw new Error("forward_from is required with fee_mode forwarded, and only then");
   if (own.fee_mode === "forwarded") own.forward_from = new PublicKey(local.forward_from).toBase58();
+  // Relaunch: a fresh state must not recount forwards already settled (e.g. refunded) before this signature.
+  if ("forward_after" in local) {
+    if (own.fee_mode !== "forwarded") throw new Error("forward_after is only for fee_mode forwarded");
+    if (typeof local.forward_after !== "string" || !/^[1-9A-HJ-NP-Za-km-z]{64,90}$/.test(local.forward_after)) {
+      throw new Error("forward_after must be a transaction signature");
+    }
+    own.forward_after = local.forward_after;
+  }
   new PublicKey(own.mint); // throws on a bad mint
   const econ = loadEcon({ file: econFile, seenFile: seenFile ?? path.join(own.state_dir, "econ_seen.json"), nowMs });
   const local_rules = Object.fromEntries(Object.entries(local).filter(([k]) => k in FEE_BOT_KEYS));
@@ -268,7 +276,7 @@ export async function main(argv = process.argv.slice(2)) {
   }
   try {
     const wallet = loadKeypair(keyFile);
-    log("start", { mode: cfg.mode, fee_mode: cfg.fee_mode, forward_from: cfg.forward_from ?? null, wallet: wallet.publicKey.toBase58(), mint: cfg.mint, econ: cfg.econ });
+    log("start", { mode: cfg.mode, fee_mode: cfg.fee_mode, forward_from: cfg.forward_from ?? null, forward_after: cfg.forward_after ?? null, wallet: wallet.publicKey.toBase58(), mint: cfg.mint, econ: cfg.econ });
     const connection = new Connection(`https://mainnet.helius-rpc.com/?api-key=${key}`, "confirmed");
     const sdk = new OnlinePumpSdk(connection);
     let state = loadState(cfg.state_dir);
@@ -283,7 +291,7 @@ export async function main(argv = process.argv.slice(2)) {
       return 2;
     }
 
-    const got = await collect(cfg, connection, sdk, wallet, state.forwardCursor);
+    const got = await collect(cfg, connection, sdk, wallet, state.forwardCursor || cfg.forward_after);
     if (got.cursor !== undefined && got.cursor !== state.forwardCursor && got.received === 0n) {
       state = { ...state, forwardCursor: got.cursor };
       saveState(cfg.state_dir, state);
