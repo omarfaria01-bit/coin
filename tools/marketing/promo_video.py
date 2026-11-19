@@ -336,7 +336,9 @@ p = subprocess.Popen(  # nosec B603 B607 - fixed ffmpeg argv
 only = sys.argv[5:] if len(sys.argv) > 5 else None
 if only:
     for s in only:
-        frame(int(float(s) * FPS)).save(f"/tmp/prev_{s}.jpg", quality=85)
+        frame(int(float(s) * FPS)).save(
+            os.path.join(os.environ.get("TMPDIR", "."), f"prev_{s}.jpg"), quality=85
+        )
     p.stdin.close()
     p.wait()
     sys.exit()
