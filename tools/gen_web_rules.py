@@ -110,10 +110,16 @@ def build_rules() -> dict:
         raise SystemExit("dust floor disagrees between params and rewards")
     if reward_min > MIN_PAYOUT_Q_MAX:
         raise SystemExit("minimum payout is outside the published range")
-    fee_line = (  # D49 wording
-        f"100% of fees go back to the community: {_pct(holder)} holder rewards, "
-        f"{_pct(draw)} prize pot, {_pct(burn)} buyback & burn. {_pct(team)} to the team."
-    )
+    if burn:  # D49 wording
+        fee_line = (
+            f"100% of fees go back to the community: {_pct(holder)} holder rewards, "
+            f"{_pct(draw)} prize pot, {_pct(burn)} buyback & burn. {_pct(team)} to the team."
+        )
+    else:  # D50 wording
+        fee_line = (
+            f"100% of fees go to holders: {_pct(holder)} holder rewards, "
+            f"{_pct(draw)} prize pot. {_pct(team)} to the team."
+        )
     every = "hour" if int(params.rebalance_hours) == 1 else f"{int(params.rebalance_hours)} hours"
     cap = int(params.weights.cap_pct)
     floor = int(params.weights.floor_pct)

@@ -22,8 +22,8 @@ const load = (over) => loadConfig(writeCfg(over), { seenFile });
 test("example config loads; split, caps and slippage come from econ/params.json", () => {
   const cfg = load({});
   assert.equal(cfg.mode, "dry");
-  assert.equal(cfg.pot_bps, 2800);
-  assert.equal(cfg.burn_bps, 500);
+  assert.equal(cfg.pot_bps, 3000);
+  assert.equal(cfg.burn_bps, 0);
   assert.equal(cfg.slippage_bps, 300);
   assert.match(cfg.econ.sha256, /^[0-9a-f]{64}$/);
 });
@@ -38,7 +38,7 @@ test("config rejects unknown keys, bad mode or mint, and any local change of a p
   const smoke = load({ max_per_run_lamports: "20000000" }); // lowering a cap is allowed and public
   assert.equal(smoke.max_per_run_lamports, "20000000");
   assert.deepEqual(smoke.econ.local_lower_caps, { max_per_run_lamports: "20000000" });
-  assert.equal(load({ mode: "live" }).burn_bps, 500); // live runs; the burn share is held until #344
+  assert.equal(load({ mode: "live" }).burn_bps, 0); // D50: no burn share
 });
 
 test("keypair must be a private file; loaded key matches", () => {

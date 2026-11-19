@@ -15,16 +15,16 @@ const withNew = (eff, change) => ({
   versions: [v0, { ...v0, effective_from: eff, fee_split_bps: { ...v0.fee_split_bps, ...change } }],
 });
 
-test("the published file is valid: D49 split, team 0, slippage <= 3%", () => {
+test("the published file is valid: D50 split, team 0, slippage <= 3%", () => {
   validateEcon(doc);
-  assert.deepEqual(v0.fee_split_bps, { basket: 6700, pot: 2800, burn: 500, team: 0 });
+  assert.deepEqual(v0.fee_split_bps, { basket: 7000, pot: 3000, burn: 0, team: 0 });
   const bad = (f, re) => {
     const d = structuredClone(doc);
     f(d);
     assert.throws(() => validateEcon(d), re);
   };
   bad((d) => (d.versions[0].fee_split_bps.team = 1), /sum to 10000|team/);
-  bad((d) => Object.assign(d.versions[0].fee_split_bps, { team: 100, basket: 6600 }), /team must be 0/);
+  bad((d) => Object.assign(d.versions[0].fee_split_bps, { team: 100, basket: 6900 }), /team must be 0/);
   bad((d) => (d.versions[0].fee_bot.slippage_bps = 301), /slippage/);
   bad((d) => (d.versions[0].fee_bot.extra = 1), /keys must be exactly/);
   bad((d) => (d.timelock_hours = 1), /72/);

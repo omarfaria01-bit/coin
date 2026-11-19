@@ -2,7 +2,7 @@
 
 The index tracks the **top 10 GTA 6 memecoins on Solana**, chosen every hour by the published rules below. Anyone can recompute it from the published inputs. Parameters live in `index/params.json` (validated by `index/params.py`, unknown keys rejected); changing one needs a DECISIONS.md entry. The temporary coin name and ticker are **GTASP10** (D26).
 
-Holder rewards (67%) are paid in the index basket. The draw pot (28%) is one SOL prize; 5% buys back and burns GTASP10 (D49). The draw stays off (`coming_soon`) until the legal gate (section 7). Out of scope for this coin (D24): supply vesting, dev-token locks, early-buy vesting, taint/forfeit, underwater boost, treasury bot.
+Holder rewards (70%) are paid in the index basket. The draw pot (30%) is one SOL prize (D50: D49 buyback & burn reverted). The draw stays off (`coming_soon`) until the legal gate (section 7). Out of scope for this coin (D24): supply vesting, dev-token locks, early-buy vesting, taint/forfeit, underwater boost, treasury bot.
 
 ## 1. Universe
 
@@ -95,7 +95,7 @@ Weights are published as integer basis points summing to 10,000: floor each, the
 
 ## 7. How the coin uses the index: basket rewards and one SOL draw
 
-- Creator fees for this coin: 67% holder rewards, 28% draw pot, 5% buyback & burn of GTASP10 (`payout` in params, D49). No team share. Until the burn path ships (#344) the fee bot holds the 5% in the system wallet; it is never spent on anything else.
+- Creator fees for this coin: 70% holder rewards, 30% draw pot (`payout` in params, D50; the D49 buyback & burn is reverted). No team share.
 - Holder rewards accrue per holder, weighted by balance × the loyalty multiplier (`engine/loyalty.py`), and are paid once a day in the index basket. A position worth less than a token-account's rent (`min_reward_lamports`, 1,513,840 lamports) is not paid and no account is opened; it carries to the next day.
 - The draw is a single SOL prize (one winner). If the pot is below 0.1 SOL (`draw_min_pot_lamports`) it rolls over to the next draw. The draw is off (`draw_enabled` false, `draw_status` `coming_soon`) until the legal gate. Odds use the same loyalty multiplier.
 - A basket buy of holder rewards is sliced by member weight, with a 3% slippage cap (`prize_slippage_bps`). A part below `min_prize_lamports` (0.01 SOL) is not bought; it stays for the next buy. A part that can't be bought within the cap is paid in SOL.

@@ -142,8 +142,8 @@
     <p>A bot on the server (D45) handles the coin's creator fees with no per-transaction approval. Every hour, at minute 20 UTC:</p>
     <ol class="steps">
       <li><strong>Claim and forward.</strong> pump.fun pays this coin's creator fees to the creator wallet and does not allow sharing them for this coin, so the creator claims them and forwards 100% to the public system wallet at least once a day. Both transactions are public on Solscan.</li>
-      <li><strong>Split 67 / 28 / 5.</strong> 28% is kept as the SOL prize pot (the draw is off, so it only accumulates); 5% is held for buyback &amp; burn of GTASP10 until the burn starts (D49); 67% becomes the basket budget.</li>
-      <li><strong>Buy the basket.</strong> The 67% buys the current index members through the Jupiter aggregator, split by each member's published <span class="mono">weight_bps</span>. The bought coins stay in the system wallet until the daily payout.</li>
+      <li><strong>Split 70 / 30.</strong> 30% is kept as the SOL prize pot (the draw is off, so it only accumulates); 70% becomes the basket budget (D50).</li>
+      <li><strong>Buy the basket.</strong> The 70% buys the current index members through the Jupiter aggregator, split by each member's published <span class="mono">weight_bps</span>. The bought coins stay in the system wallet until the daily payout.</li>
     </ol>
     <h3>Limits built into the bot</h3>
     <ul class="ticks">
@@ -155,7 +155,7 @@
       <li><strong>Emergency stop.</strong> A switch pauses the bot for everyone. It is the only manual control, and any use is announced publicly.</li>
     </ul>
     <p><strong>Public system wallet:</strong> <a class="mono" href="https://solscan.io/account/3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd" target="_blank" rel="noopener">3annmAegHQt6ru4Qd9w9fyK1FDseY7u4iyXfeeR3hJkd</a>. It receives 100% of the creator fees, forwarded by the creator after each claim. Its key was generated on the server and lives only there (file mode 600, never printed or committed). The dev holds no key to it in any wallet app. Every claim, buy and payout is a public transaction on Solscan.</p>
-    <p class="muted small">Sources: ops/fee-bot/README.md; DECISIONS D45; INDEX_RULES.md §7 (67/28/5, 0.01 SOL, 3%).</p>
+    <p class="muted small">Sources: ops/fee-bot/README.md; DECISIONS D45; INDEX_RULES.md §7 (70/30, 0.01 SOL, 3%).</p>
   </div>
 </section>
 
@@ -224,7 +224,7 @@
   <div class="sec-head"><h2>8. Team and disclosure</h2></div>
   <div class="glass card">
     <ul class="ticks">
-      <li><strong>0% of fees go to the team.</strong> 100% go back to the community: 67% as rewards in the basket coins, 28% to the prize pot, 5% to buyback &amp; burn (D49).</li>
+      <li><strong>0% of fees go to the team.</strong> 100% go to holders: 70% as rewards in the basket coins, 30% to the prize pot (D50).</li>
       <li>The team holds about <strong>2%</strong> of the supply.</li>
       <li>Team wallets are excluded from rewards, and the exclusion list is published with every payout plan. The two team wallets are <a href="https://solscan.io/account/E8JgzMnBJU5Mwbsmw88SyivaDiUYJNjkupU53UEG4uXJ" target="_blank" rel="noopener">creator E8Jg…4uXJ</a> and <a href="https://solscan.io/account/GscVFwxRLP15bAoT8QwfnHbXULDXZr6fGCsEsXCQJEks" target="_blank" rel="noopener">dev share GscV…JEks</a> (also listed on <a href="rewards.html">Rewards</a>).</li>
       <li>The creator fees are claimed by the creator wallet (pump.fun does not allow sharing them for this coin) and forwarded 100% to the public system wallet above, at least once a day; every claim and forward is public.</li>
@@ -236,7 +236,7 @@
 <section id="draw" class="section">
   <div class="sec-head"><h2>9. The draw (coming soon)</h2></div>
   <div class="glass card">
-    <p><strong>Status: COMING SOON.</strong> The draw is not live and nothing is promised. It stays off until a legal review is done (legal #8). The 28% share only builds a SOL pot meanwhile.</p>
+    <p><strong>Status: COMING SOON.</strong> The draw is not live and nothing is promised. It stays off until a legal review is done (legal #8). The 30% share only builds a SOL pot meanwhile.</p>
     <ul class="ticks">
       <li>One SOL prize, one winner. A pot below 0.1 SOL rolls over to the next draw.</li>
       <li>Odds follow the same holding score as rewards, linear and exact. Holdings are counted up to 5% of supply, and no holder group can take more than 5% of the odds (D39).</li>

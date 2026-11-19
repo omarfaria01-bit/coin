@@ -188,10 +188,10 @@ class DryRun(_Strict):
 class Payout(_Strict):
     """This coin only. Engine `config/coin.json` is unchanged (D26)."""
 
-    holder_rewards: Num = "67/100"  # D49: 67 / 28 / 5 / 0
-    draw_pot: Num = "7/25"
+    holder_rewards: Num = "7/10"  # D50: 70 / 30 / 0 / 0 (D49 reverted)
+    draw_pot: Num = "3/10"
     team: Num = 0
-    buyback_burn: Num = "1/20"
+    buyback_burn: Num = 0
     pay_in: Literal["basket"] = "basket"
     draw_period_hours: int = Field(1, ge=1)
     holder_reward_hours: int = Field(24, ge=1)
