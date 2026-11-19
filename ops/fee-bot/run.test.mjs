@@ -81,6 +81,16 @@ test("fee_mode forwarded: needs forward_from; counts only transfers from it to t
   assert.deepEqual(forwardedLamports(txs, from, me), { total: 1_250n, sigs: ["a", "d"] });
 });
 
+test("forward_after: only with fee_mode forwarded, must look like a signature", () => {
+  const from = "E8JgzMnBJU5Mwbsmw88SyivaDiUYJNjkupU53UEG4uXJ";
+  const sig = "8yijydcrVSHN6qGZrSQPzD65mQv4ak2peCT992rSMKpW17bhUAz8QF6Urpz8jP2zzTJHPtYR8Ls9qRzrpY49DUh";
+  assert.equal(load({ fee_mode: "forwarded", forward_from: from, forward_after: sig }).forward_after, sig);
+  assert.equal(load({ fee_mode: "forwarded", forward_from: from }).forward_after, undefined);
+  assert.throws(() => load({ forward_after: sig }), /forward_after/);
+  assert.throws(() => load({ fee_mode: "forwarded", forward_from: from, forward_after: "abc" }), /signature/);
+  assert.throws(() => load({ fee_mode: "forwarded", forward_from: from, forward_after: 5 }), /signature/);
+});
+
 
 test("loadKeypair returns a key that still signs (regression: zeroing wiped the secret)", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "kp-"));

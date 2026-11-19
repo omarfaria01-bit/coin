@@ -14,7 +14,9 @@ Bought basket tokens stay in the system wallet (public). Paying them out to hold
 - `"forwarded"` (GTASP10 now): pump.fun legacy creator rewards can't be shared, so the creator claims them and
   sends SOL from `forward_from` (the creator wallet) to the system wallet. The bot counts only plain transfers
   `forward_from` → system wallet after its cursor; the first run has no cursor and counts the whole history,
-  so forwards sent before the bot started are owed too. Send the reserve from any other wallet, never from
+  so forwards sent before the bot started are owed too. After a relaunch, set `forward_after` to the last settled
+  signature on the system wallet (e.g. the refund) and start from an empty `state.json`: a fresh state then
+  counts only forwards sent after it, never the old coin's. Send the reserve from any other wallet, never from
   `forward_from`, or it would be counted as fees. Each counted transfer is split 67/28/5 like a claim (`collected` in the ledger).
 - `"sharing"` / `"creator"`: the bot claims from pump.fun itself.
 
