@@ -24,7 +24,7 @@ test("the published file is valid: D50 split, team 0, slippage <= 3%", () => {
     assert.throws(() => validateEcon(d), re);
   };
   bad((d) => (d.versions[0].fee_split_bps.team = 1), /sum to 10000|team/);
-  bad((d) => Object.assign(d.versions[0].fee_split_bps, { team: 100, basket: 6600 }), /team must be 0/);
+  bad((d) => Object.assign(d.versions[0].fee_split_bps, { team: 100, basket: 6900 }), /team must be 0/);
   bad((d) => (d.versions[0].fee_bot.slippage_bps = 301), /slippage/);
   bad((d) => (d.versions[0].fee_bot.extra = 1), /keys must be exactly/);
   bad((d) => (d.timelock_hours = 1), /72/);
