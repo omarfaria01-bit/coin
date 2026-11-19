@@ -1,6 +1,7 @@
 import json
 import math
-import subprocess
+import os
+import subprocess  # nosec B404 - fixed ffmpeg argv, no untrusted input
 import sys
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -9,11 +10,6 @@ W, H, FPS, DUR = 1280, 720, 30, 15.0
 N = int(FPS * DUR)
 G = "/usr/share/fonts/truetype/google-fonts/"
 ANTON = G + "ofl/anton/Anton-Regular.ttf"
-ARCH = (
-    G + "ofl/archivoblack/" + __import__("os").listdir(G + "ofl/archivoblack")[0] if False else None
-)
-import os
-
 ARCH = [
     G + "ofl/archivoblack/" + f for f in os.listdir(G + "ofl/archivoblack") if f.endswith(".ttf")
 ][0]
@@ -54,7 +50,8 @@ def win(t, a, b, fi=0.35, fo=0.35):
 
 
 # data
-d = json.load(open(sys.argv[1]))
+with open(sys.argv[1]) as fh:
+    d = json.load(fh)
 mem = sorted(d["members"], key=lambda m: -m["weight_bps"])
 seen = {}
 bars = []
@@ -306,7 +303,7 @@ def frame(i):
 
 
 out = sys.argv[4]
-p = subprocess.Popen(
+p = subprocess.Popen(  # nosec B603 B607 - fixed ffmpeg argv
     [
         "ffmpeg",
         "-loglevel",
