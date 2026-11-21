@@ -1,4 +1,5 @@
-last_tick: 2026-11-21 tick 259 (checked #1/PRs/issues: no new kiwi comment since 2026-11-19 13:06Z; only open PR #350 HELD (kiwi's own OK missing, rule 3); no owner:grok issues (Grok paused). Nothing mergeable. All items of the 18 Nov overnight directive done or blocked on kiwi (#186 workflow scope skipped). Blocked on kiwi: coin CA, fee bot #310, #350 OK, #348 choices. ACTION Hetzner: pull /opt/coin.)
+last_tick: 2026-11-21 tick 260 (checked #1/PRs/issues: nothing new; tick PR #369 merged; only open PR #350 HELD (kiwi's own OK missing, rule 3); no owner:grok issues (Grok paused). Nothing mergeable. Blocked on kiwi: coin CA, fee bot #310, #350 OK, #348 choices. ACTION Hetzner: pull /opt/coin.)
+prev_last_tick: 2026-11-21 tick 259
 prev_last_tick: 2026-11-21 tick 258 (see tick 259)
 prev_last_tick: 2026-11-21 tick 257 (see tick 258)
 prev_last_tick: 2026-11-21 tick 256 (see tick 257)
