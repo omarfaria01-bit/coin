@@ -46,12 +46,28 @@ def test_f2_sensitivity_counts_and_weights(tmp_path: Path) -> None:
     by = {r["threshold"]: r for r in rows}
     # $5k: T8 still fails another filter (F11, mc/liquidity 125 > 100): only F2 moves
     assert [by[t]["members"] for t in (5_000, 10_000, 25_000, 50_000)] == [7, 7, 5, 3]
+    assert [by[t]["eligible"] for t in (5_000, 10_000, 25_000, 50_000)] == [7, 7, 5, 3]
     assert [by[t]["f2_excluded"] for t in (5_000, 10_000, 25_000, 50_000)] == [0, 1, 3, 5]
     for r in rows:
         assert r["bps_sum"] == 10_000
     assert by[5_000]["below_prescreen"] and not by[50_000]["below_prescreen"]
     text = render(doc, rows)
-    assert "| 50,000 | 3 |" in text and "lower bound" in text
+    assert "| 50,000 | 3 | 3 |" in text and "lower bound" in text
+
+
+def test_eligible_counts_passers_beyond_the_top_ten(tmp_path: Path) -> None:
+    """12 coins pass every filter: 12 eligible, only 10 become members (weights still 10,000)."""
+    cands = [good(i, liquidity_usd=120_000.0, ticker=f"T{i}") for i in range(1, 13)]
+    out = run_index(cands, [], P, _overrides(), AS_OF, "test")
+    doc = inputs_doc(cands, [], _overrides())
+    doc.update(as_of=out["as_of"], inputs_hash=out["inputs_hash"])
+    path = tmp_path / "2026-11-18T20.json"
+    path.write_bytes(canonical_json(doc))
+
+    rows = sensitivity(load_inputs(path), P, [50_000])
+    assert rows[0]["eligible"] == 12 and rows[0]["members"] == 10
+    assert rows[0]["bps_sum"] == 10_000 and len(rows[0]["top"]) == 10
+    assert "| 50,000 | 12 | 10 |" in render(doc, rows)
 
 
 def test_tampered_inputs_are_refused(tmp_path: Path) -> None:
@@ -66,5 +82,5 @@ def test_tampered_inputs_are_refused(tmp_path: Path) -> None:
 def test_cli_on_a_directory(tmp_path: Path, capsys) -> None:
     _doc(tmp_path)
     assert main([str(tmp_path), "--thresholds", "50000"]) == 0
-    assert "| 50,000 | 3 |" in capsys.readouterr().out
+    assert "| 50,000 | 3 | 3 |" in capsys.readouterr().out
     assert main([str(tmp_path / "empty_dir_missing")]) == 2
