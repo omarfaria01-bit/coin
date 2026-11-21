@@ -260,6 +260,23 @@
     <p class="muted small">Sources: INDEX_RULES.md §9; DECISIONS D45, D46.</p>
   </div>
 </section>
+<section id="attacks" class="section">
+  <div class="sec-head"><h2>11. Attack simulation</h2></div>
+  <div class="glass card">
+    <p>We replay four attack classes against the hourly rebalance and the draw rules (offline, deterministic, <code>sim/hourly_attacks.py</code>). This is a simulation with synthetic inputs, not a guarantee.</p>
+    <table class="tbl">
+      <thead><tr><th>Attack</th><th>Still works?</th><th>Stopped by</th><th>Rough cost</th></tr></thead>
+      <tbody>
+        <tr><td>Cheap top-10 (low-float market-cap inflation)</td><td>No</td><td>F11</td><td>~17 SOL + $50k recoverable capital</td></tr>
+        <tr><td>Wash volume and fake traders</td><td>Partly</td><td>F9 stops fake wallets; round-trip volume is an accepted risk (D35)</td><td>0.04-0.20 SOL + protocol fee share</td></tr>
+        <tr><td>Sybil-distributed supply (one-shot wallets)</td><td>No</td><td>F9</td><td>0.055 SOL rent</td></tr>
+        <tr><td>Basket domination / sandwiching</td><td>No</td><td>Weight cap 18% and the 5% holder cap in the draw</td><td>Capital + slippage</td></tr>
+      </tbody>
+    </table>
+    <p class="muted small">Wash volume is the open weakness: we list it rather than hide it. Sources: sim/hourly_attacks.py; DECISIONS D35, D38, D40.</p>
+  </div>
+</section>
+
 </main>
 <footer class="foot">
   <div class="logo small">GTASP<b>10</b></div>
