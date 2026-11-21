@@ -208,3 +208,25 @@ def test_basket_sandwich_weights_and_draw_caps() -> None:
     total_draw_weight = sum(draw_capped.values())
     max_draw_share = Fraction(max(draw_capped.values()), total_draw_weight)
     assert max_draw_share <= CAP_DEFAULT + Fraction(1, 1000)
+
+
+def test_docs_page_lists_every_attack_result():
+    """The Docs 'Attack simulation' table must match sim/hourly_attacks.py output."""
+    from sim import hourly_attacks as ha
+
+    html = (ROOT / "web" / "docs.html").read_text()
+    assert 'id="attacks"' in html
+    results = [
+        ha.simulate_cheap_top10(),
+        ha.simulate_wash_volume(),
+        ha.simulate_sybil_supply(),
+        ha.simulate_basket_sandwich(),
+    ]
+    section = html.split('id="attacks"', 1)[1].split("</section>", 1)[0]
+    for r in results:
+        assert r["cost"] in section, r["attack"]
+        row_stopped = str(r["stopped_by"]).split()[0]
+        assert row_stopped in section or "cap" in section
+    # Only the wash row may be marked as still (partly) working.
+    assert [r["works_hourly"] for r in results] == [False, True, False, False]
+    assert section.count("<td>Partly</td>") == 1
