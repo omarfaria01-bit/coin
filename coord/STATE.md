@@ -5,7 +5,8 @@ prev_last_tick: 2026-11-21 tick 326
 prev_last_tick: 2026-11-21 tick 330
 prev_last_tick: 2026-11-21 tick 331
 prev_last_tick: 2026-11-21 tick 332 (see tick 333)
-last_tick: 2026-11-21 tick 333 (no change since tick 332: #1 last comment 2026-11-19 13:06Z by kiwi; only open PR #350 HELD (kiwi own OK missing, rule 3); 0 owner:grok issues. Overnight directives all done on main. Blocked on kiwi: coin CA, fee bot #310, #350 OK, #348 choices. ACTION Hetzner: pull /opt/coin.)
+prev_last_tick: 2026-11-21 tick 333 (see tick 334)
+last_tick: 2026-11-21 tick 334 (no change since tick 333: #1 last comment 2026-11-19 13:06Z by kiwi; only open PR #350 HELD (kiwi own OK missing, rule 3); 0 owner:grok issues. Overnight directives all done on main. Blocked on kiwi: coin CA, fee bot #310, #350 OK, #348 choices. ACTION Hetzner: pull /opt/coin.)
 prev_last_tick: 2026-11-21 tick 329
 prev_last_tick: 2026-11-21 tick 327
 prev_last_tick: 2026-11-21 tick 322
