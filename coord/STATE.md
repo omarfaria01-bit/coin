@@ -10,7 +10,8 @@ prev_last_tick: 2026-11-21 tick 334 (see tick 335)
 prev_last_tick: 2026-11-21 tick 335
 prev_last_tick: 2026-11-21 tick 341
 prev_last_tick: 2026-11-21 tick 343
-last_tick: 2026-11-21 tick 344 (no change since tick 343: #1 last comment 2026-11-19 13:06Z by kiwi; only open PR #350 HELD (kiwi own OK missing, rule 3); 0 owner:grok issues; nothing updated since 19 Nov 22:52Z. 18 Nov overnight directives all done on main. Blocked on kiwi: coin CA, fee bot #310, #350 OK, #348 choices. #316/#314 payout bot need a dedicated session. ACTION Hetzner: pull /opt/coin.)
+prev_last_tick: 2026-11-21 tick 344
+last_tick: 2026-11-21 tick 345 (no change since tick 344: #1 last comment 2026-11-19 13:06Z by kiwi; only open PR #350 HELD (kiwi own OK missing, rule 3); 0 owner:grok issues; nothing updated since 19 Nov 22:52Z. 18 Nov overnight directives all done on main. Blocked on kiwi: coin CA, fee bot #310, #350 OK, #348 choices. #316/#314 payout bot need a dedicated session. ACTION Hetzner: pull /opt/coin.)
 prev_last_tick: 2026-11-21 tick 342 (no change since tick 341: #1 last comment 2026-11-19 13:06Z by kiwi; only open PR #350 HELD (kiwi own OK missing, rule 3); 0 owner:grok issues; no issue/PR updated since 19 Nov 22:52Z. 18 Nov overnight directives all done on main (nothing open in the checklist). Blocked on kiwi: coin CA, fee bot #310, #350 OK, #348 choices. #316/#314 payout bot need a dedicated session. ACTION Hetzner: pull /opt/coin.)
 prev_last_tick: 2026-11-21 tick 340
 prev_last_tick: 2026-11-21 tick 338 (no change since tick 337: #1 last comment 2026-11-19 13:06Z by kiwi; only open PR #350 HELD (kiwi own OK missing, rule 3); 0 owner:grok issues; no issue updated since 19 Nov 22:52Z. 18 Nov overnight directives all done on main. #316/#314 payout bot need a dedicated session. Blocked on kiwi: coin CA, fee bot #310, #350 OK, #348 choices. ACTION Hetzner: pull /opt/coin.)
