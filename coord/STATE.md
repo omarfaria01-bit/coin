@@ -1,4 +1,5 @@
-last_tick: 2026-11-21 tick 286 (no change since tick 285: re-delivered 18 Nov directives all done/merged; #1 last comment 2026-11-19 13:06Z by kiwi; only open PR #350 HELD (kiwi own OK missing, rule 3); no owner:grok issues. Blocked on kiwi: coin CA, fee bot #310, #350 OK, #348 choices. ACTION Hetzner: pull /opt/coin.)
+last_tick: 2026-11-21 tick 287 (no change since tick 286: re-delivered 18 Nov directives all done/merged; #1 last comment 2026-11-19 13:06Z by kiwi; only open PR #350 HELD (kiwi own OK missing, rule 3); 0 owner:grok issues. Blocked on kiwi: coin CA, fee bot #310, #350 OK, #348 choices. ACTION Hetzner: pull /opt/coin.)
+prev_last_tick: 2026-11-21 tick 286
 prev_last_tick: 2026-11-21 tick 285
 prev_last_tick: 2026-11-21 tick 284
 prev_last_tick: 2026-11-21 tick 283
