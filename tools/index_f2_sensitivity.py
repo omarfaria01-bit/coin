@@ -40,7 +40,7 @@ def load_inputs(path: Path) -> dict:
 
 
 def sensitivity(doc: dict, params: IndexParams, thresholds: Sequence[int]) -> list[dict]:
-    """One row per threshold: members, top-N tickers with weight_bps, F2 exclusions."""
+    """One row per threshold: eligible count, members, top-N tickers+bps, F2 exclusions."""
     candidates = [metrics_from_json(c) for c in doc["candidates"]]
     overrides = Overrides.model_validate(doc["overrides"])
     prescreen = float(
@@ -56,9 +56,12 @@ def sensitivity(doc: dict, params: IndexParams, thresholds: Sequence[int]) -> li
         )
         members = [(m["ticker"], m["weight_bps"]) for m in out["members"]]
         reasons = [e["reason"] for e in out["excluded"]]
+        # every filter-passing coin that missed the top N is listed as rank_<pos> (D38)
+        passed_outside = sum(1 for r in reasons if str(r).startswith("rank_"))
         rows.append(
             {
                 "threshold": t,
+                "eligible": len(members) + passed_outside,
                 "members": len(members),
                 "top": members,
                 "bps_sum": sum(b for _, b in members),
@@ -80,15 +83,16 @@ def render(doc: dict, rows: list[dict]) -> str:
         f"### as_of {doc['as_of']} (inputs_hash `{doc['inputs_hash'][:12]}…`, "
         f"{len(doc['candidates'])} candidates)",
         "",
-        "| F2 floor (USD) | members | top-10 (ticker bps) | bps sum | F2 excluded | not measured |",
-        "|---:|---:|---|---:|---:|---:|",
+        "| F2 floor (USD) | pass all filters | members | top-10 (ticker bps) | bps sum | "
+        "F2 excluded | not measured |",
+        "|---:|---:|---:|---|---:|---:|---:|",
     ]
     for r in rows:
         top = ", ".join(f"{t} {b}" for t, b in r["top"]) or "-"
         flag = " ⚠" if r["below_prescreen"] else ""
         lines.append(
-            f"| {r['threshold']:,}{flag} | {r['members']} | {top} | {r['bps_sum']} | "
-            f"{r['f2_excluded']} | {r['not_measured']} |"
+            f"| {r['threshold']:,}{flag} | {r['eligible']} | {r['members']} | {top} | "
+            f"{r['bps_sum']} | {r['f2_excluded']} | {r['not_measured']} |"
         )
     if any(r["below_prescreen"] for r in rows):
         lines += [
@@ -96,6 +100,11 @@ def render(doc: dict, rows: list[dict]) -> str:
             "⚠ below the prescreen of the saved run: coins under it were never measured, so this "
             "row is a lower bound (they are counted in *not measured*, not guessed).",
         ]
+    lines += [
+        "",
+        "*pass all filters* = coins passing F2 at this floor plus every other filter unchanged; "
+        "*members* = the top 10 actually selected (weights sum to 10,000 bps).",
+    ]
     return "\n".join(lines) + "\n"
 
 
