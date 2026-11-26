@@ -1,4 +1,5 @@
-last_tick: 2026-11-21 tick 263 (10:19Z; no new kiwi comment in #1 since 2026-11-19 13:06Z; open PRs: none after merging STATE #372; #350 closed/held per earlier; no owner:grok issues. Backtest page/sim already on main (web/backtest.html, sim/backtest.py). Nothing mergeable. Blocked on kiwi: coin CA, fee bot #310, #350 OK, #348 choices. ACTION Hetzner: pull /opt/coin.)
+last_tick: 2026-11-26 tick 264 (no new kiwi comment in #1 since 2026-11-19 13:06Z; only open PR #350 HELD (kiwi's own OK missing, rule 3), no updates since 19 Nov; no owner:grok issues. Nothing mergeable. Blocked on kiwi: coin CA, fee bot #310, #350 OK, #348 choices. ACTION Hetzner: pull /opt/coin.)
+prev_last_tick: 2026-11-21 tick 263 (10:19Z; no new kiwi comment in #1 since 2026-11-19 13:06Z; open PRs: none after merging STATE #372; #350 closed/held per earlier; no owner:grok issues. Backtest page/sim already on main (web/backtest.html, sim/backtest.py). Nothing mergeable. Blocked on kiwi: coin CA, fee bot #310, #350 OK, #348 choices. ACTION Hetzner: pull /opt/coin.)
 prev_last_tick: 2026-11-21 tick 262
 prev_last_tick: 2026-11-21 tick 260
 prev_last_tick: 2026-11-21 tick 259
